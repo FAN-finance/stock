@@ -99,7 +99,7 @@ sign=Privkey.Sign(sha256.sum(ResponseBody),crypto.SHA256)
 
 #### 验签
 当客户端需要验证sign时，需要使用第一步生成的rsa证书文件asset/cert.pem
-验证代码大致为：　ok=rsa.VerifyPKCS1v15(pubiicCert,sha256.sum(ResponseBody),sign）
+验证代码大致为：　ok=rsa.VerifyPKCS1v15(publicCert,sha256.sum(ResponseBody),sign）
 
 签名和验签代码详见：
 main.go中方法　StockInfoHandler　VerifyInfoHandler
