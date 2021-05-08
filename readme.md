@@ -69,7 +69,7 @@ Usage of /tmp/go-build868767577/b001/exe/main:
 ### swagger api doc
 http://localhost:8001/docs/index.html
 
-###签名
+### 签名
 获取股价的接口　pub/stock/info，在http响应header里添加一个名字为sign的header，值为对响应body的添名．
 签名主要可用于验证数据由我们服务器提供．验证为可选项
 
@@ -91,12 +91,12 @@ content-length: 118
  sign: m6XI2hZ2AD0BcgGqIOG4YSDaBQMVTuTiN7dVuDvLPdfY5+IUa24gi8aIKE4mw5Z43kue5PDltworBpK597QbUPXOIZi+hPpebcXjwgkGfcvwdHbOqVhb6NlAQIdoAeMOzA/05En4wjubaqX4Mr1sL5Yiq3lKHjIX5nlbLf33lErPuBim7TlZpQu6FNkm7aro1igH+doIOVYZPVxpBl8eu+Vzu8iBiQiAgx0tlLFEEs+J8Kx5Lnrrd1lHUyWQdoKR52tYtilF1Owt4QGzbCEAHaVzfrRS40DYi2g4gCshZGpn3f8PXzz9b/rLn2YZTeKlMBuLVRMN01hnzwzhr+te9Q== 
  vary: Origin 
 ```
-####签名sign的计算方式：
+#### 签名sign的计算方式：
 使用第一步生成的rsa 私钥，把Response body签名后生成．
 代码大致为：
 sign=Privkey.Sign(sha256.sum(ResponseBody),crypto.SHA256)
 
-####验签
+#### 验签
 当客户端需要验证sign时，需要使用第一步生成的rsa证书文件asset/cert.pem
 验证代码大致为：　ok=rsa.VerifyPKCS1v15(pubiicCert,sha256.sum(ResponseBody),sign）
 
