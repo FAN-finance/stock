@@ -7,13 +7,14 @@
 
 
 ### ~~gen rsa key~~
-目前无需使用了
+目前无需使用了,改用 ethereum签名方法.
 ```shell script
 openssl req -new -newkey rsa:2048 -days 1000 -nodes -x509 -keyout asset/key.pem -out asset/cert.pem -subj "/C=GB/ST=bj/L=bj/O=uprets/OU=ruprets/CN=*"
 ```
 
 ### ~~gen eth wallet~~
 ```shell script
+#目前无需使用了,启动时,会自动创建 asset/pkey 私钥文件；应用接口 /pub/stock/node_wallets,会反返回所有节点的钱包地址
 geth  account new --keystore asset
 #asset 目录只保留一个wallet文件即可，只会使用用一个wallet文件
 ```
@@ -133,9 +134,7 @@ Response body:
 ~~代码大致为：~~
 ~~sign=Privkey.Sign(sha256.sum(ResponseBody),crypto.SHA256)~~
 
-#### 验签
-
-
+#### ~~验签~~
 
 ~~当客户端需要验证sign时，需要使用第一步生成的rsa证书文件asset/cert.pem~~
 ~~验证代码大致为：　ok=rsa.VerifyPKCS1v15(publicCert,sha256.sum(ResponseBody),sign）~~

@@ -122,9 +122,9 @@
                 }
             }
         },
-        "/pub/stock/sign_verify": {
-            "post": {
-                "description": "签名验证",
+        "/pub/stock/node_wallet": {
+            "get": {
+                "description": "当前节点钱包地址",
                 "consumes": [
                     "application/json"
                 ],
@@ -134,24 +134,52 @@
                 "tags": [
                     "default"
                 ],
-                "summary": "签名验证:",
-                "operationId": "VerifyInfoHandler",
-                "parameters": [
-                    {
-                        "description": "需要验证的对象",
-                        "name": "verObj",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.VerObj"
-                        }
-                    }
-                ],
+                "summary": "当前节点钱包地址:",
+                "operationId": "NodeWalletAddreHandler",
                 "responses": {
                     "200": {
-                        "description": "ok info",
+                        "description": "stock info",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiOk"
+                            "type": "string"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/stock/node_wallets": {
+            "get": {
+                "description": "所有节点钱包地址列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "所有节点钱包地址列表:",
+                "operationId": "AllWalletAddreHandler",
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.NodeAddre"
+                            }
                         }
                     },
                     "500": {
@@ -173,26 +201,14 @@
                 }
             }
         },
-        "main.ApiOk": {
+        "main.NodeAddre": {
             "type": "object",
             "properties": {
-                "Msg": {
-                    "type": "string",
-                    "example": "ok"
-                }
-            }
-        },
-        "main.VerObj": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "description": "stockInfo json: {\"code\":\"AAPL\",\"price\":128.1,\"name\":\"苹果\",\"timestamp\":1620292445,\"UpdatedAt\":\"2021-05-06T17:14:05.878+08:00\"}",
-                    "type": "object"
+                "node": {
+                    "type": "string"
                 },
-                "sign": {
-                    "type": "string",
-                    "format": "base64",
-                    "example": "UhRVNsT8B5Za6oO3APH0T9ebPMKHxDDhkscYuILl7lDepDMzyBaQsEu9vwTRIfoYBS8udfEanI/DUAhwnIdFJf9woIv7Oo+OS6q3sF3B5Vx9NN2ipXJ4wjTf2ct7FbS1vXAvTXSmA2svj+LF8P1PIEClITBqu/EWZXTpHvAlbGAAeF+hHO7/FquLHVDavLC+OENyb0CP+NvH+ytZ69tav0DqbGp+NGGil/ImZpPsetbOxwuhC/U1CV6Ap8qgRWe8s6IpOawXDAavLMHUmXVvORDf/XVzaQUJ5ob+vTsSTZwQsvj/4jmsODFt8eKFYL/7vyN/i3HkiDwhq0w85kqHgg=="
+                "walletAddre": {
+                    "type": "string"
                 }
             }
         },
@@ -200,16 +216,22 @@
             "type": "object",
             "properties": {
                 "Price": {
-                    "description": "最新价",
+                    "description": "平均价",
                     "type": "number"
                 },
                 "Timestamp": {
                     "description": "unix 秒数",
                     "type": "integer"
                 },
+                "code": {
+                    "type": "string"
+                },
                 "sign": {
                     "description": "计算平均价格的节点的签名",
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "signs": {
                     "type": "array",
@@ -226,6 +248,9 @@
                     "description": "unix 秒数",
                     "type": "integer"
                 },
+                "code": {
+                    "type": "string"
+                },
                 "node": {
                     "description": "节点名字",
                     "type": "string"
@@ -235,7 +260,10 @@
                     "type": "number"
                 },
                 "sign": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         }

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"crypto"
+	//"crypto"
+	//"crypto/sha256"
 	//"os"
 
 	//"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
 	//"encoding/base64"
 	"encoding/json"
@@ -44,6 +44,7 @@ import (
 // @BasePath /
 func main() {
 	var dbUrl,serverPort,env string
+	var job bool
 
 	pflag.StringVarP(&dbUrl,"db","d","root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true","mysql database url")
 	pflag.StringVarP(&serverPort,"port","p","8001","api　service port")
@@ -52,10 +53,13 @@ func main() {
 	//pflag.StringVarP(&certFile,"cert","c","./asset/cert.pem","pem encoded x509 cert")
 	pflag.StringSliceVarP(&Nodes,"nodes","n",strings.Split("http://localhost:8001,http://localhost:8001",","),"所有节点列表,节点间用逗号分开")
 	pflag.StringVarP(&env,"env","e","debug","环境名字debug prod test")
+	pflag.BoolVarP(&job,"job","j",true,"是否抓取数据")
 
 	pflag.Parse()
 	utils.InitDb(dbUrl)
-	go services.GetStocks()
+	if job {
+		go services.GetStocks()
+	}
 
 	services.InitNodeKey()
 	//InitKey(keyfile,certFile)
@@ -81,7 +85,9 @@ func main() {
 	api:=router.Group("/pub")
 	api.GET("/stock/info", StockInfoHandler)
 	api.GET("/stock/aggre_info", StockAggreHandler)
-	api.POST("/stock/sign_verify", VerifyInfoHandler)
+	api.GET("/stock/node_wallet", NodeWalletAddreHandler)
+	api.GET("/stock/node_wallets", AllWalletAddreHandler)
+	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context){
 		ErrJson(c,"none api router")
@@ -223,37 +229,99 @@ func StockAggreHandler(c *gin.Context) {
 }
 
 
-type VerObj struct {
-	//stockInfo json: {"code":"AAPL","price":128.1,"name":"苹果","timestamp":1620292445,"UpdatedAt":"2021-05-06T17:14:05.878+08:00"}
-	Data json.RawMessage `swaggertype:"object"`
-	Sign []byte `swaggertype:"string" format:"base64" example:"UhRVNsT8B5Za6oO3APH0T9ebPMKHxDDhkscYuILl7lDepDMzyBaQsEu9vwTRIfoYBS8udfEanI/DUAhwnIdFJf9woIv7Oo+OS6q3sF3B5Vx9NN2ipXJ4wjTf2ct7FbS1vXAvTXSmA2svj+LF8P1PIEClITBqu/EWZXTpHvAlbGAAeF+hHO7/FquLHVDavLC+OENyb0CP+NvH+ytZ69tav0DqbGp+NGGil/ImZpPsetbOxwuhC/U1CV6Ap8qgRWe8s6IpOawXDAavLMHUmXVvORDf/XVzaQUJ5ob+vTsSTZwQsvj/4jmsODFt8eKFYL/7vyN/i3HkiDwhq0w85kqHgg=="`
-}
 // @Tags default
-// @Summary　签名验证:
-// @Description 签名验证
-// @ID VerifyInfoHandler
+// @Summary　当前节点钱包地址:
+// @Description 当前节点钱包地址
+// @ID NodeWalletAddreHandler
 // @Accept  json
 // @Produce  json
-// @Param     verObj   body    VerObj     true        "需要验证的对象" default(AAPL)
-// @Success 200 {object} ApiOk	"ok info"
+// @Success 200 {string} addr	"stock info"
+//@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/stock/sign_verify [post]
-func VerifyInfoHandler(c *gin.Context) {
-	vobj:=new(VerObj)
-	err:=c.Bind(vobj)
-	if err == nil {
-		hashbs:=sha256.Sum256(vobj.Data)
-		err=rsa.VerifyPKCS1v15(LocalCert.PublicKey.(*rsa.PublicKey),crypto.SHA256,hashbs[0:32],vobj.Sign,)
+// @Router /pub/stock/node_wallet [get]
+func NodeWalletAddreHandler(c *gin.Context) {
+	c.String(200,services.WalletAddre)
+}
+
+
+
+type NodeAddre struct {
+	Node string
+	WalletAddre string
+}
+// @Tags default
+// @Summary　所有节点钱包地址列表:
+// @Description 所有节点钱包地址列表
+// @ID AllWalletAddreHandler
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} NodeAddre	"stock info"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/stock/node_wallets [get]
+func AllWalletAddreHandler(c *gin.Context) {
+	var err error
+
+	var addres []*NodeAddre
+	sc:=sync.RWMutex{}
+	wg:= new(sync.WaitGroup)
+	var porcNode=func(nodeUrl string) {
+		defer wg.Done()
+		reqUrl := nodeUrl+"/pub/stock/node_wallet"
+		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
-			c.JSON(200, ApiOk{"ok"})
-			return
+			addr:=new(NodeAddre)
+			addr.Node=nodeUrl
+			addr.WalletAddre=string(bs)
+			sc.Lock()
+			addres=append(addres,addr)
+			sc.Unlock()
 		}
 	}
+	for _, nurl := range Nodes {
+		wg.Add(1)
+		go porcNode(nurl)
+	}
+	wg.Wait()
+	c.JSON(200,addres)
+	return
+
 	if err != nil {
 		ErrJson(c,err.Error())
 		return
 	}
 }
+
+type VerObj struct {
+	//stockInfo json: {"code":"AAPL","price":128.1,"name":"苹果","timestamp":1620292445,"UpdatedAt":"2021-05-06T17:14:05.878+08:00"}
+	Data json.RawMessage `swaggertype:"object"`
+	Sign []byte `swaggertype:"string" format:"base64" example:"UhRVNsT8B5Za6oO3APH0T9ebPMKHxDDhkscYuILl7lDepDMzyBaQsEu9vwTRIfoYBS8udfEanI/DUAhwnIdFJf9woIv7Oo+OS6q3sF3B5Vx9NN2ipXJ4wjTf2ct7FbS1vXAvTXSmA2svj+LF8P1PIEClITBqu/EWZXTpHvAlbGAAeF+hHO7/FquLHVDavLC+OENyb0CP+NvH+ytZ69tav0DqbGp+NGGil/ImZpPsetbOxwuhC/U1CV6Ap8qgRWe8s6IpOawXDAavLMHUmXVvORDf/XVzaQUJ5ob+vTsSTZwQsvj/4jmsODFt8eKFYL/7vyN/i3HkiDwhq0w85kqHgg=="`
+}
+//// @Tags default
+//// @Summary　签名验证:
+//// @Description 签名验证
+//// @ID VerifyInfoHandler
+//// @Accept  json
+//// @Produce  json
+//// @Param     verObj   body    VerObj     true        "需要验证的对象" default(AAPL)
+//// @Success 200 {object} ApiOk	"ok info"
+//// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+//// @Router /pub/stock/sign_verify [post]
+//func VerifyInfoHandler(c *gin.Context) {
+//	vobj:=new(VerObj)
+//	err:=c.Bind(vobj)
+//	if err == nil {
+//		hashbs:=sha256.Sum256(vobj.Data)
+//		err=rsa.VerifyPKCS1v15(LocalCert.PublicKey.(*rsa.PublicKey),crypto.SHA256,hashbs[0:32],vobj.Sign,)
+//		if err == nil {
+//			c.JSON(200, ApiOk{"ok"})
+//			return
+//		}
+//	}
+//	if err != nil {
+//		ErrJson(c,err.Error())
+//		return
+//	}
+//}
 
 
 type ApiErr struct{
