@@ -25,6 +25,7 @@ func GenKeyFile(){
 		log.Println("key exists")
 		return
 	}
+	os.MkdirAll("asset",os.ModePerm)
 	key,_:=crypto.GenerateKey()
 	//pubKey:=key.PublicKey
 	//addre:=crypto.PubkeyToAddress(pubKey)

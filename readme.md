@@ -128,7 +128,7 @@ Response body:
 #### 签名sign的计算方式
 目前使用 ethereum签名方式:
 
-- message= Code+","+Timestamp+"," +Price;
+- **message= Code+","+Timestamp+"," +Price**;
 - sign=crypto.Sign(Keccak256(message),edcasaKey)
 
 ~~使用第一步生成的rsa 私钥，把Response body签名后生成．~~
