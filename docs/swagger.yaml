@@ -21,23 +21,34 @@ definitions:
         format: base64
         type: string
     type: object
-  services.ViewStock:
+  services.StockData:
     properties:
-      Code:
-        description: 代码 苹果代码 AAPL ,特斯拉代码 TSLA
-        type: string
       Price:
         description: 最新价
         type: number
-      StockName:
-        description: 名称
-        type: string
       Timestamp:
         description: unix 秒数
         type: integer
-      UpdatedAt:
-        description: rfc3339 fortmat
-        example: "2021-05-07T18:25:44.27+08:00"
+      sign:
+        description: 计算平均价格的节点的签名
+        type: string
+      signs:
+        items:
+          $ref: '#/definitions/services.StockNode'
+        type: array
+    type: object
+  services.StockNode:
+    properties:
+      Timestamp:
+        description: unix 秒数
+        type: integer
+      node:
+        description: 节点名字
+        type: string
+      price:
+        description: 新价
+        type: number
+      sign:
         type: string
     type: object
 info:
@@ -52,6 +63,42 @@ info:
   title: stock-info-api
   version: "1.0"
 paths:
+  /pub/stock/aggre_info:
+    get:
+      consumes:
+      - application/json
+      description: 获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA
+      operationId: StockAggreHandler
+      parameters:
+      - default: AAPL
+        description: 美股代码
+        in: query
+        name: code
+        required: true
+        type: string
+      - default: 1620383144
+        description: unix 秒数
+        in: query
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.StockData'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/main.ApiErr'
+      summary: '获取共识美股价格:'
+      tags:
+      - default
   /pub/stock/info:
     get:
       consumes:
@@ -80,7 +127,7 @@ paths:
               description: 签名信息
               type: string
           schema:
-            $ref: '#/definitions/services.ViewStock'
+            $ref: '#/definitions/services.StockNode'
         "500":
           description: 失败时，有相应测试日志输出
           schema:

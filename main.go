@@ -2,13 +2,17 @@ package main
 
 import (
 	"crypto"
-	"crypto/rand"
+	//"os"
+
+	//"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/base64"
+	//"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
 	"github.com/spf13/pflag"
@@ -17,7 +21,9 @@ import (
 	"io/ioutil"
 	"log"
 	"stock/services"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 	_ "stock/docs"
 	"stock/utils"
@@ -37,18 +43,22 @@ import (
 //host 192.168.122.1:8080
 // @BasePath /
 func main() {
-	var dbUrl,serverPort,keyfile,certFile,env string
+	var dbUrl,serverPort,env string
+
 	pflag.StringVarP(&dbUrl,"db","d","root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true","mysql database url")
 	pflag.StringVarP(&serverPort,"port","p","8001","api　service port")
-	pflag.StringVarP(&keyfile,"key","k","./asset/key.pem","pem encoded private key")
-	pflag.StringVarP(&certFile,"cert","c","./asset/cert.pem","pem encoded x509 cert")
+	//var keyfile,certFile string
+	//pflag.StringVarP(&keyfile,"key","k","./asset/key.pem","pem encoded private key")
+	//pflag.StringVarP(&certFile,"cert","c","./asset/cert.pem","pem encoded x509 cert")
+	pflag.StringSliceVarP(&Nodes,"nodes","n",strings.Split("http://localhost:8001,http://localhost:8001",","),"所有节点列表,节点间用逗号分开")
 	pflag.StringVarP(&env,"env","e","debug","环境名字debug prod test")
-	pflag.Parse()
 
+	pflag.Parse()
 	utils.InitDb(dbUrl)
 	go services.GetStocks()
 
-	InitKey(keyfile,certFile)
+	services.InitNodeKey()
+	//InitKey(keyfile,certFile)
 	if env=="prod"{
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -70,6 +80,7 @@ func main() {
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api:=router.Group("/pub")
 	api.GET("/stock/info", StockInfoHandler)
+	api.GET("/stock/aggre_info", StockAggreHandler)
 	api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context){
@@ -78,7 +89,7 @@ func main() {
 	})
 	log.Fatal(router.Run(":"+serverPort))
 }
-
+var Nodes []string
 // @Tags default
 // @Summary　获取美股价格:
 // @Description 获取美股价格 苹果代码  AAPL  ,苹果代码 TSLA
@@ -87,31 +98,48 @@ func main() {
 // @Produce  json
 // @Param     code   query    string     true        "美股代码" default(AAPL)
 // @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
-// @Success 200 {object} services.ViewStock	"stock info"
-// @Header 200 {string} sign "签名信息"
+// @Success 200 {object} services.StockNode	"stock info"
+//@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/info [get]
 func StockInfoHandler(c *gin.Context) {
 	info := &services.ViewStock{}
 	code:=c.Query("code")
-	timestamp:=c.Query("timestamp")
-	err := utils.Orm.Model(services.ViewStock{}).Where("code= ? and timestamp>= ? ", code,timestamp).Order("timestamp").First(info).Error
+	timestampstr:=c.Query("timestamp")
+	timestamp,_:=strconv.Atoi(timestampstr)
+	//err := utils.Orm.Where("code= ? and timestamp>= ? ", code,timestamp).Order("timestamp").First(info).Error
+	err := utils.Orm.Where("code= ? and timestamp<= ? ", code,timestamp).Order("timestamp desc").First(info).Error
 	if err == nil {
+		var avgPrice float32
+		//err = utils.Orm.Model(services.ViewStock{}).Select("avg(price)").Order("timestamp desc").Limit(2500).Where("code= ? and timestamp<= ? ", code,timestamp).Scan(&avgPrice).Error
+		avgPrice,err:=getAvgPrice(code,timestamp)
 		if err == nil {
-			bs,_:=json.Marshal(info)
-			//md5str:=crypto.SHA256.New()
-			hashbs:=sha256.Sum256(bs)
-			log.Println(hashbs,len(hashbs))
-			sign,signErr:= Privkey.Sign(rand.Reader,hashbs[0:32],crypto.SHA256)
-			if signErr == nil {
-				signStr:=base64.StdEncoding.EncodeToString(sign)
-				c.Header("sign",signStr)
-				log.Println(signStr)
-			}else{
-				log.Println(signErr)
-			}
-			c.JSON(200,info)
+			log.Println("avgPrice",avgPrice)
+			info.Price=avgPrice
+
+			snode:=new(services.StockNode)
+			snode.Code=info.Code
+			snode.Price=info.Price
+			snode.Timestamp=info.Timestamp
+			snode.SetSign()
+			c.JSON(200, snode)
 			return
+
+			//bs, _ := json.Marshal(snode)
+			////md5str:=crypto.SHA256.New()
+			//hashbs := sha256.Sum256(bs)
+			////log.Println(hashbs, len(hashbs))
+			//sign, signErr := Privkey.Sign(rand.Reader, hashbs[0:32], crypto.SHA256)
+			//if signErr == nil {
+			//	signStr := base64.StdEncoding.EncodeToString(sign)
+			//	//c.Header("sign", signStr)
+			//	//log.Println(signStr)
+			//	snode.Sign=[]byte(signStr)
+			//	c.JSON(200, snode)
+			//	return
+			//} else {
+			//	log.Println(signErr)
+			//}
 		}
 	}
 	if err != nil {
@@ -119,13 +147,87 @@ func StockInfoHandler(c *gin.Context) {
 		return
 	}
 }
+func getAvgPrice(code string,timestamp int)(avgPrice float32,err error) {
+	err = utils.Orm.Model(services.ViewStock{}).Select("avg(price)").Order("timestamp desc").Limit(2500).Where("code= ? and timestamp<= ? ", code, timestamp).Scan(&avgPrice).Error
+	return
+}
+
+
+// @Tags default
+// @Summary　获取共识美股价格:
+// @Description 获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA
+// @ID StockAggreHandler
+// @Accept  json
+// @Produce  json
+// @Param     code   query    string     true        "美股代码" default(AAPL)
+// @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
+// @Success 200 {object} services.StockData	"stock info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/stock/aggre_info [get]
+func StockAggreHandler(c *gin.Context) {
+	code:=c.Query("code")
+	timestampstr:=c.Query("timestamp")
+	timestamp,_:=strconv.Atoi(timestampstr)
+	sdata:=new(services.StockData)
+	snodes:=[]services.StockNode{}
+	var err error
+
+	sc:=sync.RWMutex{}
+	wg:= new(sync.WaitGroup)
+	var porcNode=func(nodeUrl string) {
+		defer wg.Done()
+		reqUrl := fmt.Sprintf(nodeUrl+"/pub/stock/info?timestamp=%d&code=%s", timestamp, code)
+		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
+		if err == nil {
+			snode := new(services.StockNode)
+			json.Unmarshal(bs, snode)
+			snode.Node=nodeUrl
+			sc.Lock()
+			snodes = append(snodes, *snode)
+			sc.Unlock()
+		}
+	}
+	for _, nurl := range Nodes {
+		wg.Add(1)
+		go porcNode(nurl)
+	}
+	wg.Wait()
+
+	sumPrice:=float32(0.0)
+	sdata.Signs=snodes
+	if len(sdata.Signs)==0{
+		err=errors.New("数据不可用")
+		goto END
+	}
+	if len(sdata.Signs)<len(Nodes)/2+1{
+		err=errors.New("节点不够用")
+		goto END
+	}
+
+	for _, node := range snodes {
+		sumPrice+=node.Price
+	}
+	sdata.Price=sumPrice/float32( len(snodes))
+	sdata.Timestamp=int64(timestamp)
+	sdata.Code=code
+	sdata.SetSign()
+	c.JSON(200,sdata)
+	return
+
+	END:
+	if err != nil {
+		ErrJson(c,err.Error())
+		return
+	}
+}
+
 
 type VerObj struct {
 	//stockInfo json: {"code":"AAPL","price":128.1,"name":"苹果","timestamp":1620292445,"UpdatedAt":"2021-05-06T17:14:05.878+08:00"}
 	Data json.RawMessage `swaggertype:"object"`
 	Sign []byte `swaggertype:"string" format:"base64" example:"UhRVNsT8B5Za6oO3APH0T9ebPMKHxDDhkscYuILl7lDepDMzyBaQsEu9vwTRIfoYBS8udfEanI/DUAhwnIdFJf9woIv7Oo+OS6q3sF3B5Vx9NN2ipXJ4wjTf2ct7FbS1vXAvTXSmA2svj+LF8P1PIEClITBqu/EWZXTpHvAlbGAAeF+hHO7/FquLHVDavLC+OENyb0CP+NvH+ytZ69tav0DqbGp+NGGil/ImZpPsetbOxwuhC/U1CV6Ap8qgRWe8s6IpOawXDAavLMHUmXVvORDf/XVzaQUJ5ob+vTsSTZwQsvj/4jmsODFt8eKFYL/7vyN/i3HkiDwhq0w85kqHgg=="`
 }
-
 // @Tags default
 // @Summary　签名验证:
 // @Description 签名验证

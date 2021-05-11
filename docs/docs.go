@@ -32,6 +32,59 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/pub/stock/aggre_info": {
+            "get": {
+                "description": "获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取共识美股价格:",
+                "operationId": "StockAggreHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "AAPL",
+                        "description": "美股代码",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "unix 秒数",
+                        "name": "timestamp",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.StockData"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/stock/info": {
             "get": {
                 "description": "获取美股价格 苹果代码  AAPL  ,苹果代码 TSLA",
@@ -67,7 +120,7 @@ var doc = `{
                     "200": {
                         "description": "stock info",
                         "schema": {
-                            "$ref": "#/definitions/services.ViewStock"
+                            "$ref": "#/definitions/services.StockNode"
                         },
                         "headers": {
                             "sign": {
@@ -159,29 +212,46 @@ var doc = `{
                 }
             }
         },
-        "services.ViewStock": {
+        "services.StockData": {
             "type": "object",
             "properties": {
-                "Code": {
-                    "description": "代码 苹果代码 AAPL ,特斯拉代码 TSLA",
-                    "type": "string"
-                },
                 "Price": {
                     "description": "最新价",
                     "type": "number"
-                },
-                "StockName": {
-                    "description": "名称",
-                    "type": "string"
                 },
                 "Timestamp": {
                     "description": "unix 秒数",
                     "type": "integer"
                 },
-                "UpdatedAt": {
-                    "description": "rfc3339 fortmat",
-                    "type": "string",
-                    "example": "2021-05-07T18:25:44.27+08:00"
+                "sign": {
+                    "description": "计算平均价格的节点的签名",
+                    "type": "string"
+                },
+                "signs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.StockNode"
+                    }
+                }
+            }
+        },
+        "services.StockNode": {
+            "type": "object",
+            "properties": {
+                "Timestamp": {
+                    "description": "unix 秒数",
+                    "type": "integer"
+                },
+                "node": {
+                    "description": "节点名字",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "新价",
+                    "type": "number"
+                },
+                "sign": {
+                    "type": "string"
                 }
             }
         }

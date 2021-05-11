@@ -13,7 +13,7 @@ import (
 	//"strings"
 )
 
-var DebugReq = false
+var DebugReq = true
 
 func GetUa()string{
 	return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/80.0.3987.87 Chrome/80.0.3987.87 Safari/537.36"
@@ -49,7 +49,7 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 	RETRY:
 		//hclient := HClient()
 		hclient := http.DefaultClient
-		hclient.Timeout = 20 * time.Second
+		hclient.Timeout = 5 * time.Second
 		resp, err = hclient.Do(request)
 		err = err1
 		if err == nil {
@@ -61,9 +61,9 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 			}
 		} else {
 			//net error
-			log.Printf("net err set retryMax %d to %d", retryMaxDefault, retryMax)
-			retryMax = 5
-			time.Sleep(5 * time.Second)
+			//log.Printf("net err set retryMax %d to %d", retryMaxDefault, retryMax)
+			//retryMax = 1
+			//time.Sleep(5 * time.Second)
 		}
 		if err != nil {
 			retry += 1

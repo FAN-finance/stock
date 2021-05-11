@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"stock/utils"
 	"time"
@@ -31,6 +32,28 @@ type ViewStock struct {
 	//rfc3339 fortmat
 	UpdatedAt *time.Time  `json:"UpdatedAt" example:"2021-05-07T18:25:44.27+08:00"`
 }
+type StockData struct {
+	Code string
+	Sign      []byte  //计算平均价格的节点的签名
+	Price  float32 `json:"Price" gorm:"DEFAULT:null;"`  //平均价
+	Timestamp int64   `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
+	Signs     []StockNode
+}
+type  StockNode struct {
+	Code string
+	Node      string //节点名字
+	Timestamp int64  `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
+	Price     float32 //新价
+	Sign      []byte
+}
+func(s *StockNode)SetSign( ){
+	msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	s.Sign= SignMsg(msg)
+}
+func(s *StockData)SetSign() {
+	msg := fmt.Sprintf("%s,%d,%f", s.Code, s.Timestamp, s.Price)
+	s.Sign = SignMsg(msg)
+}
 
 func (Stock) TableName() string {
 	return "stocks"
@@ -51,15 +74,24 @@ func GetStocks() {
 	specUrl:="https://push2.eastmoney.com/api/qt/ulist/get?np=1&fltt=2&invt=2&fields=f2,f3,f4,f12,f13,f14,f128&pn=1&pz=30&fid=&po=1&secids=105.AAPL,105.TSLA&ut=f057cbcbce2a86e2866ab8877db1d059&cb=cbCallback&_=1620350834301"
 	sleep := 60
 	for {
-		y, m, d := time.Now().UTC().Date()
+		now:=time.Now().UTC()
+		//周未休息两小时
+		week:=now.Weekday()
+		if week==0 || week==6{
+			log.Println("周未休息两小时")
+			time.Sleep(2*time.Hour)
+			continue
+		}
+
+		y, m, d := now.Date()
 		stime := time.Date(y, m, d, 13, 30, 0, 0, time.UTC)
 		etime := time.Date(y, m, d, 20, 00, 0, 0, time.UTC)
-		if time.Now().Unix() >= stime.Unix() && time.Now().Unix() <= etime.Unix() {
+		if now.Unix() >= stime.Unix() && now.Unix() <= etime.Unix() {
 			GetCarStock(specUrl)
 			sleep = 1
 			log.Println("休息", sleep, "s")
 		} else {
-			sleep = int( time.Now().Add(time.Minute).Truncate(time.Minute).Add(time.Second*2).Sub(time.Now()).Seconds())
+			sleep = int( now.Add(time.Minute).Truncate(time.Minute).Add(time.Second*2).Sub(now).Seconds())
 			if sleep <=0 {
 				sleep = 60
 			}

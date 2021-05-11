@@ -6,9 +6,16 @@
 - 苹果代码 AAPL；特斯拉代码 TSLA
 
 
-### gen rsa key
+### ~~gen rsa key~~
+目前无需使用了
 ```shell script
 openssl req -new -newkey rsa:2048 -days 1000 -nodes -x509 -keyout asset/key.pem -out asset/cert.pem -subj "/C=GB/ST=bj/L=bj/O=uprets/OU=ruprets/CN=*"
+```
+
+### ~~gen eth wallet~~
+```shell script
+geth  account new --keystore asset
+#asset 目录只保留一个wallet文件即可，只会使用用一个wallet文件
 ```
 
 ### mysql table:
@@ -43,13 +50,29 @@ go build
 
 #stock启动后,会在8001端口，响应获取股价的http请求．
 #获取苹果这个时间点1620383144的股价
-curl -X GET "http://localhost:8001/pub/stock/info?code=AAPL&timestamp=1620383144" -H "accept: application/json"
+curl -X GET "http://localhost:8001/pub/stock/aggre_info?code=AAPL&timestamp=1620383144" -H "accept: application/json"
+Response body:
 {
   "Code": "AAPL",
+  "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE=",
   "Price": 129.74,
-  "StockName": "苹果",
   "Timestamp": 1620383144,
-  "UpdatedAt": "2021-05-07T18:25:44.27+08:00"
+  "Signs": [
+    {
+      "Code": "AAPL",
+      "Node": "http://localhost:8001",
+      "Timestamp": 1620383144,
+      "Price": 129.74,
+      "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE="
+    },
+    {
+      "Code": "AAPL",
+      "Node": "http://localhost:8001",
+      "Timestamp": 1620383144,
+      "Price": 129.74,
+      "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE="
+    }
+  ]
 }
 
 
@@ -58,11 +81,10 @@ curl -X GET "http://localhost:8001/pub/stock/info?code=AAPL&timestamp=1620383144
 ```shell script
 ./stock -h
 Usage of /tmp/go-build868767577/b001/exe/main:
-  -c, --cert string   pem encoded x509 cert (default "./asset/cert.pem")
-  -d, --db string     mysql database url (default "root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true")
-  -e, --env string    环境名字debug prod test (default "debug")
-  -k, --key string    pem encoded private key (default "./asset/key.pem")
-  -p, --port string   api　service port (default "8001")
+  -d, --db string       mysql database url (default "root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true")
+  -e, --env string      环境名字debug prod test (default "debug")
+  -n, --nodes strings   所有节点列表,节点间用逗号分开 (default [http://localhost:8001,http://localhost:8001])
+  -p, --port string     api　service port (default "8001")
 
 ```
 
@@ -71,38 +93,55 @@ http://localhost:8001/docs/index.html
 
 
 ### 签名
-获取股价的接口　pub/stock/info，在http响应header里添加一个名字为sign的header，值为对响应body的添名．
-签名主要可用于验证数据由我们服务器提供．验证为可选项
+获取股价的接口　pub/stock/aggre_info，．
+签名主要可用于验证数据由相应节点提供．
 
 example:
 ```shell script
-curl -X GET "http://localhost:8001/pub/stock/info?code=AAPL&timestamp=1620383144" -H "accept: application/json"
+curl -X GET "http://localhost:8001/pub/stock/aggre_info?code=AAPL&timestamp=1620383144" -H "accept: application/json"
 Response body:
 {
   "Code": "AAPL",
+  "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE=",
   "Price": 129.74,
-  "StockName": "苹果",
   "Timestamp": 1620383144,
-  "UpdatedAt": "2021-05-07T18:25:44.27+08:00"
+  "Signs": [
+    {
+      "Code": "AAPL",
+      "Node": "http://localhost:8001",
+      "Timestamp": 1620383144,
+      "Price": 129.74,
+      "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE="
+    },
+    {
+      "Code": "AAPL",
+      "Node": "http://localhost:8001",
+      "Timestamp": 1620383144,
+      "Price": 129.74,
+      "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE="
+    }
+  ]
 }
-Response headers:
-content-length: 118 
- content-type: application/json; charset=utf-8 
- date: Sat, 08 May 2021 01:35:04 GMT 
- sign: m6XI2hZ2AD0BcgGqIOG4YSDaBQMVTuTiN7dVuDvLPdfY5+IUa24gi8aIKE4mw5Z43kue5PDltworBpK597QbUPXOIZi+hPpebcXjwgkGfcvwdHbOqVhb6NlAQIdoAeMOzA/05En4wjubaqX4Mr1sL5Yiq3lKHjIX5nlbLf33lErPuBim7TlZpQu6FNkm7aro1igH+doIOVYZPVxpBl8eu+Vzu8iBiQiAgx0tlLFEEs+J8Kx5Lnrrd1lHUyWQdoKR52tYtilF1Owt4QGzbCEAHaVzfrRS40DYi2g4gCshZGpn3f8PXzz9b/rLn2YZTeKlMBuLVRMN01hnzwzhr+te9Q== 
- vary: Origin 
 ```
 #### 签名sign的计算方式
-使用第一步生成的rsa 私钥，把Response body签名后生成．
-代码大致为：
-sign=Privkey.Sign(sha256.sum(ResponseBody),crypto.SHA256)
+目前使用 ethereum签名方式:
+
+- message= Code+","+Timestamp+"," +Price;
+- sign=crypto.Sign(Keccak256(message),edcasaKey)
+
+~~使用第一步生成的rsa 私钥，把Response body签名后生成．~~
+~~代码大致为：~~
+~~sign=Privkey.Sign(sha256.sum(ResponseBody),crypto.SHA256)~~
 
 #### 验签
-当客户端需要验证sign时，需要使用第一步生成的rsa证书文件asset/cert.pem
-验证代码大致为：　ok=rsa.VerifyPKCS1v15(publicCert,sha256.sum(ResponseBody),sign）
 
-签名和验签代码详见：
-main.go中方法　StockInfoHandler　VerifyInfoHandler
+
+
+~~当客户端需要验证sign时，需要使用第一步生成的rsa证书文件asset/cert.pem~~
+~~验证代码大致为：　ok=rsa.VerifyPKCS1v15(publicCert,sha256.sum(ResponseBody),sign）~~
+
+~~签名和验签代码详见：~~
+~~main.go中方法　StockInfoHandler　VerifyInfoHandler~~
 
 
 
