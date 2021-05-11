@@ -46,7 +46,8 @@ create index code_time
 
 go build 
 
-./stock --db --port 8001 'root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true'
+./stock --db --port 8001 'root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true' --nodes=http://localhost:8001,http://server1:8001
+#nodes参数指定, 其它节点列表
 #stock启动后，会另外启动一个线程，这个线程会在美股开盘时间，每隔１秒抓取苹果和特斯拉股价．
 
 #stock启动后,会在8001端口，响应获取股价的http请求．
