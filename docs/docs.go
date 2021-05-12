@@ -32,7 +32,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/pub/stock/aggre_info": {
+        "/pub/stock/aggre_info/{code}/{timestamp}": {
             "get": {
                 "description": "获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA",
                 "consumes": [
@@ -52,7 +52,7 @@ var doc = `{
                         "default": "AAPL",
                         "description": "美股代码",
                         "name": "code",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     },
                     {
@@ -60,7 +60,7 @@ var doc = `{
                         "default": 1620383144,
                         "description": "unix 秒数",
                         "name": "timestamp",
-                        "in": "query"
+                        "in": "path"
                     }
                 ],
                 "responses": {
@@ -138,9 +138,9 @@ var doc = `{
                 }
             }
         },
-        "/pub/stock/node_wallet": {
+        "/pub/stock/stat": {
             "get": {
-                "description": "当前节点钱包地址",
+                "description": "当前节点状态:记录数,钱包地址",
                 "consumes": [
                     "application/json"
                 ],
@@ -150,8 +150,8 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "当前节点钱包地址:",
-                "operationId": "NodeWalletAddreHandler",
+                "summary": "当前节点状态:记录数,钱包地址",
+                "operationId": "NodeStatHandler",
                 "responses": {
                     "200": {
                         "description": "stock info",
@@ -174,9 +174,9 @@ var doc = `{
                 }
             }
         },
-        "/pub/stock/node_wallets": {
+        "/pub/stock/stats": {
             "get": {
-                "description": "所有节点钱包地址列表",
+                "description": "所有节点状态:记录数,钱包地址",
                 "consumes": [
                     "application/json"
                 ],
@@ -186,15 +186,15 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "所有节点钱包地址列表:",
-                "operationId": "AllWalletAddreHandler",
+                "summary": "所有节点状态:记录数,钱包地址",
+                "operationId": "NodeStatsHandler",
                 "responses": {
                     "200": {
                         "description": "stock info",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.NodeAddre"
+                                "$ref": "#/definitions/main.NodeStat"
                             }
                         }
                     },
@@ -217,13 +217,19 @@ var doc = `{
                 }
             }
         },
-        "main.NodeAddre": {
+        "main.NodeStat": {
             "type": "object",
             "properties": {
                 "node": {
+                    "description": "节点名",
                     "type": "string"
                 },
+                "rows": {
+                    "description": "数据库记录数",
+                    "type": "integer"
+                },
                 "walletAddre": {
+                    "description": "钱包地址",
                     "type": "string"
                 }
             }

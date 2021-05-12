@@ -88,7 +88,7 @@ func GetStocks() {
 		etime := time.Date(y, m, d, 20, 00, 0, 0, time.UTC)
 		if now.Unix() >= stime.Unix() && now.Unix() <= etime.Unix() {
 			GetCarStock(specUrl)
-			sleep = 1
+			sleep = 3
 			log.Println("休息", sleep, "s")
 		} else {
 			sleep = int( now.Add(time.Minute).Truncate(time.Minute).Add(time.Second*2).Sub(now).Seconds())

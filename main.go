@@ -84,9 +84,10 @@ func main() {
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api:=router.Group("/pub")
 	api.GET("/stock/info", StockInfoHandler)
-	api.GET("/stock/aggre_info", StockAggreHandler)
-	api.GET("/stock/node_wallet", NodeWalletAddreHandler)
-	api.GET("/stock/node_wallets", AllWalletAddreHandler)
+	//api.GET("/stock/aggre_info", StockAggreHandler)
+	api.GET("/stock/aggre_info/:code/:timestamp", StockAggreHandler)
+	api.GET("/stock/stat", NodeStatHandler)
+	api.GET("/stock/stats", NodeStatsHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context){
@@ -165,15 +166,15 @@ func getAvgPrice(code string,timestamp int)(avgPrice float32,err error) {
 // @ID StockAggreHandler
 // @Accept  json
 // @Produce  json
-// @Param     code   query    string     true        "美股代码" default(AAPL)
-// @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
+// @Param     code   path    string     true        "美股代码" default(AAPL)
+// @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockData	"stock info"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/stock/aggre_info [get]
+// @Router /pub/stock/aggre_info/{code}/{timestamp} [get]
 func StockAggreHandler(c *gin.Context) {
-	code:=c.Query("code")
-	timestampstr:=c.Query("timestamp")
+	code:=c.Param("code")
+	timestampstr:=c.Param("timestamp")
 	timestamp,_:=strconv.Atoi(timestampstr)
 	sdata:=new(services.StockData)
 	snodes:=[]services.StockNode{}
@@ -230,50 +231,59 @@ func StockAggreHandler(c *gin.Context) {
 
 
 // @Tags default
-// @Summary　当前节点钱包地址:
-// @Description 当前节点钱包地址
-// @ID NodeWalletAddreHandler
+// @Summary　当前节点状态:记录数,钱包地址
+// @Description 当前节点状态:记录数,钱包地址
+// @ID NodeStatHandler
 // @Accept  json
 // @Produce  json
 // @Success 200 {string} addr	"stock info"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/stock/node_wallet [get]
-func NodeWalletAddreHandler(c *gin.Context) {
-	c.String(200,services.WalletAddre)
+// @Router /pub/stock/stat [get]
+func NodeStatHandler(c *gin.Context) {
+	stat:=NodeStat{}
+	utils.Orm.Model(services.ViewStock{}).Count(&(stat.Rows))
+	stat.WalletAddre=services.WalletAddre
+	c.JSON(200,stat)
 }
 
 
-
-type NodeAddre struct {
+type NodeStat struct {
+	//节点名
 	Node string
+	//钱包地址
 	WalletAddre string
+	//数据库记录数
+	Rows int64
 }
 // @Tags default
-// @Summary　所有节点钱包地址列表:
-// @Description 所有节点钱包地址列表
-// @ID AllWalletAddreHandler
+// @Summary　所有节点状态:记录数,钱包地址
+// @Description 所有节点状态:记录数,钱包地址
+// @ID NodeStatsHandler
 // @Accept  json
 // @Produce  json
-// @Success 200 {array} NodeAddre	"stock info"
+// @Success 200 {array} NodeStat	"stock info"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/stock/node_wallets [get]
-func AllWalletAddreHandler(c *gin.Context) {
+// @Router /pub/stock/stats [get]
+func NodeStatsHandler(c *gin.Context) {
 	var err error
 
-	var addres []*NodeAddre
+	var addres []*NodeStat
 	sc:=sync.RWMutex{}
 	wg:= new(sync.WaitGroup)
 	var porcNode=func(nodeUrl string) {
 		defer wg.Done()
-		reqUrl := nodeUrl+"/pub/stock/node_wallet"
+		reqUrl := nodeUrl+"/pub/stock/stat"
 		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
-			addr:=new(NodeAddre)
-			addr.Node=nodeUrl
-			addr.WalletAddre=string(bs)
+			stat:=new(NodeStat)
+			err=json.Unmarshal(bs,stat)
+			if err == nil {
+				log.Println(err)
+			}
+			stat.Node=nodeUrl
 			sc.Lock()
-			addres=append(addres,addr)
+			addres=append(addres,stat)
 			sc.Unlock()
 		}
 	}

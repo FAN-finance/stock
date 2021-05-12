@@ -40,13 +40,22 @@ create index code_time
 
 ```
 
+### current node list
+- node1:62.234.169.68
+- node2:62.234.188.160 
+- node0:49.232.234.250
+### oss list
+- https://snode0.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
+- https://snode1.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
+- https://snode2.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145 
+
 ### startup 
 ```shell script
 
 
 go build 
 
-./stock --db --port 8001 'root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true' --nodes=http://localhost:8001,http://server1:8001
+./stock --db --port 8001 'root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true' --nodes=http://node0:8001,http://node1:8001,http://node2:8001
 #nodes参数指定, 其它节点列表
 #stock启动后，会另外启动一个线程，这个线程会在美股开盘时间，每隔１秒抓取苹果和特斯拉股价．
 
