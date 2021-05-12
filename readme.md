@@ -44,6 +44,7 @@ create index code_time
 - node1: 62.234.169.68
 - node2: 62.234.188.160 
 - node0: 49.232.234.250
+为方便识别结点, 自己hosts文件里加上 node0 node1这样的ip 解析.
 ### oss list
 - https://snode0.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
 - https://snode1.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
