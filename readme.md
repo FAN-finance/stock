@@ -40,10 +40,10 @@ create index code_time
 
 ```
 
-### current node list
-- node1:62.234.169.68
-- node2:62.234.188.160 
-- node0:49.232.234.250
+### current nodes ip list 
+- node1: 62.234.169.68
+- node2: 62.234.188.160 
+- node0: 49.232.234.250
 ### oss list
 - https://snode0.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
 - https://snode1.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
