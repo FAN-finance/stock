@@ -36,7 +36,7 @@ type StockData struct {
 	Sign      []byte  //计算平均价格的节点的签名
 	Price  float32 `json:"Price" gorm:"DEFAULT:null;"`  //平均价
 	// Multiply the Price by 1000000000000000000 to remove decimals
-	TextPrice string
+	BigPrice  string
 	Timestamp int64   `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
 	Signs     []StockNode
 }
@@ -46,8 +46,8 @@ type  StockNode struct {
 	Timestamp int64  `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
 	Price     float32 //新价
 	// Multiply the Price by 1000000000000000000 to remove decimals
-	TextPrice string
-	Sign      []byte
+	BigPrice string
+	Sign     []byte
 }
 func(s *StockNode)SetSign( ){
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)

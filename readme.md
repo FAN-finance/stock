@@ -151,7 +151,7 @@ prefixedHash := crypto.Keccak256Hash(
 sign=crypto.Sign(Keccak256(message),edcasaKey)
 ```
 
-对应的**solidity** 验签代码：
+对应的**solidity**验签代码：
 ```js
  prefixedHash=keccak256(abi.encodePacked(Timestamp, TextPrice, Code)).toEthSignedMessageHash()
  prefixedHash.recover(sign)

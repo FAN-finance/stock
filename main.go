@@ -127,7 +127,7 @@ func StockInfoHandler(c *gin.Context) {
 			snode:=new(services.StockNode)
 			snode.Code=info.Code
 			snode.Price=info.Price
-			snode.TextPrice=services.GetUnDecimalPrice(info.Price)
+			snode.BigPrice =services.GetUnDecimalPrice(info.Price).String()
 			snode.Timestamp=info.Timestamp
 			snode.SetSign()
 			c.JSON(200, snode)
@@ -217,7 +217,7 @@ func StockAggreHandler(c *gin.Context) {
 		sumPrice+=node.Price
 	}
 	sdata.Price=sumPrice/float32( len(snodes))
-	sdata.TextPrice=services.GetUnDecimalPrice(sdata.Price)
+	sdata.BigPrice =services.GetUnDecimalPrice(sdata.Price).String()
 	sdata.Timestamp=int64(timestamp)
 	sdata.Code=code
 	sdata.SetSign()
@@ -301,6 +301,23 @@ func NodeStatsHandler(c *gin.Context) {
 		ErrJson(c,err.Error())
 		return
 	}
+}
+
+// @Tags default
+// @Summary　当前节点状态:记录数,钱包地址
+// @Description 当前节点状态:记录数,钱包地址
+// @ID NodeStatHandler
+// @Accept  json
+// @Produce  json
+// @Success 200 {string} addr	"stock info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/stock/stat [get]
+func NodeAnyApiHandler(c *gin.Context) {
+	stat:=NodeStat{}
+	utils.Orm.Model(services.ViewStock{}).Count(&(stat.Rows))
+	stat.WalletAddre=services.WalletAddre
+	c.JSON(200,stat)
 }
 
 type VerObj struct {
