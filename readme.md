@@ -54,8 +54,9 @@ curl -X GET "http://localhost:8001/pub/stock/aggre_info/AAPL/1620383145" -H "acc
 Response body:
 {
   "Code": "AAPL",
-  "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE=",
+  "Sign": "3KGU6Rd0hMbPDkjWwVhX7qCbW8RE5WEWZSDQ0vupqNMLj/aTsyRNH6c0/yKfbiEMa8f98cGkUK1vyrR6AQrlNQE=",
   "Price": 129.74,
+  "TextPrice": "129740000000000000000",
   "Timestamp": 1620383144,
   "Signs": [
     {
@@ -63,14 +64,16 @@ Response body:
       "Node": "http://localhost:8001",
       "Timestamp": 1620383144,
       "Price": 129.74,
-      "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE="
+      "TextPrice": "129740000000000000000",
+      "Sign": "3KGU6Rd0hMbPDkjWwVhX7qCbW8RE5WEWZSDQ0vupqNMLj/aTsyRNH6c0/yKfbiEMa8f98cGkUK1vyrR6AQrlNQE="
     },
     {
       "Code": "AAPL",
       "Node": "http://localhost:8001",
       "Timestamp": 1620383144,
       "Price": 129.74,
-      "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE="
+      "TextPrice": "129740000000000000000",
+      "Sign": "3KGU6Rd0hMbPDkjWwVhX7qCbW8RE5WEWZSDQ0vupqNMLj/aTsyRNH6c0/yKfbiEMa8f98cGkUK1vyrR6AQrlNQE="
     }
   ]
 }
@@ -102,8 +105,9 @@ curl -X GET "http://localhost:8001/pub/stock/aggre_info/AAPL/1620383145" -H "acc
 Response body:
 {
   "Code": "AAPL",
-  "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE=",
+  "Sign": "3KGU6Rd0hMbPDkjWwVhX7qCbW8RE5WEWZSDQ0vupqNMLj/aTsyRNH6c0/yKfbiEMa8f98cGkUK1vyrR6AQrlNQE=",
   "Price": 129.74,
+  "TextPrice": "129740000000000000000",
   "Timestamp": 1620383144,
   "Signs": [
     {
@@ -111,18 +115,23 @@ Response body:
       "Node": "http://localhost:8001",
       "Timestamp": 1620383144,
       "Price": 129.74,
-      "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE="
+      "TextPrice": "129740000000000000000",
+      "Sign": "3KGU6Rd0hMbPDkjWwVhX7qCbW8RE5WEWZSDQ0vupqNMLj/aTsyRNH6c0/yKfbiEMa8f98cGkUK1vyrR6AQrlNQE="
     },
     {
       "Code": "AAPL",
       "Node": "http://localhost:8001",
       "Timestamp": 1620383144,
       "Price": 129.74,
-      "Sign": "rqOfrJkrOmwA3WATCG5KHrjSRfK/HzjpL9ZX6LhP3nMy2tag5H+X5wE1AetWyeguMfngX3lZ3WUbWhCWzI4a8gE="
+      "TextPrice": "129740000000000000000",
+      "Sign": "3KGU6Rd0hMbPDkjWwVhX7qCbW8RE5WEWZSDQ0vupqNMLj/aTsyRNH6c0/yKfbiEMa8f98cGkUK1vyrR6AQrlNQE="
     }
   ]
 }
 ```
+json中的　Sign字段为签名；　Sign值由　Timestamp／TextPrice／Code字段使用节点钱包签名得到．
+
+
 #### 签名sign的计算方式
 目前使用 go-ethereum签名方式:
 
