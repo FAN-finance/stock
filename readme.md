@@ -144,7 +144,7 @@ sign=crypto.Sign(Keccak256(message),edcasaKey)
 
 对应的solidity 验签代码：
 ```js
- prefixedHash=keccak256(abi.encodePacked(receiver, id, amount)).toEthSignedMessageHash()
+ prefixedHash=keccak256(abi.encodePacked(Timestamp, TextPrice, Code)).toEthSignedMessageHash()
  prefixedHash.recover(sign)
 ```
 
