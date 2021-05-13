@@ -260,6 +260,10 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/services.StockNode"
                     }
+                },
+                "textPrice": {
+                    "description": "Multiply the Price by 1000000000000000000 to remove decimals",
+                    "type": "string"
                 }
             }
         },
@@ -286,6 +290,10 @@ var doc = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "textPrice": {
+                    "description": "Multiply the Price by 1000000000000000000 to remove decimals",
+                    "type": "string"
                 }
             }
         }

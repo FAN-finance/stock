@@ -127,6 +127,7 @@ func StockInfoHandler(c *gin.Context) {
 			snode:=new(services.StockNode)
 			snode.Code=info.Code
 			snode.Price=info.Price
+			snode.TextPrice=services.GetUnDecimalPrice(info.Price)
 			snode.Timestamp=info.Timestamp
 			snode.SetSign()
 			c.JSON(200, snode)
@@ -216,6 +217,7 @@ func StockAggreHandler(c *gin.Context) {
 		sumPrice+=node.Price
 	}
 	sdata.Price=sumPrice/float32( len(snodes))
+	sdata.TextPrice=services.GetUnDecimalPrice(sdata.Price)
 	sdata.Timestamp=int64(timestamp)
 	sdata.Code=code
 	sdata.SetSign()

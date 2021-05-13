@@ -1,16 +1,62 @@
 package services
 
 import (
-
 	"github.com/ethereum/go-ethereum/crypto"
 	"log"
 	"crypto/ecdsa"
+	"math"
 	"os"
+	"math/big"
+	"fmt"
 )
-//import "github.com/ethereum/go-ethereum/common"
+import "github.com/ethereum/go-ethereum/common"
 
-func SignMsg(message string )[]byte{
-	msg := crypto.Keccak256([]byte(message))
+func GetUnDecimalPrice(price float32 )string{
+	pint:= new(big.Int)
+	//pfloat:= new(big.Float)
+	//f32str := strconv.FormatFloat(float64(price), 'g', -1, 32)
+	//f64, _ := strconv.ParseFloat(f32str, 64)
+	//
+	//pfloat.SetFloat64(f64)
+	//pfloat=pfloat.Mul(pfloat,big.NewFloat(math.Pow10(18)))
+	mint:=int64(float64(price)*math.Pow10(4))
+	pint.SetInt64(mint)
+	pint=pint.Mul(pint,big.NewInt(int64(math.Pow10(14))))
+	//pint,_=pfloat.Int(nil)
+	return pint.String()
+}
+func (s *StockNode)GetHash()[]byte{
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.TextPrice),
+		[]byte(s.Code),
+	)
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
+func (s *StockData)GetHash()[]byte{
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.TextPrice),
+		[]byte(s.Code),
+	)
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
+func SignMsg(message []byte)[]byte{
+	msg:= crypto.Keccak256([]byte(message))
 	sig, err := crypto.Sign(msg, EcKey)
 	if err != nil {
 		log.Printf("Sign error: %s", err)

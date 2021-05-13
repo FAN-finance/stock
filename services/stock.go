@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"stock/utils"
 	"time"
@@ -17,7 +16,7 @@ type resModel struct {
 type Stock struct {
 	ID        int     `gorm:"column:id;primary_key" `
 	Code      string  `gorm:"index:code_time,priority:1" json:"f12"` //代码
-	Price     float32 `json:"f2" gorm:"DEFAULT:null;"`            //最新价
+	Price     float64 `json:"f2" gorm:"DEFAULT:null;"`            //最新价
 	StockName string  `json:"f14"`                                //名称
 	Mk        int     `json:"f13"`                                //市场 1 sh 01 0 sz 02
 	Diff      float32 `json:"f3" gorm:"DEFAULT:0;"`               //最新涨百分比
@@ -36,6 +35,8 @@ type StockData struct {
 	Code string
 	Sign      []byte  //计算平均价格的节点的签名
 	Price  float32 `json:"Price" gorm:"DEFAULT:null;"`  //平均价
+	// Multiply the Price by 1000000000000000000 to remove decimals
+	TextPrice string
 	Timestamp int64   `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
 	Signs     []StockNode
 }
@@ -44,15 +45,19 @@ type  StockNode struct {
 	Node      string //节点名字
 	Timestamp int64  `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
 	Price     float32 //新价
+	// Multiply the Price by 1000000000000000000 to remove decimals
+	TextPrice string
 	Sign      []byte
 }
 func(s *StockNode)SetSign( ){
-	msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
-	s.Sign= SignMsg(msg)
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash:=s.GetHash()
+	s.Sign= SignMsg(hash)
 }
 func(s *StockData)SetSign() {
-	msg := fmt.Sprintf("%s,%d,%f", s.Code, s.Timestamp, s.Price)
-	s.Sign = SignMsg(msg)
+	//msg := fmt.Sprintf("%s,%d,%f", s.Code, s.Timestamp, s.Price)
+	hash:=s.GetHash()
+	s.Sign = SignMsg(hash)
 }
 
 func (Stock) TableName() string {

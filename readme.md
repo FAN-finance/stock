@@ -5,19 +5,8 @@
 目前提供苹果和特斯拉每秒的股价
 - 苹果代码 AAPL；特斯拉代码 TSLA
 
-
-### ~~gen rsa key~~
-目前无需使用了,改用 ethereum签名方法.
-```shell script
-openssl req -new -newkey rsa:2048 -days 1000 -nodes -x509 -keyout asset/key.pem -out asset/cert.pem -subj "/C=GB/ST=bj/L=bj/O=uprets/OU=ruprets/CN=*"
-```
-
-### ~~gen eth wallet~~
-```shell script
-#目前无需使用了,启动时,会自动创建 asset/pkey 私钥文件；应用接口 /pub/stock/node_wallets,会反返回所有节点的钱包地址
-geth  account new --keystore asset
-#asset 目录只保留一个wallet文件即可，只会使用用一个wallet文件
-```
+### 节点eth钱包
+启动时,会自动创建 asset/pkey 私钥文件；应用接口 /pub/stock/node_wallets,会反返回所有节点的钱包地址
 
 ### mysql table:
 ```mysql
@@ -37,7 +26,6 @@ create table stocks
 
 create index code_time
     on stocks (code, timestamp);
-
 ```
 
 ### current nodes ip list 
@@ -62,7 +50,7 @@ go build
 
 #stock启动后,会在8001端口，响应获取股价的http请求．
 #获取苹果这个时间点1620383144的股价
-curl -X GET "http://localhost:8001/pub/stock/aggre_info?code=AAPL&timestamp=1620383144" -H "accept: application/json"
+curl -X GET "http://localhost:8001/pub/stock/aggre_info/AAPL/1620383145" -H "accept: application/json"
 Response body:
 {
   "Code": "AAPL",
@@ -110,7 +98,7 @@ http://localhost:8001/docs/index.html
 
 example:
 ```shell script
-curl -X GET "http://localhost:8001/pub/stock/aggre_info?code=AAPL&timestamp=1620383144" -H "accept: application/json"
+curl -X GET "http://localhost:8001/pub/stock/aggre_info/AAPL/1620383145" -H "accept: application/json"
 Response body:
 {
   "Code": "AAPL",
@@ -136,22 +124,31 @@ Response body:
 }
 ```
 #### 签名sign的计算方式
-目前使用 ethereum签名方式:
+目前使用 go-ethereum签名方式:
 
-- **message= Code+","+Timestamp+"," +Price**;
-- sign=crypto.Sign(Keccak256(message),edcasaKey)
+- ~~**message= Code+","+Timestamp+"," +Price**; solidity 无法使用拼串方式生成message,再hash,也没有float字段，hash过程换成如下方法~~
+- ~~sign=crypto.Sign(Keccak256(message),edcasaKey)~~
 
-~~使用第一步生成的rsa 私钥，把Response body签名后生成．~~
-~~代码大致为：~~
-~~sign=Privkey.Sign(sha256.sum(ResponseBody),crypto.SHA256)~~
+```go
+hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.TextPrice),
+		[]byte(s.Code),
+	)
+prefixedHash := crypto.Keccak256Hash(
+        []byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+        hash.Bytes(),
+    )
+sign=crypto.Sign(Keccak256(message),edcasaKey)
+```
 
-#### ~~验签~~
+对应的solidity 验签代码：
+```js
+ prefixedHash=keccak256(abi.encodePacked(receiver, id, amount)).toEthSignedMessageHash()
+ prefixedHash.recover(sign)
+```
 
-~~当客户端需要验证sign时，需要使用第一步生成的rsa证书文件asset/cert.pem~~
-~~验证代码大致为：　ok=rsa.VerifyPKCS1v15(publicCert,sha256.sum(ResponseBody),sign）~~
-
-~~签名和验签代码详见：~~
-~~main.go中方法　StockInfoHandler　VerifyInfoHandler~~
+ 
 
 
 
