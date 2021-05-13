@@ -69,6 +69,109 @@
                 }
             }
         },
+        "/pub/stock/any_api": {
+            "get": {
+                "description": "当前节any-api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "当前节点any-api",
+                "operationId": "NodeAnyApiHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH\u0026tsyms=USD",
+                        "description": "数据url",
+                        "name": "req",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "RAW.ETH.USD.VOLUME24HOUR",
+                        "description": "指向数据字段的json path",
+                        "name": "path",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "headers": {
+                            "AnyApiRes": {
+                                "type": "object",
+                                "description": "data"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/stock/any_apis": {
+            "get": {
+                "description": "所有节点any-api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "所有节点any-api",
+                "operationId": "NodeAnyApisHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH\u0026tsyms=USD",
+                        "description": "数据url",
+                        "name": "req",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "RAW.ETH.USD.VOLUME24HOUR",
+                        "description": "指向数据字段的json path",
+                        "name": "path",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "any api data",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.AnyApiRes"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/stock/info": {
             "get": {
                 "description": "获取美股价格 苹果代码  AAPL  ,苹果代码 TSLA",
@@ -193,6 +296,23 @@
         }
     },
     "definitions": {
+        "main.AnyApiRes": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "数据库记录数",
+                    "type": "object"
+                },
+                "node": {
+                    "description": "节点名",
+                    "type": "string"
+                },
+                "req": {
+                    "description": "数据源",
+                    "type": "string"
+                }
+            }
+        },
         "main.ApiErr": {
             "type": "object",
             "properties": {

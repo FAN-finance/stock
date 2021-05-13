@@ -8,6 +8,9 @@ import (
 	//"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"github.com/tidwall/gjson"
+	"net/url"
+
 	//"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
@@ -88,6 +91,8 @@ func main() {
 	api.GET("/stock/aggre_info/:code/:timestamp", StockAggreHandler)
 	api.GET("/stock/stat", NodeStatHandler)
 	api.GET("/stock/stats", NodeStatsHandler)
+	api.GET("/stock/any_api", NodeAnyApiHandler)
+	api.GET("/stock/any_apis", NodeAnyApisHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context){
@@ -303,22 +308,92 @@ func NodeStatsHandler(c *gin.Context) {
 	}
 }
 
+
+
+type AnyApiRes struct {
+	//节点名
+	Node string
+	//数据源
+	Req string
+	//数据库记录数
+	Data interface{}
+}
 // @Tags default
-// @Summary　当前节点状态:记录数,钱包地址
-// @Description 当前节点状态:记录数,钱包地址
-// @ID NodeStatHandler
+// @Summary　当前节点any-api
+// @Description 当前节any-api
+// @ID NodeAnyApiHandler
 // @Accept  json
 // @Produce  json
+// @Param     req   query    string     true        "数据url" default(https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD)
+// @Param     path   query    string     false    "指向数据字段的json path" default(RAW.ETH.USD.VOLUME24HOUR)
 // @Success 200 {string} addr	"stock info"
-//@Header 200 {string} sign "签名信息"
+//@Header 200 {object} AnyApiRes "data"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/stock/stat [get]
+// @Router /pub/stock/any_api [get]
 func NodeAnyApiHandler(c *gin.Context) {
-	stat:=NodeStat{}
-	utils.Orm.Model(services.ViewStock{}).Count(&(stat.Rows))
-	stat.WalletAddre=services.WalletAddre
-	c.JSON(200,stat)
+	reqUrl:=c.Query("req")
+	jsonPath:=c.Query("path")
+	bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
+	if err == nil {
+		res := gjson.GetBytes(bs, jsonPath)
+		ares := new(AnyApiRes)
+		ares.Data = res.Value()
+		ares.Req=reqUrl
+		c.JSON(200,ares)
+		return
+	}
+	ErrJson(c,err.Error())
 }
+// @Tags default
+// @Summary　所有节点any-api
+// @Description 所有节点any-api
+// @ID NodeAnyApisHandler
+// @Accept  json
+// @Produce  json
+// @Param     req   query    string     true        "数据url" default(https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD)
+// @Param     path   query    string     false    "指向数据字段的json path" default(RAW.ETH.USD.VOLUME24HOUR)
+// @Success 200 {array} AnyApiRes	"any api data"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/stock/any_apis [get]
+func NodeAnyApisHandler(c *gin.Context) {
+	reqUrl:=c.Query("req")
+	jsonPath:=c.Query("path")
+
+	var err error
+	var addres []*AnyApiRes
+	sc:=sync.RWMutex{}
+	wg:= new(sync.WaitGroup)
+	var porcNode=func(nodeUrl string) {
+		defer wg.Done()
+		reqUrl :=fmt.Sprintf( nodeUrl+"/pub/stock/any_api?req=%s&path=%s",url.QueryEscape(reqUrl),jsonPath)
+		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
+		if err == nil {
+			stat:=new(AnyApiRes)
+			err=json.Unmarshal(bs,stat)
+			if err == nil {
+				log.Println(err)
+			}
+			stat.Node=nodeUrl
+			sc.Lock()
+			addres=append(addres,stat)
+			sc.Unlock()
+		}
+	}
+	for _, nurl := range Nodes {
+		wg.Add(1)
+		go porcNode(nurl)
+	}
+	wg.Wait()
+	c.JSON(200,addres)
+	return
+
+	if err != nil {
+		ErrJson(c,err.Error())
+		return
+	}
+}
+
+
 
 type VerObj struct {
 	//stockInfo json: {"code":"AAPL","price":128.1,"name":"苹果","timestamp":1620292445,"UpdatedAt":"2021-05-06T17:14:05.878+08:00"}

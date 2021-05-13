@@ -24,4 +24,5 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/gorm v1.21.6
+	github.com/tidwall/gjson v1.7.5
 )

@@ -1,5 +1,17 @@
 basePath: /
 definitions:
+  main.AnyApiRes:
+    properties:
+      data:
+        description: 数据库记录数
+        type: object
+      node:
+        description: 节点名
+        type: string
+      req:
+        description: 数据源
+        type: string
+    type: object
   main.ApiErr:
     properties:
       Error:
@@ -107,6 +119,76 @@ paths:
           schema:
             $ref: '#/definitions/main.ApiErr'
       summary: '获取共识美股价格:'
+      tags:
+      - default
+  /pub/stock/any_api:
+    get:
+      consumes:
+      - application/json
+      description: 当前节any-api
+      operationId: NodeAnyApiHandler
+      parameters:
+      - default: https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD
+        description: 数据url
+        in: query
+        name: req
+        required: true
+        type: string
+      - default: RAW.ETH.USD.VOLUME24HOUR
+        description: 指向数据字段的json path
+        in: query
+        name: path
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            AnyApiRes:
+              description: data
+              type: object
+          schema:
+            type: string
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/main.ApiErr'
+      summary: 当前节点any-api
+      tags:
+      - default
+  /pub/stock/any_apis:
+    get:
+      consumes:
+      - application/json
+      description: 所有节点any-api
+      operationId: NodeAnyApisHandler
+      parameters:
+      - default: https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD
+        description: 数据url
+        in: query
+        name: req
+        required: true
+        type: string
+      - default: RAW.ETH.USD.VOLUME24HOUR
+        description: 指向数据字段的json path
+        in: query
+        name: path
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: any api data
+          schema:
+            items:
+              $ref: '#/definitions/main.AnyApiRes'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/main.ApiErr'
+      summary: 所有节点any-api
       tags:
       - default
   /pub/stock/info:
