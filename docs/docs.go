@@ -316,8 +316,8 @@ var doc = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "description": "数据库记录数",
-                    "type": "object"
+                    "description": "节点取回的数据：取回数据的类型可能为　bool／字符串／数字等；但为了统一签名处理，将取回的数据转换为string，",
+                    "type": "string"
                 },
                 "node": {
                     "description": "节点名",
@@ -326,6 +326,13 @@ var doc = `{
                 "req": {
                     "description": "数据源",
                     "type": "string"
+                },
+                "sign": {
+                    "description": "签名：　hash= keccak256(abi.encodePacked(Req, Data).toEthSignedMessageHash()",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },

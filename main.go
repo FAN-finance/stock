@@ -1,19 +1,9 @@
 package main
 
 import (
-	//"crypto"
-	//"crypto/sha256"
-	//"os"
-
-	//"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"github.com/tidwall/gjson"
 	"net/url"
-
-	//"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -21,7 +11,6 @@ import (
 	"github.com/spf13/pflag"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	"io/ioutil"
 	"log"
 	"stock/services"
 	"strconv"
@@ -315,8 +304,10 @@ type AnyApiRes struct {
 	Node string
 	//数据源
 	Req string
-	//数据库记录数
-	Data interface{}
+	//节点取回的数据：取回数据的类型可能为　bool／字符串／数字等；但为了统一签名处理，将取回的数据转换为string，
+	Data string
+	//签名：　hash= keccak256(abi.encodePacked(Req, Data).toEthSignedMessageHash()
+	Sign []byte
 }
 // @Tags default
 // @Summary　当前节点any-api
@@ -337,7 +328,8 @@ func NodeAnyApiHandler(c *gin.Context) {
 	if err == nil {
 		res := gjson.GetBytes(bs, jsonPath)
 		ares := new(AnyApiRes)
-		ares.Data = res.Value()
+		ares.Data = res.String()
+		ares.Sign=services.GetStringsHash([][]byte{[]byte(reqUrl),[]byte(ares.Data)})
 		ares.Req=reqUrl
 		c.JSON(200,ares)
 		return
@@ -448,39 +440,4 @@ func OkJson(c *gin.Context,err error){
 	}else{
 		c.JSON(200, ApiOk{"ok"})
 	}
-}
-
-
-var  Privkey *rsa.PrivateKey
-var  LocalCert *x509.Certificate
-func InitKey(keyFile,certFile string) {
-	bs,err:=ioutil.ReadFile(keyFile)
-	if err == nil {
-	pblock,_:=pem.Decode(bs)
-
-		priv,err1:=x509.ParsePKCS8PrivateKey(pblock.Bytes)
-		err=err1
-		if err == nil {
-			Privkey =priv.(*rsa.PrivateKey)
-		}
-	}
-	if err != nil {
-		log.Fatalln("init pkey err",err)
-	}
-	log.Println("Privkey", Privkey.D)
-
-	bs,err=ioutil.ReadFile(certFile)
-	if err == nil {
-		pblock,_:=pem.Decode(bs)
-
-		c,err1:=x509.ParseCertificate(pblock.Bytes)
-		err=err1
-		if err == nil {
-			LocalCert=c
-		}
-	}
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println("init cert err",LocalCert.Subject)
 }

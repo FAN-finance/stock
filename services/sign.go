@@ -25,6 +25,14 @@ func GetUnDecimalPrice(price float32 )*big.Int{
 	//pint,_=pfloat.Int(nil)
 	return pint
 }
+func GetStringsHash(items [][]byte)[]byte{
+	hash:=crypto.Keccak256Hash(items...)
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
 func (s *StockNode)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	pint:= new(big.Int)
