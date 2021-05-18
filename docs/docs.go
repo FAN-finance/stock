@@ -79,13 +79,66 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiErr"
+                            "$ref": "#/definitions/controls.ApiErr"
                         }
                     }
                 }
             }
         },
         "/pub/dex/token_info/{token}/{timestamp}": {
+            "get": {
+                "description": "获取token信息,含pair的lp Token内容",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token信息:",
+                "operationId": "TokenInfoSignHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.TokenInfo"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/internal/dex/token_info/{token}/{timestamp}": {
             "get": {
                 "description": "获取token信息,含pair的lp Token内容",
                 "consumes": [
@@ -120,7 +173,7 @@ var doc = `{
                     "200": {
                         "description": "stock info",
                         "schema": {
-                            "$ref": "#/definitions/services.TokenInfo"
+                            "$ref": "#/definitions/services.TokenInfoPriceView"
                         },
                         "headers": {
                             "sign": {
@@ -132,7 +185,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiErr"
+                            "$ref": "#/definitions/controls.ApiErr"
                         }
                     }
                 }
@@ -185,7 +238,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiErr"
+                            "$ref": "#/definitions/controls.ApiErr"
                         }
                     }
                 }
@@ -238,7 +291,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiErr"
+                            "$ref": "#/definitions/controls.ApiErr"
                         }
                     }
                 }
@@ -281,14 +334,14 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.AnyApiRes"
+                                "$ref": "#/definitions/controls.AnyApiRes"
                             }
                         }
                     },
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiErr"
+                            "$ref": "#/definitions/controls.ApiErr"
                         }
                     }
                 }
@@ -341,7 +394,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiErr"
+                            "$ref": "#/definitions/controls.ApiErr"
                         }
                     }
                 }
@@ -377,7 +430,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiErr"
+                            "$ref": "#/definitions/controls.ApiErr"
                         }
                     }
                 }
@@ -410,7 +463,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/main.ApiErr"
+                            "$ref": "#/definitions/controls.ApiErr"
                         }
                     }
                 }
@@ -418,7 +471,7 @@ var doc = `{
         }
     },
     "definitions": {
-        "main.AnyApiRes": {
+        "controls.AnyApiRes": {
             "type": "object",
             "properties": {
                 "data": {
@@ -442,7 +495,7 @@ var doc = `{
                 }
             }
         },
-        "main.ApiErr": {
+        "controls.ApiErr": {
             "type": "object",
             "properties": {
                 "Error": {
@@ -573,6 +626,9 @@ var doc = `{
                 "name": {
                     "type": "string"
                 },
+                "priceUsd": {
+                    "type": "number"
+                },
                 "symbol": {
                     "type": "string"
                 },
@@ -593,6 +649,30 @@ var doc = `{
                 },
                 "untrackedVolumeUSD": {
                     "type": "string"
+                }
+            }
+        },
+        "services.TokenInfoPriceView": {
+            "type": "object",
+            "properties": {
+                "bigPrice": {
+                    "type": "string"
+                },
+                "node": {
+                    "type": "string"
+                },
+                "priceUsd": {
+                    "type": "number"
+                },
+                "sign": {
+                    "description": "Sign值由 Timestamp+BigPrice",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "timestamp": {
+                    "type": "integer"
                 }
             }
         }

@@ -33,6 +33,35 @@ func GetStringsHash(items [][]byte)[]byte{
 	)
 	return prefixedHash
 }
+func (s *TokenInfoPriceView)GetHash()[]byte{
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.BigPrice),
+	)
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
+
+func (s *TokenDataPriceView)GetHash()[]byte{
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.BigPrice),
+	)
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
 func (s *StockNode)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	pint:= new(big.Int)

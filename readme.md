@@ -131,7 +131,6 @@ Response body:
 ```
 json中的　Sign字段为签名；　Sign值由　Timestamp／TextPrice／Code字段使用节点钱包签名得到．
 
-
 #### 签名sign的计算方式
 目前使用 go-ethereum签名方式:
 
