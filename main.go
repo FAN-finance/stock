@@ -87,9 +87,9 @@ func main() {
 	api.GET("/stock/any_api", controls.NodeAnyApiHandler)
 	api.GET("/stock/any_apis", controls.NodeAnyApisHandler)
 	api.GET("/internal/dex/pair_info/:pair/:timestamp", controls.PairInfoHandler)
-	api.GET("/internal/dex/token_info/:token/:timestamp", controls.TokenInfoHandler)
+	api.GET("/internal/dex/token_price/:token/:timestamp", controls.TokenPriceHandler)
 	api.GET("/dex/pair_info/:pair/:timestamp", controls.PairInfoHandler)
-	api.GET("/dex/token_info/:token/:timestamp", controls.TokenInfoSignHandler)
+	api.GET("/dex/token_price/:token/:timestamp", controls.TokenPriceSignHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context){

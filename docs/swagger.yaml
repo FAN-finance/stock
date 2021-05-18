@@ -188,12 +188,12 @@ paths:
       summary: '获取pair信息:'
       tags:
       - default
-  /pub/dex/token_info/{token}/{timestamp}:
+  /pub/dex/token_price/{token}/{timestamp}:
     get:
       consumes:
       - application/json
       description: 获取token信息,含pair的lp Token内容
-      operationId: TokenInfoSignHandler
+      operationId: TokenPriceSignHandler
       parameters:
       - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
         description: token地址
@@ -221,15 +221,15 @@ paths:
           description: 失败时，有相应测试日志输出
           schema:
             $ref: '#/definitions/controls.ApiErr'
-      summary: '获取token信息:'
+      summary: '获取token价格信息:'
       tags:
       - default
-  /pub/internal/dex/token_info/{token}/{timestamp}:
+  /pub/internal/dex/token_price/{token}/{timestamp}:
     get:
       consumes:
       - application/json
       description: 获取token信息,含pair的lp Token内容
-      operationId: TokenInfoHandler
+      operationId: TokenPriceHandler
       parameters:
       - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
         description: token地址
@@ -257,7 +257,7 @@ paths:
           description: 失败时，有相应测试日志输出
           schema:
             $ref: '#/definitions/controls.ApiErr'
-      summary: '获取token信息:'
+      summary: '获取token价格信息:'
       tags:
       - default
   /pub/stock/aggre_info/{code}/{timestamp}:

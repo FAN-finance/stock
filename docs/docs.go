@@ -85,7 +85,7 @@ var doc = `{
                 }
             }
         },
-        "/pub/dex/token_info/{token}/{timestamp}": {
+        "/pub/dex/token_price/{token}/{timestamp}": {
             "get": {
                 "description": "获取token信息,含pair的lp Token内容",
                 "consumes": [
@@ -97,8 +97,8 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取token信息:",
-                "operationId": "TokenInfoSignHandler",
+                "summary": "获取token价格信息:",
+                "operationId": "TokenPriceSignHandler",
                 "parameters": [
                     {
                         "type": "string",
@@ -138,7 +138,7 @@ var doc = `{
                 }
             }
         },
-        "/pub/internal/dex/token_info/{token}/{timestamp}": {
+        "/pub/internal/dex/token_price/{token}/{timestamp}": {
             "get": {
                 "description": "获取token信息,含pair的lp Token内容",
                 "consumes": [
@@ -150,8 +150,8 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取token信息:",
-                "operationId": "TokenInfoHandler",
+                "summary": "获取token价格信息:",
+                "operationId": "TokenPriceHandler",
                 "parameters": [
                     {
                         "type": "string",
