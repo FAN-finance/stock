@@ -35,7 +35,7 @@ import (
 //host 192.168.122.1:8080
 // @BasePath /
 func main() {
-	var dbUrl,serverPort,env string
+	var dbUrl,serverPort,env,infura string
 	var job bool
 
 	pflag.StringVarP(&dbUrl,"db","d","root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true","mysql database url")
@@ -45,10 +45,14 @@ func main() {
 	//pflag.StringVarP(&certFile,"cert","c","./asset/cert.pem","pem encoded x509 cert")
 	pflag.StringSliceVarP(&Nodes,"nodes","n",strings.Split("http://localhost:8001,http://localhost:8001",","),"所有节点列表,节点间用逗号分开")
 	pflag.StringVarP(&env,"env","e","debug","环境名字debug prod test")
+	pflag.StringVar(&infura,"infura","infura_proj_id","infura申请的项目id")
 	pflag.BoolVarP(&job,"job","j",true,"是否抓取数据")
+
+
 
 	pflag.Parse()
 	utils.InitDb(dbUrl)
+	services.InitEConn(infura)
 	if job {
 		go services.GetStocks()
 	}
@@ -82,6 +86,8 @@ func main() {
 	api.GET("/stock/stats", NodeStatsHandler)
 	api.GET("/stock/any_api", NodeAnyApiHandler)
 	api.GET("/stock/any_apis", NodeAnyApisHandler)
+	api.GET("/dex/pair_info/:pair/:timestamp", PairInfoHandler)
+	api.GET("/dex/token_info/:token/:timestamp", TokenInfoHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context){
@@ -225,6 +231,63 @@ func StockAggreHandler(c *gin.Context) {
 	}
 }
 
+// @Tags default
+// @Summary　获取pair信息:
+// @Description 获取pair信息,含pair的lp Token内容
+// @ID PairInfoHandler
+// @Accept  json
+// @Produce  json
+// @Param     pair   path    string     true        "pair地址" default(0x21b8065d10f73ee2e260e5b47d3344d3ced7596e)
+// @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
+// @Success 200 {object} services.PairInfo	"stock info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/dex/pair_info/{pair}/{timestamp} [get]
+func PairInfoHandler(c *gin.Context) {
+	code:=c.Param("pair")
+	//timestampstr:=c.Param("timestamp")
+	//timestamp,_:=strconv.Atoi(timestampstr)
+	res,err:=services.GetPairInfo(code)
+	if err == nil {
+		c.JSON(200,res)
+		return
+	}
+	if err != nil {
+		ErrJson(c,err.Error())
+		return
+	}
+}
+
+// @Tags default
+// @Summary　获取token信息:
+// @Description 获取token信息,含pair的lp Token内容
+// @ID TokenInfoHandler
+// @Accept  json
+// @Produce  json
+// @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
+// @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
+// @Success 200 {object} services.TokenInfo	"stock info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/dex/token_info/{token}/{timestamp} [get]
+func TokenInfoHandler(c *gin.Context) {
+	code:=c.Param("token")
+	//timestampstr:=c.Param("timestamp")
+	//timestamp,_:=strconv.Atoi(timestampstr)
+	res,err:=services.GetTokenInfo(code)
+	if err == nil {
+		tp:=new(services.BlockPrice)
+		utils.Orm.Order("id desc").First(tp)
+		fprice,_:=strconv.ParseFloat(res.DerivedETH,64)
+		res.PriceUsd=fprice*tp.Price
+		c.JSON(200,res)
+		return
+	}
+	if err != nil {
+		ErrJson(c,err.Error())
+		return
+	}
+}
 
 // @Tags default
 // @Summary　当前节点状态:记录数,钱包地址

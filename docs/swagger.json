@@ -16,6 +16,112 @@
     },
     "basePath": "/",
     "paths": {
+        "/pub/dex/pair_info/{pair}/{timestamp}": {
+            "get": {
+                "description": "获取pair信息,含pair的lp Token内容",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取pair信息:",
+                "operationId": "PairInfoHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x21b8065d10f73ee2e260e5b47d3344d3ced7596e",
+                        "description": "pair地址",
+                        "name": "pair",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.PairInfo"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/dex/token_info/{token}/{timestamp}": {
+            "get": {
+                "description": "获取token信息,含pair的lp Token内容",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token信息:",
+                "operationId": "TokenInfoHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.TokenInfo"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/stock/aggre_info/{code}/{timestamp}": {
             "get": {
                 "description": "获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA",
@@ -345,6 +451,37 @@
                 }
             }
         },
+        "services.PairInfo": {
+            "type": "object",
+            "properties": {
+                "block": {
+                    "type": "integer"
+                },
+                "liquidityTokenTotalSupply": {
+                    "description": "lp数量",
+                    "type": "string"
+                },
+                "reserve0": {
+                    "type": "string"
+                },
+                "reserve1": {
+                    "type": "string"
+                },
+                "reserveUSD": {
+                    "description": "pair市值",
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "token0PriceUSD": {
+                    "type": "string"
+                },
+                "token1PriceUSD": {
+                    "type": "string"
+                }
+            }
+        },
         "services.StockData": {
             "type": "object",
             "properties": {
@@ -405,6 +542,41 @@
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "services.TokenInfo": {
+            "type": "object",
+            "properties": {
+                "decimals": {
+                    "type": "string"
+                },
+                "derivedETH": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "totalLiquidity": {
+                    "type": "string"
+                },
+                "totalSupply": {
+                    "type": "string"
+                },
+                "tradeVolume": {
+                    "type": "string"
+                },
+                "tradeVolumeUSD": {
+                    "type": "string"
+                },
+                "txCount": {
+                    "type": "string"
+                },
+                "untrackedVolumeUSD": {
+                    "type": "string"
                 }
             }
         }
