@@ -158,6 +158,12 @@ sign=crypto.Sign(Keccak256(message),edcasaKey)
 ```
 
  
+ 功能列表:
+- 添加获取pair信息接口
+- 添加获取token信息接口
+- 获取any-api json字段接口
+- 获取apple tsla股票信息接口
+
 
 
 
