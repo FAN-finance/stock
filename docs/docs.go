@@ -32,9 +32,9 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/pub/dex/pair_info/{pair}/{timestamp}": {
+        "/pub/dex/lp_price/{pair}/{timestamp}": {
             "get": {
-                "description": "获取pair信息,含pair的lp Token内容",
+                "description": "获取token信息,含pair的lp Token内容",
                 "consumes": [
                     "application/json"
                 ],
@@ -44,13 +44,13 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取pair信息:",
-                "operationId": "PairInfoHandler",
+                "summary": "获取token价格信息:",
+                "operationId": "PairLpPriceSignHandler",
                 "parameters": [
                     {
                         "type": "string",
                         "default": "0x21b8065d10f73ee2e260e5b47d3344d3ced7596e",
-                        "description": "pair地址",
+                        "description": "token地址",
                         "name": "pair",
                         "in": "path",
                         "required": true
@@ -65,7 +65,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "pair info",
                         "schema": {
                             "$ref": "#/definitions/services.PairInfo"
                         },
@@ -138,9 +138,62 @@ var doc = `{
                 }
             }
         },
+        "/pub/internal/dex/lp_price/{pair}/{timestamp}": {
+            "get": {
+                "description": "内部单节点获取pair价格信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取pair信息:",
+                "operationId": "PairLpPriceHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x21b8065d10f73ee2e260e5b47d3344d3ced7596e",
+                        "description": "pair地址",
+                        "name": "pair",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.PairInfo"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/internal/dex/token_price/{token}/{timestamp}": {
             "get": {
-                "description": "获取token信息,含pair的lp Token内容",
+                "description": "内部单节点获取token信息,含pair的lp Token内容",
                 "consumes": [
                     "application/json"
                 ],
@@ -173,7 +226,7 @@ var doc = `{
                     "200": {
                         "description": "stock info",
                         "schema": {
-                            "$ref": "#/definitions/services.TokenInfoPriceView"
+                            "$ref": "#/definitions/services.PriceView"
                         },
                         "headers": {
                             "sign": {
@@ -523,11 +576,13 @@ var doc = `{
         "services.PairInfo": {
             "type": "object",
             "properties": {
-                "block": {
-                    "type": "integer"
+                "createdAtBlockNumber": {
+                    "type": "string"
                 },
-                "liquidityTokenTotalSupply": {
-                    "description": "lp数量",
+                "createdAtTimestamp": {
+                    "type": "string"
+                },
+                "liquidityProviderCount": {
                     "type": "string"
                 },
                 "reserve0": {
@@ -536,18 +591,78 @@ var doc = `{
                 "reserve1": {
                     "type": "string"
                 },
-                "reserveUSD": {
-                    "description": "pair市值",
+                "reserveETH": {
                     "type": "string"
+                },
+                "reserveUSD": {
+                    "type": "string"
+                },
+                "token0": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "token0Price": {
+                    "type": "string"
+                },
+                "token1": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "token1Price": {
+                    "type": "string"
+                },
+                "totalSupply": {
+                    "type": "string"
+                },
+                "trackedReserveETH": {
+                    "type": "string"
+                },
+                "txCount": {
+                    "type": "string"
+                },
+                "untrackedVolumeUSD": {
+                    "type": "string"
+                },
+                "volumeToken0": {
+                    "type": "string"
+                },
+                "volumeToken1": {
+                    "type": "string"
+                },
+                "volumeUSD": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.PriceView": {
+            "type": "object",
+            "properties": {
+                "bigPrice": {
+                    "type": "string"
+                },
+                "node": {
+                    "type": "string"
+                },
+                "priceUsd": {
+                    "type": "number"
+                },
+                "sign": {
+                    "description": "Sign值由 Timestamp+BigPrice",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "timestamp": {
                     "type": "integer"
-                },
-                "token0PriceUSD": {
-                    "type": "string"
-                },
-                "token1PriceUSD": {
-                    "type": "string"
                 }
             }
         },
@@ -649,30 +764,6 @@ var doc = `{
                 },
                 "untrackedVolumeUSD": {
                     "type": "string"
-                }
-            }
-        },
-        "services.TokenInfoPriceView": {
-            "type": "object",
-            "properties": {
-                "bigPrice": {
-                    "type": "string"
-                },
-                "node": {
-                    "type": "string"
-                },
-                "priceUsd": {
-                    "type": "number"
-                },
-                "sign": {
-                    "description": "Sign值由 Timestamp+BigPrice",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "timestamp": {
-                    "type": "integer"
                 }
             }
         }

@@ -25,6 +25,7 @@ func GetUnDecimalPrice(price float32 )*big.Int{
 	//pint,_=pfloat.Int(nil)
 	return pint
 }
+
 func GetStringsHash(items [][]byte)[]byte{
 	hash:=crypto.Keccak256Hash(items...)
 	prefixedHash := crypto.Keccak256(
@@ -33,7 +34,7 @@ func GetStringsHash(items [][]byte)[]byte{
 	)
 	return prefixedHash
 }
-func (s *TokenInfoPriceView)GetHash()[]byte{
+func (s *PriceView)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
@@ -48,7 +49,7 @@ func (s *TokenInfoPriceView)GetHash()[]byte{
 	return prefixedHash
 }
 
-func (s *TokenDataPriceView)GetHash()[]byte{
+func (s *DataPriceView)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),

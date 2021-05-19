@@ -32,7 +32,7 @@ import (
 //host 192.168.122.1:8080
 // @BasePath /
 func main() {
-	var dbUrl,serverPort,env,infura string
+	var dbUrl,serverPort,env,infura,swapGraphApi string
 	var job bool
 
 	var nodes []string
@@ -44,6 +44,8 @@ func main() {
 	pflag.StringSliceVarP(&nodes,"nodes","n",strings.Split("http://localhost:8001,http://localhost:8001",","),"所有节点列表,节点间用逗号分开")
 	pflag.StringVarP(&env,"env","e","debug","环境名字debug prod test")
 	pflag.StringVar(&infura,"infura","infura_proj_id","infura申请的项目id")
+	//https://api.thegraph.com/subgraphs/name/wxf4150/fanswap2 https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2
+	pflag.StringVar(&swapGraphApi,"swapGraphApi","https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2","swap theGraphApi")
 	pflag.BoolVarP(&job,"job","j",true,"是否抓取数据")
 
 
@@ -52,6 +54,7 @@ func main() {
 	utils.Nodes=nodes
 	utils.InitDb(dbUrl)
 	services.InitEConn(infura)
+	services.SwapGraphApi=swapGraphApi
 	if job {
 		go services.GetStocks()
 		go services.SubEthPrice(0)
@@ -86,9 +89,9 @@ func main() {
 	api.GET("/stock/stats", NodeStatsHandler)
 	api.GET("/stock/any_api", controls.NodeAnyApiHandler)
 	api.GET("/stock/any_apis", controls.NodeAnyApisHandler)
-	api.GET("/internal/dex/pair_info/:pair/:timestamp", controls.PairInfoHandler)
+	api.GET("/internal/dex/lp_price/:pair/:timestamp", controls.PairLpPriceHandler)
+	api.GET("/dex/lp_price/:pair/:timestamp", controls.PairLpPriceSignHandler)
 	api.GET("/internal/dex/token_price/:token/:timestamp", controls.TokenPriceHandler)
-	api.GET("/dex/pair_info/:pair/:timestamp", controls.PairInfoHandler)
 	api.GET("/dex/token_price/:token/:timestamp", controls.TokenPriceSignHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 

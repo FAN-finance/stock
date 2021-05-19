@@ -36,24 +36,64 @@ definitions:
     type: object
   services.PairInfo:
     properties:
-      block:
-        type: integer
-      liquidityTokenTotalSupply:
-        description: lp数量
+      createdAtBlockNumber:
+        type: string
+      createdAtTimestamp:
+        type: string
+      liquidityProviderCount:
         type: string
       reserve0:
         type: string
       reserve1:
         type: string
-      reserveUSD:
-        description: pair市值
+      reserveETH:
         type: string
+      reserveUSD:
+        type: string
+      token0:
+        properties:
+          id:
+            type: string
+        type: object
+      token0Price:
+        type: string
+      token1:
+        properties:
+          id:
+            type: string
+        type: object
+      token1Price:
+        type: string
+      totalSupply:
+        type: string
+      trackedReserveETH:
+        type: string
+      txCount:
+        type: string
+      untrackedVolumeUSD:
+        type: string
+      volumeToken0:
+        type: string
+      volumeToken1:
+        type: string
+      volumeUSD:
+        type: string
+    type: object
+  services.PriceView:
+    properties:
+      bigPrice:
+        type: string
+      node:
+        type: string
+      priceUsd:
+        type: number
+      sign:
+        description: Sign值由 Timestamp+BigPrice
+        items:
+          type: integer
+        type: array
       timestamp:
         type: integer
-      token0PriceUSD:
-        type: string
-      token1PriceUSD:
-        type: string
     type: object
   services.StockData:
     properties:
@@ -124,22 +164,6 @@ definitions:
       untrackedVolumeUSD:
         type: string
     type: object
-  services.TokenInfoPriceView:
-    properties:
-      bigPrice:
-        type: string
-      node:
-        type: string
-      priceUsd:
-        type: number
-      sign:
-        description: Sign值由 Timestamp+BigPrice
-        items:
-          type: integer
-        type: array
-      timestamp:
-        type: integer
-    type: object
 info:
   contact:
     email: wuxiaofei@rechaintech.com
@@ -152,15 +176,15 @@ info:
   title: stock-info-api
   version: "1.0"
 paths:
-  /pub/dex/pair_info/{pair}/{timestamp}:
+  /pub/dex/lp_price/{pair}/{timestamp}:
     get:
       consumes:
       - application/json
-      description: 获取pair信息,含pair的lp Token内容
-      operationId: PairInfoHandler
+      description: 获取token信息,含pair的lp Token内容
+      operationId: PairLpPriceSignHandler
       parameters:
       - default: 0x21b8065d10f73ee2e260e5b47d3344d3ced7596e
-        description: pair地址
+        description: token地址
         in: path
         name: pair
         required: true
@@ -174,7 +198,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: pair info
           headers:
             sign:
               description: 签名信息
@@ -185,7 +209,7 @@ paths:
           description: 失败时，有相应测试日志输出
           schema:
             $ref: '#/definitions/controls.ApiErr'
-      summary: '获取pair信息:'
+      summary: '获取token价格信息:'
       tags:
       - default
   /pub/dex/token_price/{token}/{timestamp}:
@@ -224,11 +248,47 @@ paths:
       summary: '获取token价格信息:'
       tags:
       - default
+  /pub/internal/dex/lp_price/{pair}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 内部单节点获取pair价格信息
+      operationId: PairLpPriceHandler
+      parameters:
+      - default: 0x21b8065d10f73ee2e260e5b47d3344d3ced7596e
+        description: pair地址
+        in: path
+        name: pair
+        required: true
+        type: string
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.PairInfo'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取pair信息:'
+      tags:
+      - default
   /pub/internal/dex/token_price/{token}/{timestamp}:
     get:
       consumes:
       - application/json
-      description: 获取token信息,含pair的lp Token内容
+      description: 内部单节点获取token信息,含pair的lp Token内容
       operationId: TokenPriceHandler
       parameters:
       - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
@@ -252,7 +312,7 @@ paths:
               description: 签名信息
               type: string
           schema:
-            $ref: '#/definitions/services.TokenInfoPriceView'
+            $ref: '#/definitions/services.PriceView'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
