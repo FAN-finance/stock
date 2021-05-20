@@ -34,7 +34,7 @@ var doc = `{
     "paths": {
         "/pub/dex/lp_price/{pair}/{timestamp}": {
             "get": {
-                "description": "获取token信息,含pair的lp Token内容",
+                "description": "获取lp价格信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -44,7 +44,7 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取token价格信息:",
+                "summary": "获取lp价格信息",
                 "operationId": "PairLpPriceSignHandler",
                 "parameters": [
                     {
@@ -85,9 +85,9 @@ var doc = `{
                 }
             }
         },
-        "/pub/dex/token_price/{token}/{timestamp}": {
+        "/pub/dex/token_chart_prices/{token}/{count}/{interval}/{timestamp}": {
             "get": {
-                "description": "获取token信息,含pair的lp Token内容",
+                "description": "获取token不同时间的介格图表信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -97,7 +97,150 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取token价格信息:",
+                "summary": "获取token不同时间的介格图表信息",
+                "operationId": "TokenDayPricesHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "获取多少个数据点",
+                        "name": "count",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "15minite",
+                            "hour",
+                            "day",
+                            "1w",
+                            "1m"
+                        ],
+                        "type": "string",
+                        "default": "day",
+                        "description": "数据间隔 15minite hour day 1w(1周) 1m (1月) ",
+                        "name": "interval",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.BlockPrice"
+                            }
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/dex/token_day_datas/{token}/{days}/{timestamp}": {
+            "get": {
+                "description": "获取token相应天数的统计图表信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token相应天数的统计图表信息",
+                "operationId": "TokenDayDatasHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 14,
+                        "description": "获取最近多少天的数据",
+                        "name": "days",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.TokenDayData"
+                            }
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/dex/token_price/{token}/{timestamp}": {
+            "get": {
+                "description": "获取token价格信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token价格信息,内部单节点",
                 "operationId": "TokenPriceSignHandler",
                 "parameters": [
                     {
@@ -140,7 +283,7 @@ var doc = `{
         },
         "/pub/internal/dex/lp_price/{pair}/{timestamp}": {
             "get": {
-                "description": "内部单节点获取pair价格信息",
+                "description": "内部单节点获取lp价格信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -150,7 +293,7 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取pair信息:",
+                "summary": "获取lp价格信息,内部单节点:",
                 "operationId": "PairLpPriceHandler",
                 "parameters": [
                     {
@@ -203,7 +346,7 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取token价格信息:",
+                "summary": "获取token价格信息,内部单节点",
                 "operationId": "TokenPriceHandler",
                 "parameters": [
                     {
@@ -573,6 +716,23 @@ var doc = `{
                 }
             }
         },
+        "services.BlockPrice": {
+            "type": "object",
+            "properties": {
+                "blockTime": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                }
+            }
+        },
         "services.PairInfo": {
             "type": "object",
             "properties": {
@@ -726,6 +886,43 @@ var doc = `{
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "services.TokenDayData": {
+            "type": "object",
+            "properties": {
+                "__typename": {
+                    "type": "string"
+                },
+                "dailyVolumeETH": {
+                    "type": "string"
+                },
+                "dailyVolumeToken": {
+                    "type": "string"
+                },
+                "dailyVolumeUSD": {
+                    "description": "每天成交量",
+                    "type": "string"
+                },
+                "date": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "priceUSD": {
+                    "description": "每天最后一次价格",
+                    "type": "string"
+                },
+                "totalLiquidityETH": {
+                    "type": "string"
+                },
+                "totalLiquidityToken": {
+                    "type": "string"
+                },
+                "totalLiquidityUSD": {
+                    "type": "string"
                 }
             }
         },

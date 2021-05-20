@@ -83,7 +83,7 @@ END:
 type BlockPrice struct {
 	ID int
 	Price float64
-	BlockTime uint64
+	BlockTime uint64 `gorm:"index:,sort:desc"`
 	CreatedAt time.Time
 }
 func (bp BlockPrice )GetPrice() float64{

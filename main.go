@@ -93,6 +93,8 @@ func main() {
 	api.GET("/dex/lp_price/:pair/:timestamp", controls.PairLpPriceSignHandler)
 	api.GET("/internal/dex/token_price/:token/:timestamp", controls.TokenPriceHandler)
 	api.GET("/dex/token_price/:token/:timestamp", controls.TokenPriceSignHandler)
+	api.GET("/dex/token_day_datas/:token/:days/:timestamp", controls.TokenDayDatasHandler)
+	api.GET("/dex/token_chart_prices/:token/:count/:interval/:timestamp", controls.TokenDayPricesHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context){
