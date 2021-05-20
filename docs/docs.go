@@ -87,7 +87,7 @@ var doc = `{
         },
         "/pub/dex/token_chart_prices/{token}/{count}/{interval}/{timestamp}": {
             "get": {
-                "description": "获取token不同时间的介格图表信息",
+                "description": "获取token不同时间区间的价格图表信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -97,7 +97,7 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取token不同时间的介格图表信息",
+                "summary": "获取token不同时间区间的价格图表信息",
                 "operationId": "TokenDayPricesHandler",
                 "parameters": [
                     {
