@@ -68,7 +68,7 @@ func getTokenTimes(interval string, count int )([]int64){
 		item:=ttime.Add(-1* span* time.Duration(i))
 		timeItems=append(timeItems,item.Unix())
 	}
-	//timeItems=append(timeItems,now.Unix())
+	timeItems=append(timeItems,now.Unix())
 	return timeItems
 }
 
