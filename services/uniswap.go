@@ -64,7 +64,7 @@ func getTokenTimes(interval string, count int )([]int64){
 	}
 	timeItems:=[]int64{}
 	ttime:=now.Truncate(span)
-	for i:=count-2;i>-1;i--{
+	for i:=count-1;i>-1;i--{
 		item:=ttime.Add(-1* span* time.Duration(i))
 		timeItems=append(timeItems,item.Unix())
 	}
@@ -130,14 +130,25 @@ func GetTokenTimesPrice(tokenAddre string ,interval string, count int )([]*Block
 			err = json.Unmarshal(bs, &res)
 			if err == nil {
 				//log.Println(res)
-				for _, item := range bps {
+				preTime:=uint64(0)
+				for idx, item := range bps {
 					key := fmt.Sprintf("t%d", item.BlockTime)
 					log.Println("key",key,item.ID)
 					resItem, ok := res[key]
 					if ok {
 						ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
 						item.Price = RoundPrice(ethValue * item.Price)
+					}else{
+						if idx>0{
+							item.Price=	bps[idx-1].Price
+						}
 					}
+					if idx>0{
+						preTime,item.BlockTime=item.BlockTime,preTime //bps[idx-1].BlockTime
+					}
+				}
+				if len(bps)>1{
+					bps=bps[1:len(bps)]
 				}
 			}
 		}
