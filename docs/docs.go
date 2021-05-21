@@ -334,6 +334,59 @@ var doc = `{
                 }
             }
         },
+        "/pub/internal/dex/token_info/{token}/{timestamp}": {
+            "get": {
+                "description": "内部单节点获取token信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token信息,内部单节点",
+                "operationId": "TokenInfoHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.TokenInfo"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/internal/dex/token_price/{token}/{timestamp}": {
             "get": {
                 "description": "内部单节点获取token信息,含pair的lp Token内容",
@@ -843,6 +896,9 @@ var doc = `{
                 },
                 "code": {
                     "type": "string"
+                },
+                "isStockTime": {
+                    "type": "boolean"
                 },
                 "sign": {
                     "description": "计算平均价格的节点的签名",

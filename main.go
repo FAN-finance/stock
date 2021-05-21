@@ -92,6 +92,7 @@ func main() {
 	api.GET("/internal/dex/lp_price/:pair/:timestamp", controls.PairLpPriceHandler)
 	api.GET("/dex/lp_price/:pair/:timestamp", controls.PairLpPriceSignHandler)
 	api.GET("/internal/dex/token_price/:token/:timestamp", controls.TokenPriceHandler)
+	api.GET("/internal/dex/token_info/:token/:timestamp", controls.TokenInfoHandler)
 	api.GET("/dex/token_price/:token/:timestamp", controls.TokenPriceSignHandler)
 	api.GET("/dex/token_day_datas/:token/:days/:timestamp", controls.TokenDayDatasHandler)
 	api.GET("/dex/token_chart_prices/:token/:count/:interval/:timestamp", controls.TokenDayPricesHandler)

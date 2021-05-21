@@ -33,6 +33,7 @@ type ViewStock struct {
 }
 type StockData struct {
 	Code string
+	IsStockTime bool
 	Sign      []byte  //计算平均价格的节点的签名
 	Price  float32 `json:"Price" gorm:"DEFAULT:null;"`  //平均价
 	// Multiply the Price by 1000000000000000000 to remove decimals
@@ -66,7 +67,22 @@ func (Stock) TableName() string {
 func (ViewStock) TableName() string {
 	return "stocks"
 }
+func UsdStockTime() bool{
+	now:=time.Now().UTC()
+	week:=now.Weekday()
+	if week==0 || week==6{
+		//log.Println("周未休息两小时")
+		return false
+	}
 
+	y, m, d := now.Date()
+	stime := time.Date(y, m, d, 13, 30, 0, 0, time.UTC)
+	etime := time.Date(y, m, d, 20, 00, 0, 0, time.UTC)
+	if now.Unix() < stime.Unix() || now.Unix() > etime.Unix() {
+		return  false
+	}
+	return true
+}
 
 //苹果代码  AAPL  ,苹果代码 TSLA
 func GetStocks() {
