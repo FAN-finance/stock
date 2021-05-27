@@ -210,7 +210,147 @@ type TokenInfo struct {
 	TradeVolumeUSD     string `json:"tradeVolumeUSD"`
 	TxCount            string `json:"txCount"`
 	UntrackedVolumeUSD string `json:"untrackedVolumeUSD"`
+	BlockTime uint64 `json:",omitempty"`
+	//最近24小时统计
+	OneDayStat OneDayStat `json:"oneDayStat"`
 }
+type OneDayStat struct{
+	VolumeUsd float64  `json:"VolumeUsd"`
+	//变化百分比
+	VolumeChange float64 `json:"volumeChange"`
+
+	LiquidityUsd   float64 `json:"liquidityUsd"`
+	//变化百分比
+	LiquidityChange float64 `json:"liquidityChange"`
+
+	TxCount float64 `json:"txCount"`
+	//变化百分比
+	TxCountChange float64 `json:"txCountChange"`
+
+	PriceChange float64  `json:"priceChange"`
+}
+//TotalLiquidity TradeVolumeUSD  TxCount PriceUsd
+func GetTokenInfosForStat(tokenAddre string,ethPrice float64)(OneDayStat,error) {
+	//{"operationName":"blocks","variables":{},"query":"query blocks {
+	//	\nt1620871200: token(id: \"0xbc396689893d065f41bc2c6ecbee5e0085233447\", block: {number: 12423239}) {\n    derivedETH\n    __typename\n  }\n
+	//	\n}\n"}
+	//
+	var times []int64
+	now:=time.Now().UTC().Truncate(-3*time.Minute)
+	oneDay:=now.Add(time.Hour* -24)
+	twoDay:=now.Add(time.Hour* -48)
+	times=[]int64{twoDay.Unix(),oneDay.Unix(),now.Unix()}
+	//times=[]int64{12427306,12429525}
+	//times = getTokenTimes(interval, count)
+	bps, err := getBlockPrices(times)
+	log.Println(times)
+	if err == nil {
+		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
+		for _, item := range bps {
+			gql += fmt.Sprintf(`\nt%d: token(id: \"%s\", block: {number: %d}) {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n}`, item.BlockTime, tokenAddre, item.ID)
+		}
+		gql += `\n}\n"}`
+
+		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
+		err=err1
+		if err == nil {
+			//使其直接返回字符串
+			bs = bytes.TrimPrefix(bs, []byte(`{"data":`))
+			bs = bytes.TrimSuffix(bs, []byte(`}`))
+			res := map[string]*TokenInfo{}
+			err = json.Unmarshal(bs, &res)
+			if err == nil {
+				//log.Println(res)
+				tokens:=[]*TokenInfo{}
+				for _, item := range bps {
+					key := fmt.Sprintf("t%d", item.BlockTime)
+					log.Println("key",key,item.ID)
+					resItem, ok := res[key]
+					if ok {
+						tokens=append(tokens,resItem)
+						resItem.BlockTime=item.BlockTime
+					}
+				}
+				log.Println("GetTokenInfosForStat got tokens",len(tokens))
+				if len(tokens)<3 {
+					for i := 0; i < 3-len(tokens); i++ {
+						tokens = append(tokens, tokens[len(tokens)-1])
+					}
+				}
+				ost:=new(OneDayStat)
+				ost.LiquidityUsd,ost.LiquidityChange=get2DayPercentChangeFloat( parseFloat(tokens[2].TotalLiquidity)* bps[2].Price,parseFloat(tokens[1].TotalLiquidity)* bps[1].Price,parseFloat(tokens[0].TotalLiquidity)* bps[0].Price)
+				//ost.LiquidityUsd=RoundPrice(ost.LiquidityUsd*ethPrice)
+
+				ost.VolumeUsd,ost.VolumeChange=get2DayPercentChange(tokens[2].TradeVolumeUSD,tokens[1].TradeVolumeUSD,tokens[0].TradeVolumeUSD)
+
+				ost.TxCount,ost.TxCountChange=get2DayPercentChange(tokens[2].TxCount,tokens[1].TxCount,tokens[0].TxCount)
+
+				ost.PriceChange=getPercentChange(parseFloat( tokens[2].DerivedETH)* bps[2].Price,parseFloat( tokens[1].DerivedETH)*bps[1].Price)
+
+				log.Println(*ost)
+				return *ost,nil
+				//ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
+				//item.Price = RoundPrice(ethValue * item.Price)
+				//TotalLiquidity TradeVolumeUSD  TxCount PriceChange
+			}
+		}
+		//log.Println(gql ,string(bs),err)
+	}
+	if err != nil {
+		log.Println(err)
+	}
+	return OneDayStat{}, err
+}
+func parseFloat(fstr string)float64{
+	fvalue, _ := strconv.ParseFloat(fstr, 64)
+	return fvalue
+}
+func get2DayPercentChangeFloat(valueNow, value24HoursAgo, value48HoursAgo float64) (float64,float64){
+	log.Println(valueNow, value24HoursAgo, value48HoursAgo )
+	// get volume info for both 24 hour periods
+	var currentChange = valueNow - (value24HoursAgo)
+	var previousChange = (value24HoursAgo) - (value48HoursAgo)
+	if previousChange == 0 {
+		return currentChange,0
+	}
+	var adjustedPercentChange = (currentChange - previousChange) / previousChange * 100
+	//	if (isNaN(adjustedPercentChange) || !isFinite(adjustedPercentChange)) {
+	//		return [currentChange, 0]
+	//}
+	return currentChange, adjustedPercentChange
+}
+func  get2DayPercentChange(valueNow, value24HoursAgo, value48HoursAgo string) (float64,float64){
+	log.Println(valueNow, value24HoursAgo, value48HoursAgo )
+	// get volume info for both 24 hour periods
+	var currentChange = parseFloat(valueNow) - parseFloat(value24HoursAgo)
+	var previousChange = parseFloat(value24HoursAgo) - parseFloat(value48HoursAgo)
+	if previousChange == 0 {
+		return currentChange,0
+	}
+	var adjustedPercentChange = (currentChange - previousChange) / previousChange * 100
+	//	if (isNaN(adjustedPercentChange) || !isFinite(adjustedPercentChange)) {
+	//		return [currentChange, 0]
+	//}
+	return currentChange, adjustedPercentChange
+}
+func  getPercentChange(valueNow, value24HoursAgo float64) (float64){
+	log.Println("getPercentChange",valueNow, value24HoursAgo )
+	// get volume info for both 24 hour periods
+	//var currentChange = parseFloat(valueNow)
+	//var previousChange = parseFloat(value24HoursAgo)
+	var currentChange = valueNow
+	var previousChange =value24HoursAgo
+	if previousChange == 0 {
+		return 0
+	}
+	var adjustedPercentChange = (currentChange - previousChange) / previousChange * 100
+	//	if (isNaN(adjustedPercentChange) || !isFinite(adjustedPercentChange)) {
+	//		return [currentChange, 0]
+	//}
+	return  adjustedPercentChange
+}
+
+//TotalLiquidity TradeVolume TxCount
 type PriceView struct {
 	PriceUsd float64
 	BigPrice string

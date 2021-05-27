@@ -32,10 +32,10 @@ type ViewStock struct {
 	UpdatedAt *time.Time  `json:"UpdatedAt" example:"2021-05-07T18:25:44.27+08:00"`
 }
 type StockData struct {
-	Code string
-	IsStockTime bool
-	Sign      []byte  //计算平均价格的节点的签名
-	Price  float32 `json:"Price" gorm:"DEFAULT:null;"`  //平均价
+	Code            string
+	IsMarketOpening bool
+	Sign            []byte  //计算平均价格的节点的签名
+	Price           float32 `json:"Price" gorm:"DEFAULT:null;"`  //平均价
 	// Multiply the Price by 1000000000000000000 to remove decimals
 	BigPrice  string
 	Timestamp int64   `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数

@@ -104,6 +104,14 @@ func SignMsg(message []byte)[]byte{
 	}
 	return  sig
 }
+
+func Verify(hash, sig []byte,addre string)(bool,error){
+	pubKey,err:=crypto.SigToPub(hash,sig)
+	if err == nil{
+		return addre==crypto.PubkeyToAddress(*pubKey).Hex(),nil
+	}
+	return  false ,err
+}
 var keyFpath ="asset/pkey"
 func GenKeyFile(){
 	fi,err:=os.Stat(keyFpath)

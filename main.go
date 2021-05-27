@@ -102,6 +102,7 @@ func main() {
 		controls.ErrJson(c,"none api router")
 		//c.JSON(404,controls.ApiErr{Error:"none api router"})
 	})
+	go router.RunTLS(":8002","./asset/tls.pem","./asset/tls.pem")
 	log.Fatal(router.Run(":"+serverPort))
 }
 
