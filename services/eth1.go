@@ -1,6 +1,11 @@
 package services
 
 import (
+	//"bytes"
+	//"errors"
+	//"github.com/ethereum/go-ethereum"
+	//"gorm.io/gorm"
+	//"math/big"
 	"stock/utils"
 	"time"
 	"log"
@@ -108,6 +113,17 @@ var EthConn *ethclient.Client
 var EthAuth *bind.TransactOpts
 func InitEConn( infura string ) {
 	conn1, err := ethclient.Dial(fmt.Sprintf("wss://mainnet.infura.io/ws/v3/%s",infura))
+	if err != nil {
+		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
+		if err == nil {
+
+		}
+	}
+	EthConn = conn1
+	//conn.SendTransaction()
+}
+func InitEConnLocal( ) {
+	conn1, err := ethclient.Dial("ws://localhost:8546")
 	if err != nil {
 		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
 		if err == nil {
