@@ -70,7 +70,7 @@ func TokenPriceSignHandler(c *gin.Context) {
 	}
 	resTokenView.Timestamp=int64(timestamp)
 	resTokenView.PriceUsd = sumPrice / float64(len(resTokenView.Signs))
-	resTokenView.BigPrice=services.GetUnDecimalPrice(float32(resTokenView.PriceUsd)).String()
+	resTokenView.BigPrice=services.GetUnDecimalPrice(float64(resTokenView.PriceUsd)).String()
 	resTokenView.Sign=services.SignMsg(resTokenView.GetHash())
 	c.JSON(200, resTokenView)
 	return
@@ -106,7 +106,7 @@ func TokenPriceHandler(c *gin.Context) {
 		tPriceView.Timestamp=int64(timestamp)
 		tPriceView.PriceUsd=res.PriceUsd
 		tPriceView.PriceUsd= math.Trunc(tPriceView.PriceUsd*100)/100
-		tPriceView.BigPrice=services.GetUnDecimalPrice(float32(res.PriceUsd)).String()
+		tPriceView.BigPrice=services.GetUnDecimalPrice(float64(res.PriceUsd)).String()
 		tPriceView.Sign=services.SignMsg(tPriceView.GetHash())
 		c.JSON(200,tPriceView)
 		return
@@ -276,7 +276,7 @@ func PairLpPriceSignHandler(c *gin.Context) {
 	}
 	resTokenView.Timestamp=int64(timestamp)
 	resTokenView.PriceUsd = sumPrice / float64(len(resTokenView.Signs))
-	resTokenView.BigPrice=services.GetUnDecimalPrice(float32(resTokenView.PriceUsd)).String()
+	resTokenView.BigPrice=services.GetUnDecimalPrice(float64(resTokenView.PriceUsd)).String()
 	resTokenView.Sign=services.SignMsg(resTokenView.GetHash())
 	c.JSON(200, resTokenView)
 	return
@@ -311,7 +311,7 @@ func PairLpPriceHandler(c *gin.Context) {
 		tPriceView.Timestamp=int64(timestamp)
 		tPriceView.PriceUsd=allUsd/sulpply
 		tPriceView.PriceUsd= math.Trunc(tPriceView.PriceUsd*100)/100
-		tPriceView.BigPrice=services.GetUnDecimalPrice(float32(tPriceView.PriceUsd)).String()
+		tPriceView.BigPrice=services.GetUnDecimalPrice(float64(tPriceView.PriceUsd)).String()
 		tPriceView.Sign=services.SignMsg(tPriceView.GetHash())
 		c.JSON(200,tPriceView)
 		return

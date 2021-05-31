@@ -352,7 +352,33 @@ func  getPercentChange(valueNow, value24HoursAgo float64) (float64){
 	return  adjustedPercentChange
 }
 
-//TotalLiquidity TradeVolume TxCount
+type CoinPriceView struct {
+	Price float64
+	BigPrice string
+	Node string
+	Timestamp int64
+	//目标币价
+	Coin string
+	//vs币价
+	VsCoin string
+	//Sign_Hash值由 Timestamp+Coin+VsCoin+BigPrice计算
+	Sign []byte
+	//Signs []*PriceView `json:",omitempty"`
+}
+type DataCoinPriceView struct {
+	Price float64
+	BigPrice string
+	Timestamp int64
+	//目标币价
+	Coin string
+	//vs币价
+	VsCoin string
+	//Sign_Hash值由 Timestamp+Coin+VsCoin+BigPricey计算
+	Sign []byte
+	Signs []*CoinPriceView `json:",omitempty"`
+}
+
+
 type PriceView struct {
 	PriceUsd float64
 	BigPrice string

@@ -45,6 +45,48 @@ definitions:
       price:
         type: number
     type: object
+  services.CoinPriceView:
+    properties:
+      bigPrice:
+        type: string
+      coin:
+        description: 目标币价
+        type: string
+      node:
+        type: string
+      price:
+        type: number
+      sign:
+        description: Sign_Hash值由 Timestamp+Coin+VsCoin+BigPrice计算
+        items:
+          type: integer
+        type: array
+      timestamp:
+        type: integer
+      vsCoin:
+        description: vs币价
+        type: string
+    type: object
+  services.OneDayStat:
+    properties:
+      VolumeUsd:
+        type: number
+      liquidityChange:
+        description: 变化百分比
+        type: number
+      liquidityUsd:
+        type: number
+      priceChange:
+        type: number
+      txCount:
+        type: number
+      txCountChange:
+        description: 变化百分比
+        type: number
+      volumeChange:
+        description: 变化百分比
+        type: number
+    type: object
   services.PairInfo:
     properties:
       createdAtBlockNumber:
@@ -119,7 +161,7 @@ definitions:
         type: string
       code:
         type: string
-      isStockTime:
+      isMarketOpening:
         type: boolean
       sign:
         description: 计算平均价格的节点的签名
@@ -179,12 +221,17 @@ definitions:
     type: object
   services.TokenInfo:
     properties:
+      blockTime:
+        type: integer
       decimals:
         type: string
       derivedETH:
         type: string
       name:
         type: string
+      oneDayStat:
+        $ref: '#/definitions/services.OneDayStat'
+        description: 最近24小时统计
       priceUsd:
         type: number
       symbol:
@@ -214,6 +261,174 @@ info:
   title: stock-info-api
   version: "1.0"
 paths:
+  /pub/coin_price/{coin}/{vs_coin}:
+    get:
+      consumes:
+      - application/json
+      description: 获取币价换算，多节点签名版
+      operationId: CoinPriceSignHandler
+      parameters:
+      - default: eth
+        description: 目标币价
+        enum:
+        - btc
+        - aed
+        - ars
+        - aud
+        - bch
+        - bdt
+        - bhd
+        - bits
+        - bmd
+        - bnb
+        - brl
+        - byn
+        - cad
+        - chf
+        - clp
+        - cny
+        - czk
+        - dkk
+        - dot
+        - eos
+        - eth
+        - eur
+        - gbp
+        - hkd
+        - huf
+        - idr
+        - ils
+        - inr
+        - jpy
+        - krw
+        - kwd
+        - link
+        - lkr
+        - ltc
+        - mmk
+        - mxn
+        - myr
+        - ngn
+        - nok
+        - nzd
+        - php
+        - pkr
+        - pln
+        - rub
+        - sar
+        - sats
+        - sek
+        - sgd
+        - thb
+        - try
+        - twd
+        - uah
+        - usd
+        - vef
+        - vnd
+        - xag
+        - xau
+        - xdr
+        - xlm
+        - xrp
+        - yfi
+        - zar
+        in: path
+        name: coin
+        required: true
+        type: string
+      - default: usd
+        description: vs币价
+        enum:
+        - btc
+        - aed
+        - ars
+        - aud
+        - bch
+        - bdt
+        - bhd
+        - bits
+        - bmd
+        - bnb
+        - brl
+        - byn
+        - cad
+        - chf
+        - clp
+        - cny
+        - czk
+        - dkk
+        - dot
+        - eos
+        - eth
+        - eur
+        - gbp
+        - hkd
+        - huf
+        - idr
+        - ils
+        - inr
+        - jpy
+        - krw
+        - kwd
+        - link
+        - lkr
+        - ltc
+        - mmk
+        - mxn
+        - myr
+        - ngn
+        - nok
+        - nzd
+        - php
+        - pkr
+        - pln
+        - rub
+        - sar
+        - sats
+        - sek
+        - sgd
+        - thb
+        - try
+        - twd
+        - uah
+        - usd
+        - vef
+        - vnd
+        - xag
+        - xau
+        - xdr
+        - xlm
+        - xrp
+        - yfi
+        - zar
+        in: path
+        name: vs_coin
+        required: true
+        type: string
+      - default: 1620383144
+        description: unix 秒数
+        in: query
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.CoinPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取币价换算，多节点签名版
+      tags:
+      - default
   /pub/dex/lp_price/{pair}/{timestamp}:
     get:
       consumes:
@@ -384,6 +599,174 @@ paths:
           schema:
             $ref: '#/definitions/controls.ApiErr'
       summary: 获取token价格信息,内部单节点
+      tags:
+      - default
+  /pub/internal/coin_price/{coin}/{vs_coin}:
+    get:
+      consumes:
+      - application/json
+      description: 获取币价换算，内部单节点
+      operationId: CoinPriceHandler
+      parameters:
+      - default: eth
+        description: 目标币价
+        enum:
+        - btc
+        - aed
+        - ars
+        - aud
+        - bch
+        - bdt
+        - bhd
+        - bits
+        - bmd
+        - bnb
+        - brl
+        - byn
+        - cad
+        - chf
+        - clp
+        - cny
+        - czk
+        - dkk
+        - dot
+        - eos
+        - eth
+        - eur
+        - gbp
+        - hkd
+        - huf
+        - idr
+        - ils
+        - inr
+        - jpy
+        - krw
+        - kwd
+        - link
+        - lkr
+        - ltc
+        - mmk
+        - mxn
+        - myr
+        - ngn
+        - nok
+        - nzd
+        - php
+        - pkr
+        - pln
+        - rub
+        - sar
+        - sats
+        - sek
+        - sgd
+        - thb
+        - try
+        - twd
+        - uah
+        - usd
+        - vef
+        - vnd
+        - xag
+        - xau
+        - xdr
+        - xlm
+        - xrp
+        - yfi
+        - zar
+        in: path
+        name: coin
+        required: true
+        type: string
+      - default: usd
+        description: vs币价
+        enum:
+        - btc
+        - aed
+        - ars
+        - aud
+        - bch
+        - bdt
+        - bhd
+        - bits
+        - bmd
+        - bnb
+        - brl
+        - byn
+        - cad
+        - chf
+        - clp
+        - cny
+        - czk
+        - dkk
+        - dot
+        - eos
+        - eth
+        - eur
+        - gbp
+        - hkd
+        - huf
+        - idr
+        - ils
+        - inr
+        - jpy
+        - krw
+        - kwd
+        - link
+        - lkr
+        - ltc
+        - mmk
+        - mxn
+        - myr
+        - ngn
+        - nok
+        - nzd
+        - php
+        - pkr
+        - pln
+        - rub
+        - sar
+        - sats
+        - sek
+        - sgd
+        - thb
+        - try
+        - twd
+        - uah
+        - usd
+        - vef
+        - vnd
+        - xag
+        - xau
+        - xdr
+        - xlm
+        - xrp
+        - yfi
+        - zar
+        in: path
+        name: vs_coin
+        required: true
+        type: string
+      - default: 1620383144
+        description: unix 秒数
+        in: query
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.CoinPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取币价换算，内部单节点
       tags:
       - default
   /pub/internal/dex/lp_price/{pair}/{timestamp}:

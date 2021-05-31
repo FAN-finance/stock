@@ -10,6 +10,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
+	github.com/gorilla/websocket v1.4.2
 	github.com/itsjamie/gin-cors v0.0.0-20160420130702-97b4a9da7933
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/rickar/cal/v2 v2.0.0

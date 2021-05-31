@@ -11,7 +11,7 @@ import (
 )
 import "github.com/ethereum/go-ethereum/common"
 
-func GetUnDecimalPrice(price float32 )*big.Int{
+func GetUnDecimalPrice(price float64 )*big.Int{
 	pint:= new(big.Int)
 	//pfloat:= new(big.Float)
 	//f32str := strconv.FormatFloat(float64(price), 'g', -1, 32)
@@ -53,6 +53,39 @@ func (s *DataPriceView)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.BigPrice),
+	)
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
+func (s *CoinPriceView)GetHash()[]byte{
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.Coin),
+		[]byte(s.VsCoin),
+		[]byte(s.BigPrice),
+	)
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
+
+func (s *DataCoinPriceView)GetHash()[]byte{
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.Coin),
+		[]byte(s.VsCoin),
 		[]byte(s.BigPrice),
 	)
 	// normally we sign prefixed hash

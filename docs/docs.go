@@ -32,6 +32,195 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/pub/coin_price/{coin}/{vs_coin}": {
+            "get": {
+                "description": "获取币价换算，多节点签名版",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取币价换算，多节点签名版",
+                "operationId": "CoinPriceSignHandler",
+                "parameters": [
+                    {
+                        "enum": [
+                            "btc",
+                            "aed",
+                            "ars",
+                            "aud",
+                            "bch",
+                            "bdt",
+                            "bhd",
+                            "bits",
+                            "bmd",
+                            "bnb",
+                            "brl",
+                            "byn",
+                            "cad",
+                            "chf",
+                            "clp",
+                            "cny",
+                            "czk",
+                            "dkk",
+                            "dot",
+                            "eos",
+                            "eth",
+                            "eur",
+                            "gbp",
+                            "hkd",
+                            "huf",
+                            "idr",
+                            "ils",
+                            "inr",
+                            "jpy",
+                            "krw",
+                            "kwd",
+                            "link",
+                            "lkr",
+                            "ltc",
+                            "mmk",
+                            "mxn",
+                            "myr",
+                            "ngn",
+                            "nok",
+                            "nzd",
+                            "php",
+                            "pkr",
+                            "pln",
+                            "rub",
+                            "sar",
+                            "sats",
+                            "sek",
+                            "sgd",
+                            "thb",
+                            "try",
+                            "twd",
+                            "uah",
+                            "usd",
+                            "vef",
+                            "vnd",
+                            "xag",
+                            "xau",
+                            "xdr",
+                            "xlm",
+                            "xrp",
+                            "yfi",
+                            "zar"
+                        ],
+                        "type": "string",
+                        "default": "eth",
+                        "description": "目标币价",
+                        "name": "coin",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "btc",
+                            "aed",
+                            "ars",
+                            "aud",
+                            "bch",
+                            "bdt",
+                            "bhd",
+                            "bits",
+                            "bmd",
+                            "bnb",
+                            "brl",
+                            "byn",
+                            "cad",
+                            "chf",
+                            "clp",
+                            "cny",
+                            "czk",
+                            "dkk",
+                            "dot",
+                            "eos",
+                            "eth",
+                            "eur",
+                            "gbp",
+                            "hkd",
+                            "huf",
+                            "idr",
+                            "ils",
+                            "inr",
+                            "jpy",
+                            "krw",
+                            "kwd",
+                            "link",
+                            "lkr",
+                            "ltc",
+                            "mmk",
+                            "mxn",
+                            "myr",
+                            "ngn",
+                            "nok",
+                            "nzd",
+                            "php",
+                            "pkr",
+                            "pln",
+                            "rub",
+                            "sar",
+                            "sats",
+                            "sek",
+                            "sgd",
+                            "thb",
+                            "try",
+                            "twd",
+                            "uah",
+                            "usd",
+                            "vef",
+                            "vnd",
+                            "xag",
+                            "xau",
+                            "xdr",
+                            "xlm",
+                            "xrp",
+                            "yfi",
+                            "zar"
+                        ],
+                        "type": "string",
+                        "default": "usd",
+                        "description": "vs币价",
+                        "name": "vs_coin",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "unix 秒数",
+                        "name": "timestamp",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.CoinPriceView"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/dex/lp_price/{pair}/{timestamp}": {
             "get": {
                 "description": "获取lp价格信息",
@@ -264,6 +453,195 @@ var doc = `{
                         "description": "stock info",
                         "schema": {
                             "$ref": "#/definitions/services.TokenInfo"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/internal/coin_price/{coin}/{vs_coin}": {
+            "get": {
+                "description": "获取币价换算，内部单节点",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取币价换算，内部单节点",
+                "operationId": "CoinPriceHandler",
+                "parameters": [
+                    {
+                        "enum": [
+                            "btc",
+                            "aed",
+                            "ars",
+                            "aud",
+                            "bch",
+                            "bdt",
+                            "bhd",
+                            "bits",
+                            "bmd",
+                            "bnb",
+                            "brl",
+                            "byn",
+                            "cad",
+                            "chf",
+                            "clp",
+                            "cny",
+                            "czk",
+                            "dkk",
+                            "dot",
+                            "eos",
+                            "eth",
+                            "eur",
+                            "gbp",
+                            "hkd",
+                            "huf",
+                            "idr",
+                            "ils",
+                            "inr",
+                            "jpy",
+                            "krw",
+                            "kwd",
+                            "link",
+                            "lkr",
+                            "ltc",
+                            "mmk",
+                            "mxn",
+                            "myr",
+                            "ngn",
+                            "nok",
+                            "nzd",
+                            "php",
+                            "pkr",
+                            "pln",
+                            "rub",
+                            "sar",
+                            "sats",
+                            "sek",
+                            "sgd",
+                            "thb",
+                            "try",
+                            "twd",
+                            "uah",
+                            "usd",
+                            "vef",
+                            "vnd",
+                            "xag",
+                            "xau",
+                            "xdr",
+                            "xlm",
+                            "xrp",
+                            "yfi",
+                            "zar"
+                        ],
+                        "type": "string",
+                        "default": "eth",
+                        "description": "目标币价",
+                        "name": "coin",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "btc",
+                            "aed",
+                            "ars",
+                            "aud",
+                            "bch",
+                            "bdt",
+                            "bhd",
+                            "bits",
+                            "bmd",
+                            "bnb",
+                            "brl",
+                            "byn",
+                            "cad",
+                            "chf",
+                            "clp",
+                            "cny",
+                            "czk",
+                            "dkk",
+                            "dot",
+                            "eos",
+                            "eth",
+                            "eur",
+                            "gbp",
+                            "hkd",
+                            "huf",
+                            "idr",
+                            "ils",
+                            "inr",
+                            "jpy",
+                            "krw",
+                            "kwd",
+                            "link",
+                            "lkr",
+                            "ltc",
+                            "mmk",
+                            "mxn",
+                            "myr",
+                            "ngn",
+                            "nok",
+                            "nzd",
+                            "php",
+                            "pkr",
+                            "pln",
+                            "rub",
+                            "sar",
+                            "sats",
+                            "sek",
+                            "sgd",
+                            "thb",
+                            "try",
+                            "twd",
+                            "uah",
+                            "usd",
+                            "vef",
+                            "vnd",
+                            "xag",
+                            "xau",
+                            "xdr",
+                            "xlm",
+                            "xrp",
+                            "yfi",
+                            "zar"
+                        ],
+                        "type": "string",
+                        "default": "usd",
+                        "description": "vs币价",
+                        "name": "vs_coin",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "unix 秒数",
+                        "name": "timestamp",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.CoinPriceView"
                         },
                         "headers": {
                             "sign": {
@@ -786,6 +1164,67 @@ var doc = `{
                 }
             }
         },
+        "services.CoinPriceView": {
+            "type": "object",
+            "properties": {
+                "bigPrice": {
+                    "type": "string"
+                },
+                "coin": {
+                    "description": "目标币价",
+                    "type": "string"
+                },
+                "node": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "sign": {
+                    "description": "Sign_Hash值由 Timestamp+Coin+VsCoin+BigPrice计算",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "vsCoin": {
+                    "description": "vs币价",
+                    "type": "string"
+                }
+            }
+        },
+        "services.OneDayStat": {
+            "type": "object",
+            "properties": {
+                "VolumeUsd": {
+                    "type": "number"
+                },
+                "liquidityChange": {
+                    "description": "变化百分比",
+                    "type": "number"
+                },
+                "liquidityUsd": {
+                    "type": "number"
+                },
+                "priceChange": {
+                    "type": "number"
+                },
+                "txCount": {
+                    "type": "number"
+                },
+                "txCountChange": {
+                    "description": "变化百分比",
+                    "type": "number"
+                },
+                "volumeChange": {
+                    "description": "变化百分比",
+                    "type": "number"
+                }
+            }
+        },
         "services.PairInfo": {
             "type": "object",
             "properties": {
@@ -897,7 +1336,7 @@ var doc = `{
                 "code": {
                     "type": "string"
                 },
-                "isStockTime": {
+                "isMarketOpening": {
                     "type": "boolean"
                 },
                 "sign": {
@@ -985,6 +1424,9 @@ var doc = `{
         "services.TokenInfo": {
             "type": "object",
             "properties": {
+                "blockTime": {
+                    "type": "integer"
+                },
                 "decimals": {
                     "type": "string"
                 },
@@ -993,6 +1435,10 @@ var doc = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "oneDayStat": {
+                    "description": "最近24小时统计",
+                    "$ref": "#/definitions/services.OneDayStat"
                 },
                 "priceUsd": {
                     "type": "number"
