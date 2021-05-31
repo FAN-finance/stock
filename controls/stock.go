@@ -40,11 +40,11 @@ func CoinPriceHandler(c *gin.Context) {
 	timestamp,_:=strconv.Atoi(timestampstr)
 	//err := utils.Orm.Where("code= ? and timestamp>= ? ", code,timestamp).Order("timestamp").First(info).Error
 
-	coinField:=fmt.Sprintf("cast(%s as decimal)  as coin",coin)
+	coinField:=fmt.Sprintf("cast(%s as decimal(19,6))  as coin",coin)
 	if coin=="btc"{
 		coinField="1 as coin"
 	}
-	vsCoinField:=fmt.Sprintf("cast(%s as decimal)  as vs_coin",vsCoin)
+	vsCoinField:=fmt.Sprintf("cast(%s as decimal(19,6))  as vs_coin",vsCoin)
 	if vsCoin=="btc"{
 		vsCoinField="1 as vs_coin"
 	}
