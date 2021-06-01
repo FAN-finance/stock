@@ -39,6 +39,7 @@ type StockData struct {
 	// Multiply the Price by 1000000000000000000 to remove decimals
 	BigPrice  string
 	Timestamp int64   `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
+	//所有节点签名列表
 	Signs     []StockNode
 }
 type  StockNode struct {
@@ -48,6 +49,7 @@ type  StockNode struct {
 	Price     float32 //新价
 	// Multiply the Price by 1000000000000000000 to remove decimals
 	BigPrice string
+	// Sign_Hash值由 Timestamp BigPrice Code计算
 	Sign     []byte
 }
 func(s *StockNode)SetSign( ){

@@ -43,7 +43,7 @@ func main() {
 	//pflag.StringVarP(&certFile,"cert","c","./asset/cert.pem","pem encoded x509 cert")
 	pflag.StringSliceVarP(&nodes,"nodes","n",strings.Split("http://localhost:8001,http://localhost:8001",","),"所有节点列表,节点间用逗号分开")
 	pflag.StringVarP(&env,"env","e","debug","环境名字debug prod test")
-	pflag.StringVar(&infura,"infura","infura_proj_id","infura申请的项目id")
+	pflag.StringVar(&infura,"infura","infura_proj_id","infura的项目id,需要自行去https://infura.io申请")
 	//https://api.thegraph.com/subgraphs/name/wxf4150/fanswap2 https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2
 	pflag.StringVar(&swapGraphApi,"swapGraphApi","https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2","swap theGraphApi")
 	pflag.BoolVarP(&job,"job","j",true,"是否抓取数据")
@@ -58,6 +58,7 @@ func main() {
 	if job {
 		go services.GetStocks()
 		go services.SubEthPrice(0)
+		go services.SubCoinsPrice()
 	}
 
 	services.InitNodeKey()
@@ -114,13 +115,21 @@ func main() {
 // @ID NodeStatHandler
 // @Accept  json
 // @Produce  json
-// @Success 200 {string} addr	"stock info"
+// @Success 200 {object} NodeStat	"node stat"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/stat [get]
 func NodeStatHandler(c *gin.Context) {
 	stat:=NodeStat{}
-	utils.Orm.Model(services.ViewStock{}).Count(&(stat.Rows))
+	utils.Orm.Model(services.ViewStock{}).Count(&(stat.StockRows))
+	utils.Orm.Model(services.ViewStock{}).Select("max(updated_at) ").Scan(&stat.StockUpdateAt)
+
+	coinMaxid:=0
+	utils.Orm.Model(services.Coin{}).Select("max(id)").Scan(&coinMaxid)
+	stat.CionPricesUpdateAt=time.Unix(int64(coinMaxid),0)
+
+	utils.Orm.Model(services.BlockPrice{}).Select("max(created_at)").Scan(&stat.BlockPricesUpdateAt)
+
 	stat.WalletAddre=services.WalletAddre
 	c.JSON(200,stat)
 }
@@ -131,8 +140,15 @@ type NodeStat struct {
 	Node string
 	//钱包地址
 	WalletAddre string
-	//数据库记录数
-	Rows int64
+	//股票信息数据库记录数
+	StockRows int64
+	//股票信息最后更新时间
+	StockUpdateAt time.Time
+	//币价换算信息最后更新时间
+	CionPricesUpdateAt time.Time
+	//eth价格信息最后更新时间
+	BlockPricesUpdateAt time.Time
+
 }
 // @Tags default
 // @Summary　所有节点状态:记录数,钱包地址
@@ -140,7 +156,7 @@ type NodeStat struct {
 // @ID NodeStatsHandler
 // @Accept  json
 // @Produce  json
-// @Success 200 {array} NodeStat	"stock info"
+// @Success 200 {array} NodeStat	"Node Stat list"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/stats [get]
 func NodeStatsHandler(c *gin.Context) {

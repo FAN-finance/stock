@@ -375,6 +375,7 @@ type DataCoinPriceView struct {
 	VsCoin string
 	//Sign_Hash值由 Timestamp+Coin+VsCoin+BigPricey计算
 	Sign []byte
+	//所有节点签名数据
 	Signs []*CoinPriceView `json:",omitempty"`
 }
 

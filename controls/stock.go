@@ -29,7 +29,7 @@ func (cs coinvs) TableName()string{
 // @Param     coin   path    string     true        "目标币价" default(eth) Enums(btc,aed,ars,aud,bch,bdt,bhd,bits,bmd,bnb,brl,byn,cad,chf,clp,cny,czk,dkk,dot,eos,eth,eur,gbp,hkd,huf,idr,ils,inr,jpy,krw,kwd,link,lkr,ltc,mmk,mxn,myr,ngn,nok,nzd,php,pkr,pln,rub,sar,sats,sek,sgd,thb,try,twd,uah,usd,vef,vnd,xag,xau,xdr,xlm,xrp,yfi,zar)
 // @Param     vs_coin   path    string     true        "vs币价" default(usd) Enums(btc,aed,ars,aud,bch,bdt,bhd,bits,bmd,bnb,brl,byn,cad,chf,clp,cny,czk,dkk,dot,eos,eth,eur,gbp,hkd,huf,idr,ils,inr,jpy,krw,kwd,link,lkr,ltc,mmk,mxn,myr,ngn,nok,nzd,php,pkr,pln,rub,sar,sats,sek,sgd,thb,try,twd,uah,usd,vef,vnd,xag,xau,xdr,xlm,xrp,yfi,zar)
 // @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
-// @Success 200 {object} services.CoinPriceView	"stock info"
+// @Success 200 {object} services.CoinPriceView	"Coin Price"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/coin_price/{coin}/{vs_coin} [get]
@@ -81,7 +81,7 @@ func CoinPriceHandler(c *gin.Context) {
 // @Param     coin   path    string     true        "目标币价" default(eth) Enums(btc,aed,ars,aud,bch,bdt,bhd,bits,bmd,bnb,brl,byn,cad,chf,clp,cny,czk,dkk,dot,eos,eth,eur,gbp,hkd,huf,idr,ils,inr,jpy,krw,kwd,link,lkr,ltc,mmk,mxn,myr,ngn,nok,nzd,php,pkr,pln,rub,sar,sats,sek,sgd,thb,try,twd,uah,usd,vef,vnd,xag,xau,xdr,xlm,xrp,yfi,zar)
 // @Param     vs_coin   path    string     true        "vs币价" default(usd) Enums(btc,aed,ars,aud,bch,bdt,bhd,bits,bmd,bnb,brl,byn,cad,chf,clp,cny,czk,dkk,dot,eos,eth,eur,gbp,hkd,huf,idr,ils,inr,jpy,krw,kwd,link,lkr,ltc,mmk,mxn,myr,ngn,nok,nzd,php,pkr,pln,rub,sar,sats,sek,sgd,thb,try,twd,uah,usd,vef,vnd,xag,xau,xdr,xlm,xrp,yfi,zar)
 // @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
-// @Success 200 {object} services.CoinPriceView	"stock info"
+// @Success 200 {object} services.CoinPriceView	"CoinPriceView"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/coin_price/{coin}/{vs_coin} [get]
@@ -217,7 +217,7 @@ func getAvgPrice(code string,timestamp int)(avgPrice float32,err error) {
 // @Produce  json
 // @Param     code   path    string     true        "美股代码" default(AAPL)
 // @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
-// @Success 200 {object} services.StockData	"stock info"
+// @Success 200 {object} services.StockData	"stock info list"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/aggre_info/{code}/{timestamp} [get]

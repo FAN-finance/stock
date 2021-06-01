@@ -201,7 +201,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "CoinPriceView",
                         "schema": {
                             "$ref": "#/definitions/services.CoinPriceView"
                         },
@@ -254,9 +254,12 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "pair info",
+                        "description": "pair price view list",
                         "schema": {
-                            "$ref": "#/definitions/services.PairInfo"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.PriceView"
+                            }
                         },
                         "headers": {
                             "sign": {
@@ -429,7 +432,7 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取token价格信息,内部单节点",
+                "summary": "获取token价格信息",
                 "operationId": "TokenPriceSignHandler",
                 "parameters": [
                     {
@@ -450,9 +453,9 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "token price info",
                         "schema": {
-                            "$ref": "#/definitions/services.TokenInfo"
+                            "$ref": "#/definitions/services.DataPriceView"
                         },
                         "headers": {
                             "sign": {
@@ -639,7 +642,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "Coin Price",
                         "schema": {
                             "$ref": "#/definitions/services.CoinPriceView"
                         },
@@ -692,9 +695,9 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "price vew",
                         "schema": {
-                            "$ref": "#/definitions/services.PairInfo"
+                            "$ref": "#/definitions/services.PriceView"
                         },
                         "headers": {
                             "sign": {
@@ -798,7 +801,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "Price View",
                         "schema": {
                             "$ref": "#/definitions/services.PriceView"
                         },
@@ -851,7 +854,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "stock info list",
                         "schema": {
                             "$ref": "#/definitions/services.StockData"
                         },
@@ -904,15 +907,9 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "data",
                         "schema": {
-                            "type": "string"
-                        },
-                        "headers": {
-                            "AnyApiRes": {
-                                "type": "object",
-                                "description": "data"
-                            }
+                            "$ref": "#/definitions/controls.AnyApiRes"
                         }
                     },
                     "500": {
@@ -1043,9 +1040,9 @@ var doc = `{
                 "operationId": "NodeStatHandler",
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "node stat",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.NodeStat"
                         },
                         "headers": {
                             "sign": {
@@ -1079,7 +1076,7 @@ var doc = `{
                 "operationId": "NodeStatsHandler",
                 "responses": {
                     "200": {
-                        "description": "stock info",
+                        "description": "Node Stat list",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -1133,13 +1130,25 @@ var doc = `{
         "main.NodeStat": {
             "type": "object",
             "properties": {
+                "blockPricesUpdateAt": {
+                    "description": "eth价格信息最后更新时间",
+                    "type": "string"
+                },
+                "cionPricesUpdateAt": {
+                    "description": "币价换算信息最后更新时间",
+                    "type": "string"
+                },
                 "node": {
                     "description": "节点名",
                     "type": "string"
                 },
-                "rows": {
-                    "description": "数据库记录数",
+                "stockRows": {
+                    "description": "股票信息数据库记录数",
                     "type": "integer"
+                },
+                "stockUpdateAt": {
+                    "description": "股票信息最后更新时间",
+                    "type": "string"
                 },
                 "walletAddre": {
                     "description": "钱包地址",
@@ -1196,6 +1205,34 @@ var doc = `{
                 }
             }
         },
+        "services.DataPriceView": {
+            "type": "object",
+            "properties": {
+                "bigPrice": {
+                    "type": "string"
+                },
+                "priceUsd": {
+                    "type": "number"
+                },
+                "sign": {
+                    "description": "Sign值由 Timestamp+BigPrice",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "signs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.PriceView"
+                    }
+                },
+                "timestamp": {
+                    "description": "Node string",
+                    "type": "integer"
+                }
+            }
+        },
         "services.OneDayStat": {
             "type": "object",
             "properties": {
@@ -1222,75 +1259,6 @@ var doc = `{
                 "volumeChange": {
                     "description": "变化百分比",
                     "type": "number"
-                }
-            }
-        },
-        "services.PairInfo": {
-            "type": "object",
-            "properties": {
-                "createdAtBlockNumber": {
-                    "type": "string"
-                },
-                "createdAtTimestamp": {
-                    "type": "string"
-                },
-                "liquidityProviderCount": {
-                    "type": "string"
-                },
-                "reserve0": {
-                    "type": "string"
-                },
-                "reserve1": {
-                    "type": "string"
-                },
-                "reserveETH": {
-                    "type": "string"
-                },
-                "reserveUSD": {
-                    "type": "string"
-                },
-                "token0": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "token0Price": {
-                    "type": "string"
-                },
-                "token1": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "token1Price": {
-                    "type": "string"
-                },
-                "totalSupply": {
-                    "type": "string"
-                },
-                "trackedReserveETH": {
-                    "type": "string"
-                },
-                "txCount": {
-                    "type": "string"
-                },
-                "untrackedVolumeUSD": {
-                    "type": "string"
-                },
-                "volumeToken0": {
-                    "type": "string"
-                },
-                "volumeToken1": {
-                    "type": "string"
-                },
-                "volumeUSD": {
-                    "type": "string"
                 }
             }
         },
@@ -1347,6 +1315,7 @@ var doc = `{
                     }
                 },
                 "signs": {
+                    "description": "所有节点签名列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/services.StockNode"
@@ -1377,6 +1346,7 @@ var doc = `{
                     "type": "number"
                 },
                 "sign": {
+                    "description": "Sign_Hash值由 Timestamp BigPrice Code计算",
                     "type": "array",
                     "items": {
                         "type": "integer"

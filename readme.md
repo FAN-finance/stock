@@ -84,11 +84,13 @@ Response body:
 ```shell script
 ./stock -h
 Usage of /tmp/go-build868767577/b001/exe/main:
-  -d, --db string       mysql database url (default "root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true")
-  -e, --env string      环境名字debug prod test (default "debug")
-  -n, --nodes strings   所有节点列表,节点间用逗号分开 (default [http://localhost:8001,http://localhost:8001])
-  -p, --port string     api　service port (default "8001")
-
+  -d, --db string             mysql database url (default "root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true")
+  -e, --env string            环境名字debug prod test (default "debug")
+      --infura string         infura的项目id,需要自行去https://infura.io申请 (default "infura_proj_id")
+  -j, --job                   是否抓取数据 (default true)
+  -n, --nodes strings         所有节点列表,节点间用逗号分开 (default [http://localhost:8001,http://localhost:8001])
+  -p, --port string           api　service port (default "8001")
+      --swapGraphApi string   swap theGraphApi (default "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2")
 ```
 
 ### swagger api doc

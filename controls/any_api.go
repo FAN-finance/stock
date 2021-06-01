@@ -30,8 +30,7 @@ type AnyApiRes struct {
 // @Produce  json
 // @Param     req   query    string     true        "数据url" default(https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD)
 // @Param     path   query    string     false    "指向数据字段的json path" default(RAW.ETH.USD.VOLUME24HOUR)
-// @Success 200 {string} addr	"stock info"
-//@Header 200 {object} AnyApiRes "data"
+// @Success 200 {object} AnyApiRes	"data"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/any_api [get]
 func NodeAnyApiHandler(c *gin.Context) {

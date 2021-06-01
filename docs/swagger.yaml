@@ -24,12 +24,21 @@ definitions:
     type: object
   main.NodeStat:
     properties:
+      blockPricesUpdateAt:
+        description: eth价格信息最后更新时间
+        type: string
+      cionPricesUpdateAt:
+        description: 币价换算信息最后更新时间
+        type: string
       node:
         description: 节点名
         type: string
-      rows:
-        description: 数据库记录数
+      stockRows:
+        description: 股票信息数据库记录数
         type: integer
+      stockUpdateAt:
+        description: 股票信息最后更新时间
+        type: string
       walletAddre:
         description: 钱包地址
         type: string
@@ -67,6 +76,25 @@ definitions:
         description: vs币价
         type: string
     type: object
+  services.DataPriceView:
+    properties:
+      bigPrice:
+        type: string
+      priceUsd:
+        type: number
+      sign:
+        description: Sign值由 Timestamp+BigPrice
+        items:
+          type: integer
+        type: array
+      signs:
+        items:
+          $ref: '#/definitions/services.PriceView'
+        type: array
+      timestamp:
+        description: Node string
+        type: integer
+    type: object
   services.OneDayStat:
     properties:
       VolumeUsd:
@@ -86,51 +114,6 @@ definitions:
       volumeChange:
         description: 变化百分比
         type: number
-    type: object
-  services.PairInfo:
-    properties:
-      createdAtBlockNumber:
-        type: string
-      createdAtTimestamp:
-        type: string
-      liquidityProviderCount:
-        type: string
-      reserve0:
-        type: string
-      reserve1:
-        type: string
-      reserveETH:
-        type: string
-      reserveUSD:
-        type: string
-      token0:
-        properties:
-          id:
-            type: string
-        type: object
-      token0Price:
-        type: string
-      token1:
-        properties:
-          id:
-            type: string
-        type: object
-      token1Price:
-        type: string
-      totalSupply:
-        type: string
-      trackedReserveETH:
-        type: string
-      txCount:
-        type: string
-      untrackedVolumeUSD:
-        type: string
-      volumeToken0:
-        type: string
-      volumeToken1:
-        type: string
-      volumeUSD:
-        type: string
     type: object
   services.PriceView:
     properties:
@@ -169,6 +152,7 @@ definitions:
           type: integer
         type: array
       signs:
+        description: 所有节点签名列表
         items:
           $ref: '#/definitions/services.StockNode'
         type: array
@@ -190,6 +174,7 @@ definitions:
         description: 新价
         type: number
       sign:
+        description: Sign_Hash值由 Timestamp BigPrice Code计算
         items:
           type: integer
         type: array
@@ -415,7 +400,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: CoinPriceView
           headers:
             sign:
               description: 签名信息
@@ -451,13 +436,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: pair info
+          description: pair price view list
           headers:
             sign:
               description: 签名信息
               type: string
           schema:
-            $ref: '#/definitions/services.PairInfo'
+            items:
+              $ref: '#/definitions/services.PriceView'
+            type: array
         "500":
           description: 失败时，有相应测试日志输出
           schema:
@@ -587,18 +574,18 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: token price info
           headers:
             sign:
               description: 签名信息
               type: string
           schema:
-            $ref: '#/definitions/services.TokenInfo'
+            $ref: '#/definitions/services.DataPriceView'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
             $ref: '#/definitions/controls.ApiErr'
-      summary: 获取token价格信息,内部单节点
+      summary: 获取token价格信息
       tags:
       - default
   /pub/internal/coin_price/{coin}/{vs_coin}:
@@ -755,7 +742,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: Coin Price
           headers:
             sign:
               description: 签名信息
@@ -791,13 +778,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: price vew
           headers:
             sign:
               description: 签名信息
               type: string
           schema:
-            $ref: '#/definitions/services.PairInfo'
+            $ref: '#/definitions/services.PriceView'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
@@ -863,7 +850,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: Price View
           headers:
             sign:
               description: 签名信息
@@ -899,7 +886,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: stock info list
           headers:
             sign:
               description: 签名信息
@@ -935,13 +922,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
-          headers:
-            AnyApiRes:
-              description: data
-              type: object
+          description: data
           schema:
-            type: string
+            $ref: '#/definitions/controls.AnyApiRes'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
@@ -1029,13 +1012,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: node stat
           headers:
             sign:
               description: 签名信息
               type: string
           schema:
-            type: string
+            $ref: '#/definitions/main.NodeStat'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
@@ -1053,7 +1036,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: stock info
+          description: Node Stat list
           schema:
             items:
               $ref: '#/definitions/main.NodeStat'

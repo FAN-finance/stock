@@ -97,6 +97,7 @@ func (s *DataCoinPriceView)GetHash()[]byte{
 	return prefixedHash
 }
 func (s *StockNode)GetHash()[]byte{
+	//Timestamp BigPrice Code
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	pint:= new(big.Int)
 	pint.SetString(s.BigPrice,10)

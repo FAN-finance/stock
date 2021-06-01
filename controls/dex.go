@@ -13,14 +13,14 @@ import (
 )
 
 // @Tags default
-// @Summary　获取token价格信息,内部单节点
+// @Summary　获取token价格信息
 // @Description 获取token价格信息
 // @ID TokenPriceSignHandler
 // @Accept  json
 // @Produce  json
 // @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {object} services.TokenInfo	"stock info"
+// @Success 200 {object} services.DataPriceView	"token price info"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_price/{token}/{timestamp} [get]
@@ -88,7 +88,7 @@ END:
 // @Produce  json
 // @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {object} services.PriceView	"stock info"
+// @Success 200 {object} services.PriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_price/{token}/{timestamp} [get]
@@ -224,7 +224,7 @@ func TokenDayDatasHandler(c *gin.Context) {
 // @Produce  json
 // @Param     pair   path    string     true        "token地址" default(0x21b8065d10f73ee2e260e5b47d3344d3ced7596e)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {object} services.PairInfo	"pair info"
+// @Success 200 {array} services.PriceView	"pair price view list"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/lp_price/{pair}/{timestamp} [get]
@@ -294,7 +294,7 @@ END:
 // @Produce  json
 // @Param     pair   path    string     true        "pair地址" default(0x21b8065d10f73ee2e260e5b47d3344d3ced7596e)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {object} services.PairInfo	"stock info"
+// @Success 200 {object} services.PriceView	"price vew"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/lp_price/{pair}/{timestamp} [get]
