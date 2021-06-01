@@ -1,5 +1,4 @@
-###Api Path: 
-#### 获取币价换算　
+ #### 获取币价换算　
 /pub/coin_price/{coin}/{vs_coin}
 
 详见swag 文件档：
