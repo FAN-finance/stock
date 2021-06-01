@@ -29,3 +29,4 @@ log.log
 bin/
 .conf.yaml
 main_test.go
+services/rsa_noUse.go
