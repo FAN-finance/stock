@@ -837,6 +837,10 @@ var doc = `{
                 "operationId": "StockAggreHandler",
                 "parameters": [
                     {
+                        "enum": [
+                            "AAPL",
+                            "TSLA"
+                        ],
                         "type": "string",
                         "default": "AAPL",
                         "description": "美股代码",
@@ -987,6 +991,10 @@ var doc = `{
                 "operationId": "StockInfoHandler",
                 "parameters": [
                     {
+                        "enum": [
+                            "AAPL",
+                            "TSLA"
+                        ],
                         "type": "string",
                         "default": "AAPL",
                         "description": "美股代码",
@@ -1302,6 +1310,7 @@ var doc = `{
                     "type": "string"
                 },
                 "code": {
+                    "description": "合约代码",
                     "type": "string"
                 },
                 "isMarketOpening": {
@@ -1320,6 +1329,10 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/services.StockNode"
                     }
+                },
+                "stockCode": {
+                    "description": "股票代码",
+                    "type": "string"
                 }
             }
         },
@@ -1335,6 +1348,7 @@ var doc = `{
                     "type": "string"
                 },
                 "code": {
+                    "description": "合约代码",
                     "type": "string"
                 },
                 "node": {
@@ -1351,6 +1365,10 @@ var doc = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "stockCode": {
+                    "description": "股票代码",
+                    "type": "string"
                 }
             }
         },

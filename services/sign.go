@@ -96,11 +96,18 @@ func (s *DataCoinPriceView)GetHash()[]byte{
 	)
 	return prefixedHash
 }
+
+//代码 苹果代码 AAPL ,特斯拉代码 TSLA
+var stockAddres=map[string]string{
+	"AAPL":"AAPL",
+	"TSLA":"0x050F44a559B5A2B3741aD202f9bB0CD2d6e7dAF2",
+}
 func (s *StockNode)GetHash()[]byte{
 	//Timestamp BigPrice Code
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	pint:= new(big.Int)
 	pint.SetString(s.BigPrice,10)
+	s.Code=stockAddres[s.StockCode]
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
 		common.LeftPadBytes(pint.Bytes(), 32),
@@ -116,6 +123,7 @@ func (s *StockNode)GetHash()[]byte{
 }
 func (s *StockData)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	s.Code=stockAddres[s.StockCode]
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
 		[]byte(s.BigPrice),

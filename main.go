@@ -49,7 +49,6 @@ func main() {
 	pflag.BoolVarP(&job,"job","j",true,"是否抓取数据")
 
 
-
 	pflag.Parse()
 	utils.Nodes=nodes
 	utils.InitDb(dbUrl)

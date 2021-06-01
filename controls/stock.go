@@ -151,7 +151,7 @@ END:
 // @ID StockInfoHandler
 // @Accept  json
 // @Produce  json
-// @Param     code   query    string     true        "美股代码" default(AAPL)
+// @Param     code   query    string     true        "美股代码" default(AAPL) Enums(AAPL,TSLA)
 // @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockNode	"stock info"
 //@Header 200 {string} sign "签名信息"
@@ -173,7 +173,7 @@ func StockInfoHandler(c *gin.Context) {
 			info.Price=avgPrice
 
 			snode:=new(services.StockNode)
-			snode.Code=info.Code
+			snode.StockCode=info.Code
 			snode.Price=info.Price
 			snode.BigPrice =services.GetUnDecimalPrice(float64(info.Price)).String()
 			snode.Timestamp=info.Timestamp
@@ -215,7 +215,7 @@ func getAvgPrice(code string,timestamp int)(avgPrice float32,err error) {
 // @ID StockAggreHandler
 // @Accept  json
 // @Produce  json
-// @Param     code   path    string     true        "美股代码" default(AAPL)
+// @Param     code   path    string     true        "美股代码" default(AAPL)  Enums(AAPL,TSLA)
 // @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockData	"stock info list"
 //@Header 200 {string} sign "签名信息"
@@ -267,7 +267,7 @@ func StockAggreHandler(c *gin.Context) {
 	sdata.Price=sumPrice/float32( len(snodes))
 	sdata.BigPrice =services.GetUnDecimalPrice(float64(sdata.Price)).String()
 	sdata.Timestamp=int64(timestamp)
-	sdata.Code=code
+	sdata.StockCode=code
 	sdata.SetSign()
 	sdata.IsMarketOpening =services.UsdStockTime()
 	c.JSON(200,sdata)

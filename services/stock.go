@@ -32,6 +32,9 @@ type ViewStock struct {
 	UpdatedAt *time.Time  `json:"UpdatedAt" example:"2021-05-07T18:25:44.27+08:00"`
 }
 type StockData struct {
+	//股票代码
+	StockCode            string
+	//合约代码
 	Code            string
 	IsMarketOpening bool
 	Sign            []byte  //计算平均价格的节点的签名
@@ -43,7 +46,10 @@ type StockData struct {
 	Signs     []StockNode
 }
 type  StockNode struct {
-	Code string
+	//股票代码
+	StockCode string
+	//合约代码
+	Code            string
 	Node      string //节点名字
 	Timestamp int64  `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
 	Price     float32 //新价

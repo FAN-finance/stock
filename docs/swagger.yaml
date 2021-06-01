@@ -143,6 +143,7 @@ definitions:
         description: Multiply the Price by 1000000000000000000 to remove decimals
         type: string
       code:
+        description: 合约代码
         type: string
       isMarketOpening:
         type: boolean
@@ -156,6 +157,9 @@ definitions:
         items:
           $ref: '#/definitions/services.StockNode'
         type: array
+      stockCode:
+        description: 股票代码
+        type: string
     type: object
   services.StockNode:
     properties:
@@ -166,6 +170,7 @@ definitions:
         description: Multiply the Price by 1000000000000000000 to remove decimals
         type: string
       code:
+        description: 合约代码
         type: string
       node:
         description: 节点名字
@@ -178,6 +183,9 @@ definitions:
         items:
           type: integer
         type: array
+      stockCode:
+        description: 股票代码
+        type: string
     type: object
   services.TokenDayData:
     properties:
@@ -873,6 +881,9 @@ paths:
       parameters:
       - default: AAPL
         description: 美股代码
+        enum:
+        - AAPL
+        - TSLA
         in: path
         name: code
         required: true
@@ -975,6 +986,9 @@ paths:
       parameters:
       - default: AAPL
         description: 美股代码
+        enum:
+        - AAPL
+        - TSLA
         in: query
         name: code
         required: true
