@@ -38,6 +38,7 @@ func (s *PriceView)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.Code),
 		[]byte(s.BigPrice),
 	)
 	// normally we sign prefixed hash
@@ -53,6 +54,7 @@ func (s *DataPriceView)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.Code),
 		[]byte(s.BigPrice),
 	)
 	// normally we sign prefixed hash

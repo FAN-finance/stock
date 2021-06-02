@@ -68,6 +68,7 @@ func TokenPriceSignHandler(c *gin.Context) {
 	for _, node := range resTokenView.Signs {
 		sumPrice += node.PriceUsd
 	}
+	resTokenView.Code=code
 	resTokenView.Timestamp=int64(timestamp)
 	resTokenView.PriceUsd = sumPrice / float64(len(resTokenView.Signs))
 	resTokenView.BigPrice=services.GetUnDecimalPrice(float64(resTokenView.PriceUsd)).String()
@@ -103,6 +104,7 @@ func TokenPriceHandler(c *gin.Context) {
 		res.PriceUsd=fprice*price
 
 		tPriceView:=new(services.PriceView)
+		tPriceView.Code=code
 		tPriceView.Timestamp=int64(timestamp)
 		tPriceView.PriceUsd=res.PriceUsd
 		tPriceView.PriceUsd= math.Trunc(tPriceView.PriceUsd*100)/100

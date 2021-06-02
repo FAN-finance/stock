@@ -1219,11 +1219,15 @@ var doc = `{
                 "bigPrice": {
                     "type": "string"
                 },
+                "code": {
+                    "description": "合约代码",
+                    "type": "string"
+                },
                 "priceUsd": {
                     "type": "number"
                 },
                 "sign": {
-                    "description": "Sign值由 Timestamp+BigPrice",
+                    "description": "Sign_Hash值由 Timestamp,Code,BigPrice",
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -1276,6 +1280,10 @@ var doc = `{
                 "bigPrice": {
                     "type": "string"
                 },
+                "code": {
+                    "description": "合约代码",
+                    "type": "string"
+                },
                 "node": {
                     "type": "string"
                 },
@@ -1283,7 +1291,7 @@ var doc = `{
                     "type": "number"
                 },
                 "sign": {
-                    "description": "Sign值由 Timestamp+BigPrice",
+                    "description": "Sign_Hash值由 Timestamp,Code,BigPrice",
                     "type": "array",
                     "items": {
                         "type": "integer"

@@ -381,20 +381,24 @@ type DataCoinPriceView struct {
 
 
 type PriceView struct {
+	//合约代码
+	Code            string
 	PriceUsd float64
 	BigPrice string
 	Node string
 	Timestamp int64
-	//Sign值由 Timestamp+BigPrice
+	//Sign_Hash值由 Timestamp,Code,BigPrice
 	Sign []byte
 	//Signs []*PriceView `json:",omitempty"`
 }
 type DataPriceView struct {
+	//合约代码
+	Code            string
 	PriceUsd float64
 	BigPrice string
 	//Node string
 	Timestamp int64
-	//Sign值由 Timestamp+BigPrice
+	//Sign_Hash值由 Timestamp,Code,BigPrice
 	Sign []byte
 	Signs []*PriceView `json:",omitempty"`
 }

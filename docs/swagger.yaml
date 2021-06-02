@@ -80,10 +80,13 @@ definitions:
     properties:
       bigPrice:
         type: string
+      code:
+        description: 合约代码
+        type: string
       priceUsd:
         type: number
       sign:
-        description: Sign值由 Timestamp+BigPrice
+        description: Sign_Hash值由 Timestamp,Code,BigPrice
         items:
           type: integer
         type: array
@@ -119,12 +122,15 @@ definitions:
     properties:
       bigPrice:
         type: string
+      code:
+        description: 合约代码
+        type: string
       node:
         type: string
       priceUsd:
         type: number
       sign:
-        description: Sign值由 Timestamp+BigPrice
+        description: Sign_Hash值由 Timestamp,Code,BigPrice
         items:
           type: integer
         type: array
