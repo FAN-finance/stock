@@ -449,6 +449,13 @@ var doc = `{
                         "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
                         "name": "timestamp",
                         "in": "path"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "调试",
+                        "name": "debug",
+                        "in": "query"
                     }
                 ],
                 "responses": {

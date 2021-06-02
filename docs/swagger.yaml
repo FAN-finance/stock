@@ -584,6 +584,11 @@ paths:
         in: path
         name: timestamp
         type: integer
+      - default: 0
+        description: 调试
+        in: query
+        name: debug
+        type: integer
       produces:
       - application/json
       responses:
