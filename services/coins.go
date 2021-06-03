@@ -28,7 +28,10 @@ func SubCoinsPrice (){
 	wcHeader.Set( "Origin","https://www.coingecko.com")
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), wcHeader)
 	if err != nil {
-		log.Fatal("dial:", err)
+		log.Println("dial:", err)
+		time.Sleep(5*time.Second)
+		goto BEGIN
+		//log.Fatal("dial:", err)
 	}
 	defer c.Close()
 
