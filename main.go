@@ -55,7 +55,7 @@ func main() {
 	services.InitEConn(infura)
 	services.SwapGraphApi=swapGraphApi
 	if job {
-		go services.GetStocks()
+		//go services.GetStocks()
 		go services.SubEthPrice(0)
 		go services.SubCoinsPrice()
 	}
