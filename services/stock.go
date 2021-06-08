@@ -16,7 +16,7 @@ type resModel struct {
 type Stock struct {
 	ID        int     `gorm:"column:id;primary_key" `
 	Code      string  `gorm:"index:code_time,priority:1" json:"f12"` //代码
-	Price     float64 `json:"f2" gorm:"DEFAULT:null;"`            //最新价
+	Price     float64 `json:"f2" gorm:"DEFAULT:null;type:decimal(10,2)"`            //最新价
 	StockName string  `json:"f14"`                                //名称
 	Mk        int     `json:"f13"`                                //市场 1 sh 01 0 sz 02
 	Diff      float32 `json:"f3" gorm:"DEFAULT:0;"`               //最新涨百分比
@@ -25,7 +25,7 @@ type Stock struct {
 }
 type ViewStock struct {
 	Code      string  `json:"Code" gorm:"column:code"` //代码 苹果代码 AAPL ,特斯拉代码 TSLA
-	Price     float32 `json:"Price" gorm:"DEFAULT:null;"`        //最新价
+	Price     float64 `json:"Price" gorm:"DEFAULT:null;"`        //最新价
 	StockName string  `json:"StockName" `                            //名称
 	Timestamp  int64 `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
 	//rfc3339 fortmat
@@ -34,11 +34,14 @@ type ViewStock struct {
 type StockData struct {
 	//股票代码
 	StockCode            string
+	//最高最低价１最高　２最低价
+	DataType int
 	//合约代码
 	Code            string
 	IsMarketOpening bool
-	Sign            []byte  //计算平均价格的节点的签名
-	Price           float32 `json:"Price" gorm:"DEFAULT:null;"`  //平均价
+	//	计算平均价格的节点的签名　Sign_Hash值由 Timestamp　DataType BigPrice Code计算
+	Sign            []byte
+	Price           float64 `json:"Price" gorm:"DEFAULT:null;"`  //平均价
 	// Multiply the Price by 1000000000000000000 to remove decimals
 	BigPrice  string
 	Timestamp int64   `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
@@ -48,14 +51,16 @@ type StockData struct {
 type  StockNode struct {
 	//股票代码
 	StockCode string
+	//最高最低价１最高　２最低价
+	DataType int
 	//合约代码
 	Code            string
 	Node      string //节点名字
 	Timestamp int64  `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
-	Price     float32 //新价
+	Price     float64 //新价
 	// Multiply the Price by 1000000000000000000 to remove decimals
 	BigPrice string
-	// Sign_Hash值由 Timestamp BigPrice Code计算
+	// Sign_Hash值由 Timestamp　DataType BigPrice Code计算
 	Sign     []byte
 }
 func(s *StockNode)SetSign( ){

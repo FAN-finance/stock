@@ -25,6 +25,14 @@ func GetUnDecimalPrice(price float64 )*big.Int{
 	//pint,_=pfloat.Int(nil)
 	return pint
 }
+func GetUnDecimalUsdPrice(price float64 )*big.Int {
+	pint := new(big.Int)
+	mint := int64(price * math.Pow10(4))
+	pint.SetInt64(mint)
+	//pint = pint.Mul(pint, big.NewInt(int64(math.Pow10(14))))
+	//pint,_=pfloat.Int(nil)
+	return pint
+}
 
 func GetStringsHash(items [][]byte)[]byte{
 	hash:=crypto.Keccak256Hash(items...)
@@ -112,6 +120,7 @@ func (s *StockNode)GetHash()[]byte{
 	s.Code=stockAddres[s.StockCode]
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		common.LeftPadBytes(big.NewInt(int64(s.DataType)).Bytes(), 32),
 		common.LeftPadBytes(pint.Bytes(), 32),
 		[]byte(s.Code),
 	)
@@ -128,6 +137,7 @@ func (s *StockData)GetHash()[]byte{
 	s.Code=stockAddres[s.StockCode]
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		common.LeftPadBytes(big.NewInt(int64(s.DataType)).Bytes(), 32),
 		[]byte(s.BigPrice),
 		[]byte(s.Code),
 	)

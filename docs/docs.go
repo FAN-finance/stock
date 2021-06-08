@@ -856,6 +856,18 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
                         "type": "integer",
                         "default": 1620383144,
                         "description": "unix 秒数",
@@ -1006,6 +1018,18 @@ var doc = `{
                         "default": "AAPL",
                         "description": "美股代码",
                         "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
                         "in": "query",
                         "required": true
                     },
@@ -1328,11 +1352,15 @@ var doc = `{
                     "description": "合约代码",
                     "type": "string"
                 },
+                "dataType": {
+                    "description": "最高最低价１最高　２最低价",
+                    "type": "integer"
+                },
                 "isMarketOpening": {
                     "type": "boolean"
                 },
                 "sign": {
-                    "description": "计算平均价格的节点的签名",
+                    "description": "计算平均价格的节点的签名　Sign_Hash值由 Timestamp　DataType BigPrice Code计算",
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -1366,6 +1394,10 @@ var doc = `{
                     "description": "合约代码",
                     "type": "string"
                 },
+                "dataType": {
+                    "description": "最高最低价１最高　２最低价",
+                    "type": "integer"
+                },
                 "node": {
                     "description": "节点名字",
                     "type": "string"
@@ -1375,7 +1407,7 @@ var doc = `{
                     "type": "number"
                 },
                 "sign": {
-                    "description": "Sign_Hash值由 Timestamp BigPrice Code计算",
+                    "description": "Sign_Hash值由 Timestamp　DataType BigPrice Code计算",
                     "type": "array",
                     "items": {
                         "type": "integer"

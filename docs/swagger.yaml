@@ -151,10 +151,13 @@ definitions:
       code:
         description: 合约代码
         type: string
+      dataType:
+        description: 最高最低价１最高　２最低价
+        type: integer
       isMarketOpening:
         type: boolean
       sign:
-        description: 计算平均价格的节点的签名
+        description: 计算平均价格的节点的签名　Sign_Hash值由 Timestamp　DataType BigPrice Code计算
         items:
           type: integer
         type: array
@@ -178,6 +181,9 @@ definitions:
       code:
         description: 合约代码
         type: string
+      dataType:
+        description: 最高最低价１最高　２最低价
+        type: integer
       node:
         description: 节点名字
         type: string
@@ -185,7 +191,7 @@ definitions:
         description: 新价
         type: number
       sign:
-        description: Sign_Hash值由 Timestamp BigPrice Code计算
+        description: Sign_Hash值由 Timestamp　DataType BigPrice Code计算
         items:
           type: integer
         type: array
@@ -899,6 +905,15 @@ paths:
         name: code
         required: true
         type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: query
+        name: data_type
+        required: true
+        type: integer
       - default: 1620383144
         description: unix 秒数
         in: path
@@ -1004,6 +1019,15 @@ paths:
         name: code
         required: true
         type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: query
+        name: data_type
+        required: true
+        type: integer
       - default: 1620383144
         description: unix 秒数
         in: query

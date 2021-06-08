@@ -152,59 +152,68 @@ END:
 // @Accept  json
 // @Produce  json
 // @Param     code   query    string     true        "美股代码" default(AAPL) Enums(AAPL,TSLA)
+// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockNode	"stock info"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/info [get]
 func StockInfoHandler(c *gin.Context) {
-	info := &services.ViewStock{}
-	code:=c.Query("code")
-	timestampstr:=c.Query("timestamp")
-	timestamp,_:=strconv.Atoi(timestampstr)
-	//err := utils.Orm.Where("code= ? and timestamp>= ? ", code,timestamp).Order("timestamp").First(info).Error
-	err := utils.Orm.Where("code= ? and timestamp<= ? ", code,timestamp).Order("timestamp desc").First(info).Error
-	if err == nil {
-		var avgPrice float32
-		//err = utils.Orm.Model(services.ViewStock{}).Select("avg(price)").Order("timestamp desc").Limit(2500).Where("code= ? and timestamp<= ? ", code,timestamp).Scan(&avgPrice).Error
-		avgPrice,err:=getAvgPrice(code,timestamp)
-		if err == nil {
-			log.Println("avgPrice",avgPrice)
-			info.Price=avgPrice
+	//info := &services.ViewStock{}
+	code := c.Query("code")
+	timestampstr := c.Query("timestamp")
+	timestamp, _ := strconv.Atoi(timestampstr)
+	dataTypeStr := c.Query("data_type")
+	dataType, _ := strconv.Atoi(dataTypeStr)
+	////err := utils.Orm.Where("code= ? and timestamp>= ? ", code,timestamp).Order("timestamp").First(info).Error
+	//err := utils.Orm.Where("code= ? and timestamp<= ? ", code,timestamp).Order("timestamp desc").First(info).Error
+	//if err == nil {
+	//	//var avgPrice float64
+	//	//err = utils.Orm.Model(services.ViewStock{}).Select("avg(price)").Order("timestamp desc").Limit(2500).Where("code= ? and timestamp<= ? ", code,timestamp).Scan(&avgPrice).Error
+	//	//avgPrice,err:=getAvgPrice(code,timestamp)
+	//	if err == nil {
+	//	}
+	//}
+	avgPrice := services.GetMsStatData(code, dataType)
+	log.Println("avgPrice", avgPrice)
+	//info.Price=avgPrice
+	snode := new(services.StockNode)
+	snode.StockCode = code
+	snode.DataType = dataType
+	snode.Price = (math.Trunc(float64(avgPrice)*10000)/10000)
+	snode.BigPrice = services.GetUnDecimalUsdPrice(float64(snode.Price)).String()
+	snode.Timestamp = int64(timestamp)
+	snode.SetSign()
+	c.JSON(200, snode)
+	return
 
-			snode:=new(services.StockNode)
-			snode.StockCode=info.Code
-			snode.Price=info.Price
-			snode.BigPrice =services.GetUnDecimalPrice(float64(info.Price)).String()
-			snode.Timestamp=info.Timestamp
-			snode.SetSign()
-			c.JSON(200, snode)
-			return
+	//bs, _ := json.Marshal(snode)
+	////md5str:=crypto.SHA256.New()
+	//hashbs := sha256.Sum256(bs)
+	////log.Println(hashbs, len(hashbs))
+	//sign, signErr := Privkey.Sign(rand.Reader, hashbs[0:32], crypto.SHA256)
+	//if signErr == nil {
+	//	signStr := base64.StdEncoding.EncodeToString(sign)
+	//	//c.Header("sign", signStr)
+	//	//log.Println(signStr)
+	//	snode.Sign=[]byte(signStr)
+	//	c.JSON(200, snode)
+	//	return
+	//} else {
+	//	log.Println(signErr)
+	//}
 
-			//bs, _ := json.Marshal(snode)
-			////md5str:=crypto.SHA256.New()
-			//hashbs := sha256.Sum256(bs)
-			////log.Println(hashbs, len(hashbs))
-			//sign, signErr := Privkey.Sign(rand.Reader, hashbs[0:32], crypto.SHA256)
-			//if signErr == nil {
-			//	signStr := base64.StdEncoding.EncodeToString(sign)
-			//	//c.Header("sign", signStr)
-			//	//log.Println(signStr)
-			//	snode.Sign=[]byte(signStr)
-			//	c.JSON(200, snode)
-			//	return
-			//} else {
-			//	log.Println(signErr)
-			//}
-		}
-	}
-	if err != nil {
-		ErrJson(c,err.Error())
-		return
-	}
+	//if err != nil {
+	//	ErrJson(c, err.Error())
+	//	return
+	//}
 }
-func getAvgPrice(code string,timestamp int)(avgPrice float32,err error) {
+
+func getAvgPrice(code string,timestamp int)(avgPrice float64,err error) {
 	err = utils.Orm.Model(services.ViewStock{}).Select("avg(price)").Order("timestamp desc").Limit(2500).Where("code= ? and timestamp<= ? ", code, timestamp).Scan(&avgPrice).Error
+	if err == nil {
+		avgPrice=(math.Trunc(avgPrice*10000)/10000)
+	}
 	return
 }
 
@@ -216,6 +225,7 @@ func getAvgPrice(code string,timestamp int)(avgPrice float32,err error) {
 // @Accept  json
 // @Produce  json
 // @Param     code   path    string     true        "美股代码" default(AAPL)  Enums(AAPL,TSLA)
+// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockData	"stock info list"
 //@Header 200 {string} sign "签名信息"
@@ -225,6 +235,9 @@ func StockAggreHandler(c *gin.Context) {
 	code:=c.Param("code")
 	timestampstr:=c.Param("timestamp")
 	timestamp,_:=strconv.Atoi(timestampstr)
+	dataTypeStr := c.Query("data_type")
+	dataType, _ := strconv.Atoi(dataTypeStr)
+
 	sdata:=new(services.StockData)
 	snodes:=[]services.StockNode{}
 	var err error
@@ -233,7 +246,7 @@ func StockAggreHandler(c *gin.Context) {
 	wg:= new(sync.WaitGroup)
 	var porcNode=func(nodeUrl string) {
 		defer wg.Done()
-		reqUrl := fmt.Sprintf(nodeUrl+"/pub/stock/info?timestamp=%d&code=%s", timestamp, code)
+		reqUrl := fmt.Sprintf(nodeUrl+"/pub/stock/info?timestamp=%d&code=%s&data_type=%d", timestamp, code,dataType)
 		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
 			snode := new(services.StockNode)
@@ -250,7 +263,7 @@ func StockAggreHandler(c *gin.Context) {
 	}
 	wg.Wait()
 
-	sumPrice:=float32(0.0)
+	sumPrice:=(0.0)
 	sdata.Signs=snodes
 	if len(sdata.Signs)==0{
 		err=errors.New("数据不可用")
@@ -264,10 +277,13 @@ func StockAggreHandler(c *gin.Context) {
 	for _, node := range snodes {
 		sumPrice+=node.Price
 	}
-	sdata.Price=sumPrice/float32( len(snodes))
-	sdata.BigPrice =services.GetUnDecimalPrice(float64(sdata.Price)).String()
+	sdata.Price=sumPrice/float64(len(snodes))
+
+	sdata.Price= (math.Trunc(float64( sdata.Price)*10000)/10000)
+	sdata.BigPrice =services.GetUnDecimalUsdPrice(float64(sdata.Price)).String()
 	sdata.Timestamp=int64(timestamp)
 	sdata.StockCode=code
+	sdata.DataType = dataType
 	sdata.SetSign()
 	sdata.IsMarketOpening =services.UsdStockTime()
 	c.JSON(200,sdata)

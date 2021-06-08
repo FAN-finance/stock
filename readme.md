@@ -16,7 +16,7 @@ create table stocks
     id         bigint auto_increment
         primary key,
     code       varchar(191)    null,
-    price      float           null,
+    price      decimal(19,2)           null,
     stock_name longtext        null,
     mk         bigint          null,
     diff       float default 0 null,
