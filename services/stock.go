@@ -96,6 +96,21 @@ func UsdStockTime() bool{
 	}
 	return true
 }
+func GetUsdStockCacheTime() int64{
+	now:=time.Now().UTC()
+	week:=now.Weekday()
+	if week==0 || week==6{
+		//log.Println("周未休息两小时")
+		return 300
+	}
+	y, m, d := now.Date()
+	stime := time.Date(y, m, d, 13, 30, 0, 0, time.UTC)
+	etime := time.Date(y, m, d, 20, 00, 0, 0, time.UTC)
+	if now.Unix() < stime.Unix() || now.Unix() > etime.Unix() {
+		return int64(stime.Add(24*time.Hour).Sub(now).Seconds())
+	}
+	return 0
+}
 
 //苹果代码  AAPL  ,苹果代码 TSLA
 func GetStocks() {

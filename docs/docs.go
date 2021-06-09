@@ -420,7 +420,7 @@ var doc = `{
                 }
             }
         },
-        "/pub/dex/token_price/{token}/{timestamp}": {
+        "/pub/dex/token_price/{token}/{data_type}/{timestamp}": {
             "get": {
                 "description": "获取token价格信息",
                 "consumes": [
@@ -444,6 +444,18 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "type": "integer",
                         "default": 1620383144,
                         "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
@@ -462,7 +474,7 @@ var doc = `{
                     "200": {
                         "description": "token price info",
                         "schema": {
-                            "$ref": "#/definitions/services.DataPriceView"
+                            "$ref": "#/definitions/services.HLDataPriceView"
                         },
                         "headers": {
                             "sign": {
@@ -799,6 +811,18 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
                         "type": "integer",
                         "default": 1620383144,
                         "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
@@ -810,7 +834,7 @@ var doc = `{
                     "200": {
                         "description": "Price View",
                         "schema": {
-                            "$ref": "#/definitions/services.PriceView"
+                            "$ref": "#/definitions/services.HLPriceView"
                         },
                         "headers": {
                             "sign": {
@@ -828,7 +852,7 @@ var doc = `{
                 }
             }
         },
-        "/pub/stock/aggre_info/{code}/{timestamp}": {
+        "/pub/stock/aggre_info/{code}/{data_type}/{timestamp}": {
             "get": {
                 "description": "获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA",
                 "consumes": [
@@ -864,7 +888,7 @@ var doc = `{
                         "default": 1,
                         "description": "最高最低价１最高　２最低价",
                         "name": "data_type",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     },
                     {
@@ -1244,7 +1268,7 @@ var doc = `{
                 }
             }
         },
-        "services.DataPriceView": {
+        "services.HLDataPriceView": {
             "type": "object",
             "properties": {
                 "bigPrice": {
@@ -1254,11 +1278,15 @@ var doc = `{
                     "description": "合约代码",
                     "type": "string"
                 },
+                "dataType": {
+                    "description": "最高最低价１最高　２最低价",
+                    "type": "integer"
+                },
                 "priceUsd": {
                     "type": "number"
                 },
                 "sign": {
-                    "description": "Sign_Hash值由 Timestamp,Code,BigPrice",
+                    "description": "Sign_Hash值由 Timestamp，DataType,Code,BigPrice",
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -1267,11 +1295,43 @@ var doc = `{
                 "signs": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services.PriceView"
+                        "$ref": "#/definitions/services.HLPriceView"
                     }
                 },
                 "timestamp": {
                     "description": "Node string",
+                    "type": "integer"
+                }
+            }
+        },
+        "services.HLPriceView": {
+            "type": "object",
+            "properties": {
+                "bigPrice": {
+                    "type": "string"
+                },
+                "code": {
+                    "description": "合约代码",
+                    "type": "string"
+                },
+                "dataType": {
+                    "description": "最高最低价１最高　２最低价",
+                    "type": "integer"
+                },
+                "node": {
+                    "type": "string"
+                },
+                "priceUsd": {
+                    "type": "number"
+                },
+                "sign": {
+                    "description": "Sign_Hash值由 Timestamp，DataType,Code,BigPrice",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "timestamp": {
                     "type": "integer"
                 }
             }

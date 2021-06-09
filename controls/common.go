@@ -32,16 +32,19 @@ func OkJson(c *gin.Context,err error){
 }
 
 func SetCacheRes(c *gin.Context, ckey string,setHeaderCache bool,process func() (interface{}, error) , debug bool){
+	SetCacheResExpire(c,ckey,setHeaderCache,100, process,debug)
+}
+func SetCacheResExpire(c *gin.Context, ckey string,setHeaderCache bool,expire int64,process func() (interface{}, error) , debug bool){
 	var res interface{}
 	var err error
 	if debug {
 		res, err = process()
 	} else {
 		log.Println("cache process",ckey)
-		res, err = utils.CacheFromLru(1, ckey, 100, process)
+		res, err = utils.CacheFromLru(1, ckey, int(expire), process)
 	}
 	if err == nil {
-		headerTtl:=time.Now().Unix()- utils.CalcExpiration(100,ckey)
+		headerTtl:=utils.CalcExpiration(expire,ckey)-time.Now().Unix()
 		log.Println("set cache header",ckey,headerTtl)
 		if !debug && setHeaderCache {
 			SetExireHeader(c, headerTtl)

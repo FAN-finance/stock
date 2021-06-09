@@ -174,18 +174,22 @@ func StockInfoHandler(c *gin.Context) {
 	//	if err == nil {
 	//	}
 	//}
-	avgPrice := services.GetMsStatData(code, dataType)
+	avgPrice,err := services.GetMsStatData(code, dataType)
+	if err == nil {
+
+
 	log.Println("avgPrice", avgPrice)
 	//info.Price=avgPrice
 	snode := new(services.StockNode)
 	snode.StockCode = code
 	snode.DataType = dataType
-	snode.Price = (math.Trunc(float64(avgPrice)*10000)/10000)
-	snode.BigPrice = services.GetUnDecimalUsdPrice(float64(snode.Price)).String()
+	snode.Price = (math.Trunc(float64(avgPrice)*1000)/1000)
+	snode.BigPrice = services.GetUnDecimalUsdPrice(float64(snode.Price),3).String()
 	snode.Timestamp = int64(timestamp)
 	snode.SetSign()
 	c.JSON(200, snode)
 	return
+	}
 
 	//bs, _ := json.Marshal(snode)
 	////md5str:=crypto.SHA256.New()
@@ -203,16 +207,16 @@ func StockInfoHandler(c *gin.Context) {
 	//	log.Println(signErr)
 	//}
 
-	//if err != nil {
-	//	ErrJson(c, err.Error())
-	//	return
-	//}
+	if err != nil {
+		ErrJson(c, err.Error())
+		return
+	}
 }
 
 func getAvgPrice(code string,timestamp int)(avgPrice float64,err error) {
 	err = utils.Orm.Model(services.ViewStock{}).Select("avg(price)").Order("timestamp desc").Limit(2500).Where("code= ? and timestamp<= ? ", code, timestamp).Scan(&avgPrice).Error
 	if err == nil {
-		avgPrice=(math.Trunc(avgPrice*10000)/10000)
+		avgPrice=(math.Trunc(avgPrice*1000)/1000)
 	}
 	return
 }
@@ -225,17 +229,17 @@ func getAvgPrice(code string,timestamp int)(avgPrice float64,err error) {
 // @Accept  json
 // @Produce  json
 // @Param     code   path    string     true        "美股代码" default(AAPL)  Enums(AAPL,TSLA)
-// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockData	"stock info list"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/stock/aggre_info/{code}/{timestamp} [get]
+// @Router /pub/stock/aggre_info/{code}/{data_type}/{timestamp} [get]
 func StockAggreHandler(c *gin.Context) {
 	code:=c.Param("code")
 	timestampstr:=c.Param("timestamp")
 	timestamp,_:=strconv.Atoi(timestampstr)
-	dataTypeStr := c.Query("data_type")
+	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
 	sdata:=new(services.StockData)
@@ -279,8 +283,8 @@ func StockAggreHandler(c *gin.Context) {
 	}
 	sdata.Price=sumPrice/float64(len(snodes))
 
-	sdata.Price= (math.Trunc(float64( sdata.Price)*10000)/10000)
-	sdata.BigPrice =services.GetUnDecimalUsdPrice(float64(sdata.Price)).String()
+	sdata.Price= (math.Trunc(float64( sdata.Price)*1000)/1000)
+	sdata.BigPrice =services.GetUnDecimalUsdPrice(float64(sdata.Price),3).String()
 	sdata.Timestamp=int64(timestamp)
 	sdata.StockCode=code
 	sdata.DataType = dataType

@@ -11,8 +11,8 @@ import (
 
 type msData struct {
 	Open float32 `json:"open"`
-	High float32 `json:"high"`
-	Low float32 `json:"low"`
+	High float64 `json:"high"`
+	Low float64 `json:"low"`
 	Close float32 `json:"close"`
 	Volume float32 `json:"volume"`
 	Date string `json:"date"`
@@ -23,7 +23,7 @@ type msResponse struct {
 	Data []msData `json:"data"`
 }
 
-func GetMsData(code string )(apiResponse *msResponse) {
+func GetMsData(code string )(apiResponse *msResponse,err error) {
 	apiResponse=new(msResponse)
 	//httpClient := http.Client{}
 
@@ -48,7 +48,7 @@ func GetMsData(code string )(apiResponse *msResponse) {
 	//
 	//var apiResponse Response
 	//json.NewDecoder(res.Body).Decode(&apiResponse)
-	urlstr:=fmt.Sprintf("http://api.marketstack.com/v1/intraday?access_key=a2223ab3c24359116ca94676453e5b1b&symbols=%s&interval=15min&limit=4",code)
+	urlstr:=fmt.Sprintf("http://api.marketstack.com/v1/intraday?access_key=dde1d6a489bb02c9bf0d67daf1b6821d&symbols=%s&interval=15min&limit=4",code)
 	bs,err:=utils.ReqResBody(urlstr,"nil","GET",nil,nil)
 	if err == nil {
 		err=json.Unmarshal(bs,apiResponse)
@@ -60,18 +60,22 @@ func GetMsData(code string )(apiResponse *msResponse) {
 		//}
 	}
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	return
 }
-func GetMsStatData(code string,dataType int) float32{
-	res:=GetMsData(code)
-	max,min:=float32(0),float32(10000)
+func GetMsStatData(code string,dataType int) (float64,error){
+	res,err:=GetMsData(code)
+	if err != nil {
+		return -1,err
+	}
+	max,min:=float64(0),float64(10000)
 	if len(res.Data)==0{
 		min=0
 	}
+	fmt.Println(fmt.Sprintf("Ticker %s datas: %d", code, len(res.Data)))
 	for _, stockData := range res.Data {
-		fmt.Println(fmt.Sprintf("Ticker %s has a day high of %v on %s", stockData.Symbol, stockData.High, stockData.Date))
+		//fmt.Println(fmt.Sprintf("Ticker %s has a day high of %v on %s", stockData.Symbol, stockData.High, stockData.Date))
 		if max<stockData.High{
 			max=stockData.High
 		}
@@ -80,10 +84,10 @@ func GetMsStatData(code string,dataType int) float32{
 		}
 	}
 	if dataType==1{
-		return max
+		return max,nil
 	}
 	if dataType==2{
-		return min
+		return min,nil
 	}
-	return -1
+	return -1,err
 }

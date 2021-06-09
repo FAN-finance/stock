@@ -402,6 +402,22 @@ type DataPriceView struct {
 	Sign []byte
 	Signs []*PriceView `json:",omitempty"`
 }
+type HLPriceView struct {
+	PriceView
+	//最高最低价１最高　２最低价
+	DataType int
+	//Sign_Hash值由 Timestamp，DataType,Code,BigPrice
+	Sign []byte
+}
+type HLDataPriceView struct {
+	DataPriceView
+	//最高最低价１最高　２最低价
+	DataType int
+	//Sign_Hash值由 Timestamp，DataType,Code,BigPrice
+	Sign []byte
+	Signs []*HLPriceView `json:",omitempty"`
+}
+
 
 var infoTokenGraph=`{"query":"{\n  token(id:\"%s\") {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n  }\n}","variables":null}`
 func GetTokenInfo(pairAddre string ) (token *TokenInfo,err error ){

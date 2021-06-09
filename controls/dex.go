@@ -19,31 +19,35 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
+// @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 //@Param     debug   query    int     false    "调试" default(0)
-// @Success 200 {object} services.DataPriceView	"token price info"
+// @Success 200 {object} services.HLDataPriceView	"token price info"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/dex/token_price/{token}/{timestamp} [get]
+// @Router /pub/dex/token_price/{token}/{data_type}/{timestamp} [get]
 func TokenPriceSignHandler(c *gin.Context) {
 	code := c.Param("token")
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
+	dataTypeStr := c.Param("data_type")
+	dataType, _ := strconv.Atoi(dataTypeStr)
+
 
 	//ckey:=fmt.Sprintf("TokenPriceSignHandler-%s",code)
 	//var addres []*services.PriceView
 	//proc:= func()(interface{},error) {}
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 
-	resTokenView := new(services.DataPriceView)
+	resTokenView := new(services.HLDataPriceView)
 	sc := sync.RWMutex{}
 	wg := new(sync.WaitGroup)
 	var porcNode = func(nodeUrl string) {
 		defer wg.Done()
-		reqUrl := fmt.Sprintf(nodeUrl+"/pub/internal/dex/token_price/%s/%d", code, timestamp)
+		reqUrl := fmt.Sprintf(nodeUrl+"/pub/internal/dex/token_price/%s/%d?data_type=%d", code, timestamp,dataType)
 		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
-			token := new(services.PriceView)
+			token := new(services.HLPriceView)
 			err = json.Unmarshal(bs, token)
 			if err == nil {
 				log.Println(err)
@@ -75,12 +79,13 @@ func TokenPriceSignHandler(c *gin.Context) {
 	}
 	resTokenView.Code = code
 	if code=="0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"{
-		resTokenView.Code="0x8617E28C663d5978D356E5816467Cd59eB21C0c0"
+		resTokenView.Code="0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
 	}
 	resTokenView.Timestamp = int64(timestamp)
 	resTokenView.PriceUsd = sumPrice/float64(len(resTokenView.Signs))
-	resTokenView.PriceUsd= math.Trunc(resTokenView.PriceUsd*10000)/10000
-	resTokenView.BigPrice = services.GetUnDecimalUsdPrice(float64(resTokenView.PriceUsd)).String()
+	resTokenView.PriceUsd=  math.Trunc(resTokenView.PriceUsd*1000)/1000
+	resTokenView.BigPrice = services.GetUnDecimalUsdPrice(float64(resTokenView.PriceUsd),3).String()
+	resTokenView.DataType=dataType
 	resTokenView.Sign = services.SignMsg(resTokenView.GetHash())
 	//return resTokenView,err
 
@@ -99,8 +104,9 @@ END:
 // @Accept  json
 // @Produce  json
 // @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
+// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {object} services.PriceView	"Price View"
+// @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_price/{token}/{timestamp} [get]
@@ -108,21 +114,24 @@ func TokenPriceHandler(c *gin.Context) {
 	code:=c.Param("token")
 	timestampstr:=c.Param("timestamp")
 	timestamp,_:=strconv.Atoi(timestampstr)
+	dataTypeStr := c.Query("data_type")
+	dataType, _ := strconv.Atoi(dataTypeStr)
 	res,err:=services.GetTokenInfo(code)
 	if err == nil {
 		price:=services.BlockPrice{}.GetPrice()
 		fprice,_:=strconv.ParseFloat(res.DerivedETH,64)
 		res.PriceUsd=fprice*price
 
-		tPriceView:=new(services.PriceView)
+		tPriceView:=new(services.HLPriceView)
 		tPriceView.Code=code
 		if code=="0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"{
-			tPriceView.Code="0x8617E28C663d5978D356E5816467Cd59eB21C0c0"
+			tPriceView.Code="0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
 		}
 		tPriceView.Timestamp=int64(timestamp)
+		tPriceView.DataType=dataType
 		tPriceView.PriceUsd=res.PriceUsd
-		tPriceView.PriceUsd= math.Trunc(tPriceView.PriceUsd*10000)/10000
-		tPriceView.BigPrice=services.GetUnDecimalUsdPrice(float64(res.PriceUsd)).String()
+		tPriceView.PriceUsd= math.Trunc(tPriceView.PriceUsd*1000)/1000
+		tPriceView.BigPrice=services.GetUnDecimalUsdPrice(float64(res.PriceUsd),3).String()
 		tPriceView.Sign=services.SignMsg(tPriceView.GetHash())
 		c.JSON(200,tPriceView)
 		return

@@ -76,26 +76,51 @@ definitions:
         description: vs币价
         type: string
     type: object
-  services.DataPriceView:
+  services.HLDataPriceView:
     properties:
       bigPrice:
         type: string
       code:
         description: 合约代码
         type: string
+      dataType:
+        description: 最高最低价１最高　２最低价
+        type: integer
       priceUsd:
         type: number
       sign:
-        description: Sign_Hash值由 Timestamp,Code,BigPrice
+        description: Sign_Hash值由 Timestamp，DataType,Code,BigPrice
         items:
           type: integer
         type: array
       signs:
         items:
-          $ref: '#/definitions/services.PriceView'
+          $ref: '#/definitions/services.HLPriceView'
         type: array
       timestamp:
         description: Node string
+        type: integer
+    type: object
+  services.HLPriceView:
+    properties:
+      bigPrice:
+        type: string
+      code:
+        description: 合约代码
+        type: string
+      dataType:
+        description: 最高最低价１最高　２最低价
+        type: integer
+      node:
+        type: string
+      priceUsd:
+        type: number
+      sign:
+        description: Sign_Hash值由 Timestamp，DataType,Code,BigPrice
+        items:
+          type: integer
+        type: array
+      timestamp:
         type: integer
     type: object
   services.OneDayStat:
@@ -572,7 +597,7 @@ paths:
       summary: 获取token相应天数的统计图表信息
       tags:
       - default
-  /pub/dex/token_price/{token}/{timestamp}:
+  /pub/dex/token_price/{token}/{data_type}/{timestamp}:
     get:
       consumes:
       - application/json
@@ -585,6 +610,15 @@ paths:
         name: token
         required: true
         type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: path
+        name: data_type
+        required: true
+        type: integer
       - default: 1620383144
         description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
         in: path
@@ -605,7 +639,7 @@ paths:
               description: 签名信息
               type: string
           schema:
-            $ref: '#/definitions/services.DataPriceView'
+            $ref: '#/definitions/services.HLDataPriceView'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
@@ -866,6 +900,15 @@ paths:
         name: token
         required: true
         type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: query
+        name: data_type
+        required: true
+        type: integer
       - default: 1620383144
         description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
         in: path
@@ -881,7 +924,7 @@ paths:
               description: 签名信息
               type: string
           schema:
-            $ref: '#/definitions/services.PriceView'
+            $ref: '#/definitions/services.HLPriceView'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
@@ -889,7 +932,7 @@ paths:
       summary: 获取token价格信息,内部单节点
       tags:
       - default
-  /pub/stock/aggre_info/{code}/{timestamp}:
+  /pub/stock/aggre_info/{code}/{data_type}/{timestamp}:
     get:
       consumes:
       - application/json
@@ -910,7 +953,7 @@ paths:
         enum:
         - 1
         - 2
-        in: query
+        in: path
         name: data_type
         required: true
         type: integer

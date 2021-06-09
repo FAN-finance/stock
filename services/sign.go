@@ -25,9 +25,9 @@ func GetUnDecimalPrice(price float64 )*big.Int{
 	//pint,_=pfloat.Int(nil)
 	return pint
 }
-func GetUnDecimalUsdPrice(price float64 )*big.Int {
+func GetUnDecimalUsdPrice(price float64,decimal int )*big.Int {
 	pint := new(big.Int)
-	mint := int64(price * math.Pow10(4))
+	mint := int64(price * math.Pow10(decimal))
 	pint.SetInt64(mint)
 	//pint = pint.Mul(pint, big.NewInt(int64(math.Pow10(14))))
 	//pint,_=pfloat.Int(nil)
@@ -62,6 +62,39 @@ func (s *DataPriceView)GetHash()[]byte{
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		[]byte(s.Code),
+		[]byte(s.BigPrice),
+	)
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
+func (s *HLPriceView)GetHash()[]byte{
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		common.LeftPadBytes(big.NewInt(int64(s.DataType)).Bytes(), 32),
+		[]byte(s.Code),
+		[]byte(s.BigPrice),
+	)
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
+
+func (s *HLDataPriceView)GetHash()[]byte{
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := crypto.Keccak256Hash(
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+		common.LeftPadBytes(big.NewInt(int64(s.DataType)).Bytes(), 32),
 		[]byte(s.Code),
 		[]byte(s.BigPrice),
 	)
