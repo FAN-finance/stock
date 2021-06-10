@@ -224,13 +224,13 @@ func (s *StockData) GetHash() []byte {
 	return prefixedHash
 }
 func SignMsg(message []byte) []byte {
-	msg := crypto.Keccak256([]byte(message))
-	sig, err := crypto.Sign(msg, EcKey)
+	//msg := crypto.Keccak256([]byte(message))
+	sig, err := crypto.Sign(message, EcKey)
 	if err != nil {
 		log.Printf("Sign error: %s", err)
 		return nil
 	}
-	sig[64] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
+	//sig[64] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
 	return sig
 }
 
