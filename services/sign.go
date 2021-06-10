@@ -150,7 +150,7 @@ var stockAddres = map[string]string{
 func (s *StockNode) GetHash() []byte {
 	//Timestamp BigPrice Code
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
-	pint := new(big.Int)
+	/*pint := new(big.Int)
 	pint.SetString(s.BigPrice, 10)
 	s.Code = stockAddres[s.StockCode]
 	hash := crypto.Keccak256Hash(
@@ -158,7 +158,23 @@ func (s *StockNode) GetHash() []byte {
 		common.LeftPadBytes(big.NewInt(int64(s.DataType)).Bytes(), 32),
 		common.LeftPadBytes(pint.Bytes(), 32),
 		[]byte(s.Code),
-	)
+	)*/
+
+	uint256Ty, _ := abi.NewType("uint256", "", nil)
+	addressTy, _ := abi.NewType("address", "", nil)
+	arguments := abi.Arguments{
+		{Type: uint256Ty},
+		{Type: addressTy},
+		{Type: uint256Ty},
+		{Type: uint256Ty},
+	}
+
+	pint := new(big.Int)
+	pint.SetString(s.BigPrice, 10)
+
+	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), s.Code, pint, big.NewInt(s.Timestamp))
+	hash := crypto.Keccak256Hash(pack)
+
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
 	prefixedHash := crypto.Keccak256(
@@ -190,7 +206,6 @@ func (s *StockData) GetHash() []byte {
 	pint.SetString(s.BigPrice, 10)
 
 	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), s.Code, pint, big.NewInt(s.Timestamp))
-
 	hash := crypto.Keccak256Hash(pack)
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
