@@ -230,6 +230,7 @@ func SignMsg(message []byte) []byte {
 		log.Printf("Sign error: %s", err)
 		return nil
 	}
+	sig[64] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
 	return sig
 }
 
