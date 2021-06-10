@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/status-im/keycard-go/hexutils"
 	"log"
 	"math"
 	"math/big"
@@ -175,15 +176,20 @@ func (s *StockNode) GetHash() []byte {
 	pint.SetString(s.BigPrice, 10)
 
 	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), common.HexToAddress(s.Code), pint, big.NewInt(s.Timestamp))
+	log.Println(s.StockCode, hexutils.BytesToHex(pack))
+
 	hash := crypto.Keccak256Hash(pack)
 
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
-	prefixedHash := crypto.Keccak256(
-		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
-		hash.Bytes(),
-	)
-	return prefixedHash
+	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(hash), hash.Bytes())
+	log.Println(msg)
+	prefixedHash := crypto.Keccak256([]byte(msg))
+	/*	prefixedHash := crypto.Keccak256(
+			[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+			hash.Bytes(),
+		)
+	*/return prefixedHash
 }
 func (s *StockData) GetHash() []byte {
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
