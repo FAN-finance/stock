@@ -161,7 +161,7 @@ func (s *StockNode) GetHash() []byte {
 	)
 
 	)*/
-
+	s.Code = stockAddres[s.StockCode]
 	uint256Ty, _ := abi.NewType("uint256", "", nil)
 	addressTy, _ := abi.NewType("address", "", nil)
 	arguments := abi.Arguments{
