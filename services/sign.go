@@ -174,9 +174,8 @@ func (s *StockNode) GetHash() []byte {
 	pint := new(big.Int)
 	pint.SetString(s.BigPrice, 10)
 
-	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), s.Code, pint, big.NewInt(s.Timestamp))
+	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), common.HexToAddress(s.Code), pint, big.NewInt(s.Timestamp))
 	hash := crypto.Keccak256Hash(pack)
-
 
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
@@ -208,7 +207,7 @@ func (s *StockData) GetHash() []byte {
 	pint := new(big.Int)
 	pint.SetString(s.BigPrice, 10)
 
-	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), s.Code, pint, big.NewInt(s.Timestamp))
+	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), common.HexToAddress(s.Code), pint, big.NewInt(s.Timestamp))
 	hash := crypto.Keccak256Hash(pack)
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
