@@ -152,10 +152,10 @@ func (s *StockNode)GetHash()[]byte{
 	pint.SetString(s.BigPrice,10)
 	s.Code=stockAddres[s.StockCode]
 	hash := crypto.Keccak256Hash(
-		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
 		common.LeftPadBytes(big.NewInt(int64(s.DataType)).Bytes(), 32),
-		common.LeftPadBytes(pint.Bytes(), 32),
 		[]byte(s.Code),
+		common.LeftPadBytes(pint.Bytes(), 32),
+		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
 	)
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
