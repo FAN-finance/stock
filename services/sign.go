@@ -77,12 +77,30 @@ func (s *DataPriceView) GetHash() []byte {
 }
 func (s *HLPriceView) GetHash() []byte {
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
-	hash := crypto.Keccak256Hash(
-		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
-		common.LeftPadBytes(big.NewInt(int64(s.DataType)).Bytes(), 32),
-		[]byte(s.Code),
-		[]byte(s.BigPrice),
-	)
+	//addre:=common.HexToAddress(s.Code)
+	//bgPrice,_:=big.NewInt(0).SetString(s.BigPrice,10)
+	//hash := crypto.Keccak256Hash(
+	//	common.LeftPadBytes(big.NewInt(int64(s.DataType)).Bytes(), 32),
+	//	addre[:],
+	//	common.LeftPadBytes(bgPrice.Bytes(), 32),
+	//	common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
+	//)
+	//
+
+	uint256Ty, _ := abi.NewType("uint256", "", nil)
+	addressTy, _ := abi.NewType("address", "", nil)
+	arguments := abi.Arguments{
+		{Type: uint256Ty},
+		{Type: addressTy},
+		{Type: uint256Ty},
+		{Type: uint256Ty},
+	}
+	pint := new(big.Int)
+	pint.SetString(s.BigPrice, 10)
+
+	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), common.HexToAddress(s.Code), pint, big.NewInt(s.Timestamp))
+	hash := crypto.Keccak256Hash(pack)
+
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
 	prefixedHash := crypto.Keccak256(
