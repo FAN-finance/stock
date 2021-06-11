@@ -174,6 +174,7 @@ func StockInfoHandler(c *gin.Context) {
 	//	if err == nil {
 	//	}
 	//}
+
 	avgPrice,err := services.GetMsStatData(code, dataType)
 	if err == nil {
 

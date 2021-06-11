@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"stock/utils"
 )
@@ -23,6 +24,17 @@ type msResponse struct {
 	Data []msData `json:"data"`
 }
 
+func GetMsDataFromCache(code string )(apiResponse *msResponse,err error) {
+	ttl:=GetUsdStockCacheTime()
+	//var addres []*services.PriceView
+	proc:= func()(interface{},error) {
+		return GetMsData(code)
+	}
+	ckey:=fmt.Sprintf("GetMsDataFromCache-%s-%d",code,time.Now().Unix()+ttl)
+	log.Println(ckey,ttl)
+	res,err:=utils.CacheFromLruWithFixKey(ckey,proc)
+	return res.(*msResponse),err
+}
 func GetMsData(code string )(apiResponse *msResponse,err error) {
 	apiResponse=new(msResponse)
 	//httpClient := http.Client{}
@@ -65,7 +77,7 @@ func GetMsData(code string )(apiResponse *msResponse,err error) {
 	return
 }
 func GetMsStatData(code string,dataType int) (float64,error){
-	res,err:=GetMsData(code)
+	res,err:=GetMsDataFromCache(code)
 	if err != nil {
 		return -1,err
 	}

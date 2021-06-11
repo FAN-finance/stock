@@ -18,11 +18,8 @@ func init(){
 		log.Println("lru cache init")
 	}
 }
-func CacheFromLru(version int ,key string,ttl int,myfunc func()(interface{},error))(interface{},error){
-	if ttl>0{
-		key=fmt.Sprintf("%s-%d-%d",key,version,CalcExpiration(int64(ttl),key))
-	}
 
+func CacheFromLruWithFixKey(key string, myfunc func()(interface{},error))(interface{},error){
 	res,ok:=lcache.Get(key)
 	if ok{
 		log.Println("lru hit key",key)
@@ -35,6 +32,13 @@ func CacheFromLru(version int ,key string,ttl int,myfunc func()(interface{},erro
 		lcache.Add(key,obj)
 	}
 	return obj,err
+}
+func CacheFromLru(version int ,key string,ttl int,myfunc func()(interface{},error))(interface{},error){
+	if ttl>0{
+		key=fmt.Sprintf("%s-%d-%d",key,version,CalcExpiration(int64(ttl),key))
+	}
+	return CacheFromLruWithFixKey(key, myfunc)
+
 }
 func CalcExpiration(ttl int64, key string) int64 {
 	if ttl<60{

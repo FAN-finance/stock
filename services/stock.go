@@ -98,18 +98,27 @@ func UsdStockTime() bool{
 }
 func GetUsdStockCacheTime() int64{
 	now:=time.Now().UTC()
-	week:=now.Weekday()
-	if week==0 || week==6{
-		//log.Println("周未休息两小时")
-		return 300
-	}
 	y, m, d := now.Date()
+	week:=now.Weekday()
+	//周未
+	if week==0 || week==6{
+		nextMondyDays:=2
+		if week==0 {
+			nextMondyDays = 1
+		}
+		nextOpen := time.Date(y, m, d, 13, 30, 0, 0, time.UTC).Add( 24*time.Hour* time.Duration( nextMondyDays))
+		return int64(nextOpen.Sub(now).Seconds())
+	}
 	stime := time.Date(y, m, d, 13, 30, 0, 0, time.UTC)
 	etime := time.Date(y, m, d, 20, 00, 0, 0, time.UTC)
 	if now.Unix() < stime.Unix() || now.Unix() > etime.Unix() {
+		if now.Unix() < stime.Unix(){//当天未开盘
+			return int64(stime.Sub(now).Seconds())
+		}
+		//当天已经收盘
 		return int64(stime.Add(24*time.Hour).Sub(now).Seconds())
 	}
-	return 0
+	return 100
 }
 
 //苹果代码  AAPL  ,苹果代码 TSLA
