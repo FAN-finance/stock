@@ -33,13 +33,13 @@ func TokenPriceSignHandler(c *gin.Context) {
 	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
-
 	//ckey:=fmt.Sprintf("TokenPriceSignHandler-%s",code)
 	//var addres []*services.PriceView
 	//proc:= func()(interface{},error) {}
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 
 	resTokenView := new(services.HLDataPriceView)
+	avgNodesPrice:=[]*services.HLPriceView{}
 	sc := sync.RWMutex{}
 	wg := new(sync.WaitGroup)
 	var porcNode = func(nodeUrl string) {
@@ -49,7 +49,7 @@ func TokenPriceSignHandler(c *gin.Context) {
 		if err == nil {
 			token := new(services.HLPriceView)
 			err = json.Unmarshal(bs, token)
-			if err == nil {
+			if err != nil {
 				log.Println(err)
 			}
 			token.Node = nodeUrl
@@ -64,7 +64,7 @@ func TokenPriceSignHandler(c *gin.Context) {
 	}
 	wg.Wait()
 	var err error
-	sumPrice := float64(0.0)
+
 	if len(resTokenView.Signs) == 0 {
 		err = errors.New("数据不可用")
 		goto END
@@ -74,21 +74,45 @@ func TokenPriceSignHandler(c *gin.Context) {
 		goto END
 	}
 
-	for _, node := range resTokenView.Signs {
-		sumPrice += node.PriceUsd
-	}
-	resTokenView.Code = code
-	if code=="0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"{
-		resTokenView.Code="0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
-	}
-	resTokenView.Timestamp = int64(timestamp)
-	resTokenView.PriceUsd = sumPrice/float64(len(resTokenView.Signs))
-	resTokenView.PriceUsd=  math.Trunc(resTokenView.PriceUsd*1000)/1000
-	resTokenView.BigPrice = services.GetUnDecimalUsdPrice(float64(resTokenView.PriceUsd),3).String()
-	resTokenView.DataType=dataType
-	resTokenView.Sign = services.SignMsg(resTokenView.GetHash())
-	//return resTokenView,err
+	porcNode=func(nodeUrl string) {
+		defer wg.Done()
+		reqUrl := fmt.Sprintf(nodeUrl+"/pub/internal/token_avgprice")
+		bodyBs,_:=json.Marshal(resTokenView.Signs)
+		bs, err := utils.ReqResBody(reqUrl, "", "POST", nil, bodyBs)
+		if err == nil {
+			snode := new(services.HLPriceView)
+			json.Unmarshal(bs, snode)
+			snode.Node=nodeUrl
 
+			isMyData,_:=services.Verify(snode.GetHash(),snode.Sign,services.WalletAddre)
+			if isMyData{
+				//log.Println(myData,"124")
+				resTokenView.PriceUsd= snode.PriceUsd
+				resTokenView.BigPrice = snode.BigPrice
+				resTokenView.Timestamp= snode.Timestamp
+				resTokenView.Code=snode.Code
+				resTokenView.DataType = dataType
+				resTokenView.Sign=snode.Sign
+			}
+			sc.Lock()
+			avgNodesPrice = append(avgNodesPrice, snode)
+			sc.Unlock()
+		}
+	}
+	for _, nurl := range utils.Nodes {
+		wg.Add(1)
+		go porcNode(nurl)
+	}
+	wg.Wait()
+	if len(avgNodesPrice)==0{
+		err=errors.New("数据不可用")
+		goto END
+	}
+	if len(avgNodesPrice)<len(utils.Nodes)/2+1{
+		err=errors.New("节点不够用")
+		goto END
+	}
+	resTokenView.AvgSigns=avgNodesPrice
 	c.JSON(200, resTokenView)
 	return
 END:
@@ -141,6 +165,69 @@ func TokenPriceHandler(c *gin.Context) {
 		return
 	}
 }
+
+// @Tags default
+// @Summary　获取token平均价格共识:
+// @Description 获取token平均价格共识
+// @ID TokenAvgHlPriceHandler
+// @Accept  json
+// @Produce  json
+// @Param   nodePrices  body   []services.HLPriceView true       "节点价格列表"
+// @Success 200 {object} services.HLPriceView	"stock info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/internal/token_avgprice [post]
+func TokenAvgHlPriceHandler(c *gin.Context) {
+	nodePrices:=[]*services.HLPriceView{}
+	err:=c.BindJSON(&nodePrices)
+	if err == nil {
+		if len(nodePrices) == 0 {
+			err = errors.New("数据不可用")
+			ErrJson(c, err.Error())
+			return
+		}
+		if len(nodePrices) < len(utils.Nodes)/2+1 {
+			err = errors.New("节点不够用")
+			ErrJson(c, err.Error())
+			return
+		}
+
+		timestamp:=nodePrices[0].Timestamp
+		code:=nodePrices[0].Code
+		dataType:= nodePrices[0].DataType
+
+		sumPrice := float64(0)
+		for _, node := range nodePrices {
+			sumPrice += node.PriceUsd
+			//验证数据
+			if timestamp!=node.Timestamp || code!=node.Code|| dataType!=node.DataType{
+				err=errors.New("需要共识的数据不一致")
+				break
+			}
+			//TODO 验证数据签名
+			//services.Verify(node.GetHash(),node.Sign,"")
+		}
+		if err != nil {
+			ErrJson(c, err.Error())
+			return
+		}
+		sdata := new(services.HLPriceView)
+		sdata.PriceUsd = sumPrice / float64(len(nodePrices))
+		sdata.PriceUsd = (math.Trunc(float64(sdata.PriceUsd)*1000) / 1000)
+		sdata.BigPrice = services.GetUnDecimalUsdPrice(float64(sdata.PriceUsd), 3).String()
+		sdata.Timestamp = int64(timestamp)
+		sdata.Code = code
+		sdata.DataType = dataType
+		sdata.Sign=services.SignMsg(sdata.GetHash())
+		c.JSON(200, sdata)
+		return
+	}
+	if err != nil {
+		ErrJson(c, err.Error())
+		return
+	}
+}
+
 
 // @Tags default
 // @Summary　获取token信息,内部单节点
@@ -323,7 +410,7 @@ func PairLpPriceSignHandler(c *gin.Context) {
 			if err == nil {
 				token := new(services.PriceView)
 				err = json.Unmarshal(bs, token)
-				if err == nil {
+				if err != nil {
 					log.Println(err)
 				}
 				token.Node = nodeUrl

@@ -17,7 +17,7 @@ type ApiOk struct{
 }
 
 func ErrJson(c *gin.Context,msg string){
-	if strings.HasPrefix( msg,"401"){
+	if strings.HasPrefix( msg,"40"){
 		c.JSON(400, ApiErr{msg})
 		return
 	}

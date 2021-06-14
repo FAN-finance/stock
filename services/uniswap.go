@@ -416,6 +416,7 @@ type HLDataPriceView struct {
 	//Sign_Hash值由 Timestamp，DataType,Code,BigPrice
 	Sign []byte
 	Signs []*HLPriceView `json:",omitempty"`
+	AvgSigns []*HLPriceView `json:",omitempty"`
 }
 
 

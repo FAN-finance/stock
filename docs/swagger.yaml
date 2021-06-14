@@ -78,6 +78,10 @@ definitions:
     type: object
   services.HLDataPriceView:
     properties:
+      avgSigns:
+        items:
+          $ref: '#/definitions/services.HLPriceView'
+        type: array
       bigPrice:
         type: string
       code:
@@ -170,6 +174,11 @@ definitions:
       Timestamp:
         description: unix 秒数
         type: integer
+      avgSigns:
+        description: 所有节点平均价格签名列表
+        items:
+          $ref: '#/definitions/services.StockNode'
+        type: array
       bigPrice:
         description: Multiply the Price by 1000000000000000000 to remove decimals
         type: string
@@ -930,6 +939,72 @@ paths:
           schema:
             $ref: '#/definitions/controls.ApiErr'
       summary: 获取token价格信息,内部单节点
+      tags:
+      - default
+  /pub/internal/stock_avgprice:
+    post:
+      consumes:
+      - application/json
+      description: 获取股票平均价格共识 苹果代码  AAPL  ,苹果代码 TSLA
+      operationId: StockAvgPriceHandler
+      parameters:
+      - description: 节点价格列表
+        in: body
+        name: nodePrices
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/services.StockNode'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.StockNode'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取股票平均价格共识:'
+      tags:
+      - default
+  /pub/internal/token_avgprice:
+    post:
+      consumes:
+      - application/json
+      description: 获取token平均价格共识
+      operationId: TokenAvgHlPriceHandler
+      parameters:
+      - description: 节点价格列表
+        in: body
+        name: nodePrices
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/services.HLPriceView'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取token平均价格共识:'
       tags:
       - default
   /pub/stock/aggre_info/{code}/{data_type}/{timestamp}:

@@ -243,10 +243,12 @@ func StockAggreHandler(c *gin.Context) {
 	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
+	//节点数据
+	nodesPirce :=[]services.StockNode{}
+	//节点间平均值数据
+	avgNodesPrice:=[]services.StockNode{}
 	sdata:=new(services.StockData)
-	snodes:=[]services.StockNode{}
 	var err error
-
 	sc:=sync.RWMutex{}
 	wg:= new(sync.WaitGroup)
 	var porcNode=func(nodeUrl string) {
@@ -258,7 +260,7 @@ func StockAggreHandler(c *gin.Context) {
 			json.Unmarshal(bs, snode)
 			snode.Node=nodeUrl
 			sc.Lock()
-			snodes = append(snodes, *snode)
+			nodesPirce = append(nodesPirce, *snode)
 			sc.Unlock()
 		}
 	}
@@ -267,29 +269,81 @@ func StockAggreHandler(c *gin.Context) {
 		go porcNode(nurl)
 	}
 	wg.Wait()
-
-	sumPrice:=(0.0)
-	sdata.Signs=snodes
-	if len(sdata.Signs)==0{
+	if len(nodesPirce)==0{
 		err=errors.New("数据不可用")
 		goto END
 	}
-	if len(sdata.Signs)<len(utils.Nodes)/2+1{
+	if len(nodesPirce)<len(utils.Nodes)/2+1{
 		err=errors.New("节点不够用")
 		goto END
 	}
 
-	for _, node := range snodes {
-		sumPrice+=node.Price
-	}
-	sdata.Price=sumPrice/float64(len(snodes))
+	//var err error
+	//sc:=sync.RWMutex{}
+	//wg:= new(sync.WaitGroup)
+	porcNode=func(nodeUrl string) {
+		defer wg.Done()
+		reqUrl := fmt.Sprintf(nodeUrl+"/pub/internal/stock_avgprice")
+		bodyBs,_:=json.Marshal(nodesPirce)
+		bs, err := utils.ReqResBody(reqUrl, "", "POST", nil, bodyBs)
+		if err == nil {
+			snode := new(services.StockNode)
+			json.Unmarshal(bs, snode)
+			snode.Node=nodeUrl
 
-	sdata.Price= (math.Trunc(float64( sdata.Price)*1000)/1000)
-	sdata.BigPrice =services.GetUnDecimalUsdPrice(float64(sdata.Price),3).String()
-	sdata.Timestamp=int64(timestamp)
-	sdata.StockCode=code
-	sdata.DataType = dataType
-	sdata.SetSign()
+			isMyData,_:=services.Verify(snode.GetHash(),snode.Sign,services.WalletAddre)
+			if isMyData{
+				//log.Println(myData,"124")
+				sdata.Price= snode.Price
+				sdata.BigPrice = snode.BigPrice
+				sdata.Timestamp= snode.Timestamp
+				sdata.StockCode=snode.StockCode
+				sdata.Code=snode.Code
+				sdata.DataType = dataType
+				sdata.Sign=snode.Sign
+			}
+			sc.Lock()
+			avgNodesPrice = append(avgNodesPrice, *snode)
+			sc.Unlock()
+		}
+	}
+	for _, nurl := range utils.Nodes {
+		wg.Add(1)
+		go porcNode(nurl)
+	}
+	wg.Wait()
+	if len(avgNodesPrice)==0{
+		err=errors.New("数据不可用")
+		goto END
+	}
+	if len(avgNodesPrice)<len(utils.Nodes)/2+1{
+		err=errors.New("节点不够用")
+		goto END
+	}
+
+
+	sdata.Signs= nodesPirce
+	sdata.AvgSigns=avgNodesPrice
+	//if len(sdata.Signs)==0{
+	//	err=errors.New("数据不可用")
+	//	goto END
+	//}
+	//if len(sdata.Signs)<len(utils.Nodes)/2+1{
+	//	err=errors.New("节点不够用")
+	//	goto END
+	//}
+	//
+	//for _, node := range nodesPirce {
+	//	sumPrice+=node.Price
+	//}
+	//sdata.Price=sumPrice/float64(len(nodesPirce))
+	//
+	//sdata.Price= (math.Trunc(float64( sdata.Price)*1000)/1000)
+	//sdata.BigPrice =services.GetUnDecimalUsdPrice(float64(sdata.Price),3).String()
+	//sdata.Timestamp=int64(timestamp)
+	//sdata.StockCode=code
+	//sdata.DataType = dataType
+	//sdata.SetSign()
 	sdata.IsMarketOpening =services.UsdStockTime()
 	c.JSON(200,sdata)
 	return
@@ -301,3 +355,66 @@ END:
 	}
 }
 
+
+
+// @Tags default
+// @Summary　获取股票平均价格共识:
+// @Description 获取股票平均价格共识 苹果代码  AAPL  ,苹果代码 TSLA
+// @ID StockAvgPriceHandler
+// @Accept  json
+// @Produce  json
+// @Param   nodePrices  body   []services.StockNode true       "节点价格列表"
+// @Success 200 {object} services.StockNode	"stock info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/internal/stock_avgprice [post]
+func StockAvgPriceHandler(c *gin.Context) {
+	nodePrices:=[]*services.StockNode{}
+	err:=c.BindJSON(&nodePrices)
+	if err == nil {
+		if len(nodePrices) == 0 {
+			err = errors.New("数据不可用")
+			ErrJson(c, err.Error())
+			return
+		}
+		if len(nodePrices) < len(utils.Nodes)/2+1 {
+			err = errors.New("节点不够用")
+			ErrJson(c, err.Error())
+			return
+		}
+
+		timestamp:=nodePrices[0].Timestamp
+		stockCode:=nodePrices[0].StockCode
+		dataType:= nodePrices[0].DataType
+
+		sumPrice := float64(0)
+		for _, node := range nodePrices {
+			sumPrice += node.Price
+			//验证数据
+			if timestamp!=node.Timestamp || stockCode!=node.StockCode|| dataType!=node.DataType{
+				err=errors.New("需要共识的数据不一致")
+				break
+			}
+			//TODO 验证数据签名
+			//services.Verify(node.GetHash(),node.Sign,"")
+		}
+		if err != nil {
+			ErrJson(c, err.Error())
+			return
+		}
+		sdata := new(services.StockNode)
+		sdata.Price = sumPrice / float64(len(nodePrices))
+		sdata.Price = (math.Trunc(float64(sdata.Price)*1000) / 1000)
+		sdata.BigPrice = services.GetUnDecimalUsdPrice(float64(sdata.Price), 3).String()
+		sdata.Timestamp = int64(timestamp)
+		sdata.StockCode = stockCode
+		sdata.DataType = dataType
+		sdata.SetSign()
+		c.JSON(200, sdata)
+		return
+	}
+	if err != nil {
+		ErrJson(c, err.Error())
+		return
+	}
+}

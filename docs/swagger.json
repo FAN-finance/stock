@@ -836,6 +836,106 @@
                 }
             }
         },
+        "/pub/internal/stock_avgprice": {
+            "post": {
+                "description": "获取股票平均价格共识 苹果代码  AAPL  ,苹果代码 TSLA",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取股票平均价格共识:",
+                "operationId": "StockAvgPriceHandler",
+                "parameters": [
+                    {
+                        "description": "节点价格列表",
+                        "name": "nodePrices",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.StockNode"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.StockNode"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/internal/token_avgprice": {
+            "post": {
+                "description": "获取token平均价格共识",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token平均价格共识:",
+                "operationId": "TokenAvgHlPriceHandler",
+                "parameters": [
+                    {
+                        "description": "节点价格列表",
+                        "name": "nodePrices",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.HLPriceView"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.HLPriceView"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/stock/aggre_info/{code}/{data_type}/{timestamp}": {
             "get": {
                 "description": "获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA",
@@ -1255,6 +1355,12 @@
         "services.HLDataPriceView": {
             "type": "object",
             "properties": {
+                "avgSigns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.HLPriceView"
+                    }
+                },
                 "bigPrice": {
                     "type": "string"
                 },
@@ -1387,6 +1493,13 @@
                 "Timestamp": {
                     "description": "unix 秒数",
                     "type": "integer"
+                },
+                "avgSigns": {
+                    "description": "所有节点平均价格签名列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.StockNode"
+                    }
                 },
                 "bigPrice": {
                     "description": "Multiply the Price by 1000000000000000000 to remove decimals",

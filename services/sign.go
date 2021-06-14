@@ -250,9 +250,19 @@ func SignMsg(message []byte) []byte {
 	sig[64] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
 	return sig
 }
-
+//https://github.com/ethereum/go-ethereum/blob/55599ee95d4151a2502465e0afc7c47bd1acba77/internal/ethapi/api.go#L452-L459
 func Verify(hash, sig []byte, addre string) (bool, error) {
-	pubKey, err := crypto.SigToPub(hash, sig)
+	if len(sig) != 65 {
+		return false, fmt.Errorf("signature must be 65 bytes long")
+	}
+	if sig[64] != 27 && sig[64] != 28 {
+		return false, fmt.Errorf("invalid Ethereum signature (V is not 27 or 28)")
+	}
+	tmpSig:=make([]byte,len(sig))
+	copy(tmpSig,sig)
+
+	tmpSig[64] -= 27 // Transform yellow paper V from 27/28 to 0/1
+	pubKey, err := crypto.SigToPub(hash, tmpSig)
 	if err == nil {
 		return addre == crypto.PubkeyToAddress(*pubKey).Hex(), nil
 	}

@@ -47,6 +47,8 @@ type StockData struct {
 	Timestamp int64   `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
 	//所有节点签名列表
 	Signs     []StockNode
+	//所有节点平均价格签名列表
+	AvgSigns     []StockNode
 }
 type  StockNode struct {
 	//股票代码
