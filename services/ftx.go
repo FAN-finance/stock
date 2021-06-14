@@ -13,7 +13,38 @@ func CacuBullPrice(lastAjustPriceBull, lastAjustPric, curPric float64) float64{
 }
 
 /**/
-func SetAllBulls() {
+
+var FirstBull ,LastBullAJ *CoinBull
+func setFirstBull()  {
+	firstBull := new(CoinBull)
+	err := utils.Orm.First(firstBull).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+	FirstBull=firstBull
+	//return firstBull
+}
+
+func setLastBullAJ() {
+	lastAj := new(CoinBull)
+	err:= utils.Orm.Order("id desc").First(lastAj, "is_ajust_point=?", 1).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("lastaj %v", lastAj)
+	LastBullAJ=lastAj
+	//return lastAj
+}
+func LastBullID() uint{
+	lastAj := new(CoinBull)
+	err:= utils.Orm.Order("id desc").First(lastAj).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("lastja %v", lastAj)
+	return lastAj.ID
+}
+func initCoinBull(){
 	var err error
 	utils.Orm.AutoMigrate(CoinBull{})
 	bullCount := int64(0)
@@ -31,24 +62,40 @@ func SetAllBulls() {
 		cb.BullChange = 0
 		cb.IsAjustPoint = true
 		cb.ID = 1
-		utils.Orm.Save(cb)
+		err=utils.Orm.Save(cb).Error
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-	firstBull := new(CoinBull)
-	err = utils.Orm.First(firstBull).Error
-	if err != nil {
-		log.Fatal(err)
+}
+func SetAllBulls() {
+	initCoinBull()
+	setFirstBull()
+	setLastBullAJ()
+	lastBullId:=LastBullID()
+	proc:=func()error{
+		lastId,err:=SetBullsFromID(lastBullId)
+		if err==nil{
+			lastBullId=lastId
+		}
+		return err
 	}
+	utils.IntervalSync("SetAllBull",10,proc)
+}
+func SetBullsFromID(lastBullId uint) (uint,error) {
+	//initCoinBull()
+	//setFirstBull()
+	//setLastBullAJ()
 
-	lastAj := new(CoinBull)
-	err = utils.Orm.Order("id desc").First(lastAj, "is_ajust_point=?", 1).Error
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("lastja %v", lastAj)
-	rows, err := utils.Orm.Model(Coin{}).Where("id>?",lastAj.ID).Select("id","usd").Rows()
+	var err error
+	//firstBull :=FirstBull()
+	//lastAj :=LastBullAJ()
+
+	rows, err := utils.Orm.Model(Coin{}).Where("id>?",lastBullId).Select("id","usd").Rows()
 	//rows,err:=utils.Orm.Raw("SELECT cast(usd as decimal(10,2))as `usd`,id FROM `coins` order by `usd` asc;").Rows()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return 0,err
 	}
 	defer rows.Close()
 	counter:=0
@@ -60,23 +107,26 @@ func SetAllBulls() {
 		coin := new(Coin)
 		err=utils.Orm.ScanRows(rows, coin)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			return 0,err
 		}
 		cb := new(CoinBull)
 		cb.Btc = getCoinUSdPriceFromStr("1", coin.Usd)
-		cb.BtcBull = CacuBullPrice(lastAj.BtcBull, lastAj.Btc, cb.Btc)
-		cb.BaseChange = RoundPercentageChange(firstBull.Btc,cb.Btc, 1)
-		cb.BullChange = RoundPercentageChange(firstBull.BtcBull,cb.BtcBull, 1)
-		ajChange:= RoundPercentageChange(lastAj.BtcBull,cb.BtcBull, 1)
+		cb.BtcBull = CacuBullPrice(LastBullAJ.BtcBull, LastBullAJ.Btc, cb.Btc)
+		cb.BaseChange = RoundPercentageChange(FirstBull.Btc,cb.Btc, 1)
+		cb.BullChange = RoundPercentageChange(FirstBull.BtcBull,cb.BtcBull, 1)
+		ajChange:= RoundPercentageChange(LastBullAJ.BtcBull,cb.BtcBull, 1)
 		cb.Timestamp = time.Unix(coin.ID, 0).UTC()
 		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
 		if  math.Abs(ajChange) > 10 {
 			cb.IsAjustPoint = true
-			lastAj = cb
+			LastBullAJ = cb
 		}
-		//cb.ID=uint(coin.ID)
-		utils.Orm.Create(cb)
+		cb.ID=uint(coin.ID)
+		err=utils.Orm.Create(cb).Error
+		lastBullId=cb.ID
 	}
+	return lastBullId,err
 }
 func RoundPercentageChange(oldValue,newValue float64,deciaml int) float64{
 	return float64(int(math.Trunc((newValue-oldValue)/oldValue* math.Pow10(deciaml+2))))/ math.Pow10(deciaml)

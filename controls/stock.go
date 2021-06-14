@@ -20,6 +20,8 @@ type coinvs struct{
 func (cs coinvs) TableName()string{
 	return "coins"
 }
+
+
 // @Tags default
 // @Summary　获取币价换算，内部单节点
 // @Description 获取币价换算，内部单节点

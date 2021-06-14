@@ -221,6 +221,84 @@ var doc = `{
                 }
             }
         },
+        "/pub/dex/ftx_chart_prices/btc/{count}/{interval}/{timestamp}": {
+            "get": {
+                "description": "获取杠杆代币不同时间区间的价格图表信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取杠杆代币不同时间区间的价格图表信息",
+                "operationId": "FtxChartPricesHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "获取多少个数据点",
+                        "name": "count",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4,
+                            96
+                        ],
+                        "type": "integer",
+                        "description": "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；",
+                        "name": "interval",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.BlockPrice"
+                            }
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/dex/lp_price/{pair}/{timestamp}": {
             "get": {
                 "description": "获取lp价格信息",
@@ -835,6 +913,59 @@ var doc = `{
                         "description": "Price View",
                         "schema": {
                             "$ref": "#/definitions/services.HLPriceView"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/internal/ftx_price/btc": {
+            "get": {
+                "description": "获取btc杠杆币价格，内部单节点模式",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取btc杠杆币价格，内部单节点模式",
+                "operationId": "FtxPriceHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "btc",
+                        "description": "btc币价",
+                        "name": "coin",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "unix 秒数",
+                        "name": "timestamp",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coin Price",
+                        "schema": {
+                            "$ref": "#/definitions/services.CoinPriceView"
                         },
                         "headers": {
                             "sign": {

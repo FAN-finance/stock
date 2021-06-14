@@ -102,7 +102,44 @@ func getBlockPrices(timeItems []int64)([]*BlockPrice,error){
 	return bps,err
 }
 
-
+type FtxChartDate struct {
+	Timestamp uint
+	//杠杆币价格
+	Bull float64
+	//杠杆区间最高
+	Hight float64
+	//杠杆区间最低
+	Low float64
+	//Btc价格
+	Btc float64
+	//Btc区间最高
+	Btc_hight float64
+	//Btc区间最低
+	Btc_low float64
+}
+func GetFtxTimesPrice(interval , count int )([]*FtxChartDate,error) {
+	datas := []*FtxChartDate{}
+	sql := `
+select cast(dates.id / ? as SIGNED) as id1,
+#        min(dates.date) datestr,
+       min(dates.secon1) timestamp,
+       cast(avg(bulls.btc_bull) as decimal(9,3)) bull,
+       cast(max(bulls.btc_bull)as decimal(9,3)) hight,
+       cast(avg(bulls.btc_bull)as decimal(9,3)) low,
+       cast( avg(bulls.btc) as decimal(9,3))btc,
+       cast(max(bulls.btc)as decimal(9,3)) btc_hight,
+       cast(avg(bulls.btc)as decimal(9,3)) btc_low
+from stock.dates dates
+         left join coin_bulls bulls on dates.secon1 < bulls.id and dates.secon2 > bulls.id
+where dates.secon1 > unix_timestamp()-15*60*?*?
+  and dates.secon1 < unix_timestamp()
+and bulls.id > unix_timestamp()-15*60*?*?
+  and bulls.id < unix_timestamp()
+group by id1 limit ?;
+`
+	err := utils.Orm.Raw(sql, interval, interval, count, interval, count,    count).Scan(&datas).Error
+	return datas, err
+}
 func GetTokenTimesPrice(tokenAddre string ,interval string, count int )([]*BlockPrice,error) {
 	//{"operationName":"blocks","variables":{},"query":"query blocks {
 	//	\nt1620871200: token(id: \"0xbc396689893d065f41bc2c6ecbee5e0085233447\", block: {number: 12423239}) {\n    derivedETH\n    __typename\n  }\n
