@@ -221,7 +221,7 @@ func StockInfoHandler(c *gin.Context) {
 
 type resMarketStatus struct {
 	IsOpening bool
-	OpenTime  time.Time
+	OpenTime  int64
 }
 
 // @Tags default

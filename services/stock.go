@@ -237,14 +237,14 @@ func InitCalendar() {
 	c.SetWorkHours(9*time.Hour+30*time.Minute, 16*time.Hour)
 	stockCalendar = c
 }
-func IsWorkTime(timestamp int64) (bool, time.Time) {
+func IsWorkTime(timestamp int64) (bool, int64) {
 	tmpCa := stockCalendar
 	if !IsSummerTime(timestamp) {
 		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 17*time.Hour)
 	}
 	tmpDate := time.Unix(timestamp, 0)
 	tmpDate = tmpDate.In(locUsaStock)
-	return tmpCa.IsWorkTime(tmpDate), tmpCa.WorkdayStart(tmpDate)
+	return tmpCa.IsWorkTime(tmpDate), tmpCa.WorkdayStart(tmpDate).Unix()
 }
 
 var locUsaStock = time.FixedZone("usa-stock", -4*60*60)
