@@ -1,15 +1,16 @@
 package controls
+
 import (
-	"errors"
-	"github.com/gin-gonic/gin"
-	"math"
-	"stock/utils"
-	"log"
-	"fmt"
-	"sync"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"log"
+	"math"
 	"stock/services"
+	"stock/utils"
 	"strconv"
+	"sync"
 )
 
 // @Tags default
@@ -39,12 +40,12 @@ func TokenPriceSignHandler(c *gin.Context) {
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 
 	resTokenView := new(services.HLDataPriceView)
-	avgNodesPrice:=[]*services.HLPriceView{}
+	avgNodesPrice := []*services.HLPriceView{}
 	sc := sync.RWMutex{}
 	wg := new(sync.WaitGroup)
 	var porcNode = func(nodeUrl string) {
 		defer wg.Done()
-		reqUrl := fmt.Sprintf(nodeUrl+"/pub/internal/dex/token_price/%s/%d?data_type=%d", code, timestamp,dataType)
+		reqUrl := fmt.Sprintf(nodeUrl+"/pub/internal/dex/token_price/%s/%d?data_type=%d", code, timestamp, dataType)
 		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
 			token := new(services.HLPriceView)
@@ -74,25 +75,25 @@ func TokenPriceSignHandler(c *gin.Context) {
 		goto END
 	}
 
-	porcNode=func(nodeUrl string) {
+	porcNode = func(nodeUrl string) {
 		defer wg.Done()
-		reqUrl := fmt.Sprintf(nodeUrl+"/pub/internal/token_avgprice")
-		bodyBs,_:=json.Marshal(resTokenView.Signs)
+		reqUrl := fmt.Sprintf(nodeUrl + "/pub/internal/token_avgprice")
+		bodyBs, _ := json.Marshal(resTokenView.Signs)
 		bs, err := utils.ReqResBody(reqUrl, "", "POST", nil, bodyBs)
 		if err == nil {
 			snode := new(services.HLPriceView)
 			json.Unmarshal(bs, snode)
-			snode.Node=nodeUrl
+			snode.Node = nodeUrl
 
-			isMyData,_:=services.Verify(snode.GetHash(),snode.Sign,services.WalletAddre)
-			if isMyData{
+			isMyData, _ := services.Verify(snode.GetHash(), snode.Sign, services.WalletAddre)
+			if isMyData {
 				//log.Println(myData,"124")
-				resTokenView.PriceUsd= snode.PriceUsd
+				resTokenView.PriceUsd = snode.PriceUsd
 				resTokenView.BigPrice = snode.BigPrice
-				resTokenView.Timestamp= snode.Timestamp
-				resTokenView.Code=snode.Code
+				resTokenView.Timestamp = snode.Timestamp
+				resTokenView.Code = snode.Code
 				resTokenView.DataType = dataType
-				resTokenView.Sign=snode.Sign
+				resTokenView.Sign = snode.Sign
 			}
 			sc.Lock()
 			avgNodesPrice = append(avgNodesPrice, snode)
@@ -104,15 +105,15 @@ func TokenPriceSignHandler(c *gin.Context) {
 		go porcNode(nurl)
 	}
 	wg.Wait()
-	if len(avgNodesPrice)==0{
-		err=errors.New("数据不可用")
+	if len(avgNodesPrice) == 0 {
+		err = errors.New("数据不可用")
 		goto END
 	}
-	if len(avgNodesPrice)<len(utils.Nodes)/2+1{
-		err=errors.New("节点不够用")
+	if len(avgNodesPrice) < len(utils.Nodes)/2+1 {
+		err = errors.New("节点不够用")
 		goto END
 	}
-	resTokenView.AvgSigns=avgNodesPrice
+	resTokenView.AvgSigns = avgNodesPrice
 	c.JSON(200, resTokenView)
 	return
 END:
@@ -135,33 +136,34 @@ END:
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_price/{token}/{timestamp} [get]
 func TokenPriceHandler(c *gin.Context) {
-	code:=c.Param("token")
-	timestampstr:=c.Param("timestamp")
-	timestamp,_:=strconv.Atoi(timestampstr)
+	code := c.Param("token")
+	timestampstr := c.Param("timestamp")
+	timestamp, _ := strconv.Atoi(timestampstr)
 	dataTypeStr := c.Query("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
-	res,err:=services.GetTokenInfo(code)
+	res, err := services.GetTokenInfo(code)
 	if err == nil {
-		price:=services.BlockPrice{}.GetPrice()
-		fprice,_:=strconv.ParseFloat(res.DerivedETH,64)
-		res.PriceUsd=fprice*price
+		price := services.BlockPrice{}.GetPrice()
+		fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
+		res.PriceUsd = fprice * price
 
-		tPriceView:=new(services.HLPriceView)
-		tPriceView.Code=code
-		if code=="0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"{
-			tPriceView.Code="0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
+		tPriceView := new(services.HLPriceView)
+		tPriceView.Code = code
+		if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
+			tPriceView.Code = "0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
 		}
-		tPriceView.Timestamp=int64(timestamp)
-		tPriceView.DataType=dataType
-		tPriceView.PriceUsd=res.PriceUsd
-		tPriceView.PriceUsd= math.Trunc(tPriceView.PriceUsd*1000)/1000
-		tPriceView.BigPrice=services.GetUnDecimalUsdPrice(float64(res.PriceUsd),3).String()
-		tPriceView.Sign=services.SignMsg(tPriceView.GetHash())
-		c.JSON(200,tPriceView)
+		tPriceView.Timestamp = int64(timestamp)
+		tPriceView.DataType = dataType
+		tPriceView.PriceUsd = res.PriceUsd
+		tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*1000) / 1000
+		tPriceView.BigPrice = services.GetUnDecimalUsdPrice(float64(res.PriceUsd), 3).String()
+		tPriceView.NodeAddress = services.WalletAddre
+		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+		c.JSON(200, tPriceView)
 		return
 	}
 	if err != nil {
-		ErrJson(c,err.Error())
+		ErrJson(c, err.Error())
 		return
 	}
 }
@@ -178,8 +180,8 @@ func TokenPriceHandler(c *gin.Context) {
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/token_avgprice [post]
 func TokenAvgHlPriceHandler(c *gin.Context) {
-	nodePrices:=[]*services.HLPriceView{}
-	err:=c.BindJSON(&nodePrices)
+	nodePrices := []*services.HLPriceView{}
+	err := c.BindJSON(&nodePrices)
 	if err == nil {
 		if len(nodePrices) == 0 {
 			err = errors.New("数据不可用")
@@ -192,16 +194,16 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 			return
 		}
 
-		timestamp:=nodePrices[0].Timestamp
-		code:=nodePrices[0].Code
-		dataType:= nodePrices[0].DataType
+		timestamp := nodePrices[0].Timestamp
+		code := nodePrices[0].Code
+		dataType := nodePrices[0].DataType
 
 		sumPrice := float64(0)
 		for _, node := range nodePrices {
 			sumPrice += node.PriceUsd
 			//验证数据
-			if timestamp!=node.Timestamp || code!=node.Code|| dataType!=node.DataType{
-				err=errors.New("需要共识的数据不一致")
+			if timestamp != node.Timestamp || code != node.Code || dataType != node.DataType {
+				err = errors.New("需要共识的数据不一致")
 				break
 			}
 			//TODO 验证数据签名
@@ -218,7 +220,8 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.Timestamp = int64(timestamp)
 		sdata.Code = code
 		sdata.DataType = dataType
-		sdata.Sign=services.SignMsg(sdata.GetHash())
+		sdata.NodeAddress = services.WalletAddre
+		sdata.Sign = services.SignMsg(sdata.GetHash())
 		c.JSON(200, sdata)
 		return
 	}
@@ -227,7 +230,6 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		return
 	}
 }
-
 
 // @Tags default
 // @Summary　获取token信息,内部单节点
@@ -242,14 +244,14 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_info/{token}/{timestamp} [get]
 func TokenInfoHandler(c *gin.Context) {
-	code:=c.Param("token")
+	code := c.Param("token")
 	//timestampstr:=c.Param("timestamp")
 	//timestamp,_:=strconv.Atoi(timestampstr)
 
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-	ckey:=fmt.Sprintf("TokenInfoHandler-%s",code)
-	proc:= func()(interface{},error) {
-		res,err:=services.GetTokenInfo(code)
+	ckey := fmt.Sprintf("TokenInfoHandler-%s", code)
+	proc := func() (interface{}, error) {
+		res, err := services.GetTokenInfo(code)
 		if err == nil {
 			price := services.BlockPrice{}.GetPrice()
 			fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
@@ -260,11 +262,11 @@ func TokenInfoHandler(c *gin.Context) {
 			//	log.Println("GetTokenInfosForStat err", err)
 			//}
 			//res.OneDayStat = ost
-			return  res,nil
+			return res, nil
 		}
-		return  res,err
+		return res, err
 	}
-	SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 
 	//
 	//res,err:=services.GetTokenInfo(code)
@@ -287,7 +289,6 @@ func TokenInfoHandler(c *gin.Context) {
 	//}
 }
 
-
 // @Tags default
 // @Summary　获取token不同时间区间的价格图表信息
 // @Description 获取token不同时间区间的价格图表信息
@@ -303,21 +304,21 @@ func TokenInfoHandler(c *gin.Context) {
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_chart_prices/{token}/{count}/{interval}/{timestamp} [get]
 func TokenDayPricesHandler(c *gin.Context) {
-	code:=c.Param("token")
-	interval:=c.Param("interval")
-	day_str:=c.Param("count")
-	count,_:=strconv.Atoi(day_str)
+	code := c.Param("token")
+	interval := c.Param("interval")
+	day_str := c.Param("count")
+	count, _ := strconv.Atoi(day_str)
 
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-	ckey:=fmt.Sprintf("TokenDayPricesHandler-%s-%s-%s",code,interval,day_str)
-	proc:= func()(interface{},error) {
-		items,err:=services.GetTokenTimesPrice(code,interval,count)
+	ckey := fmt.Sprintf("TokenDayPricesHandler-%s-%s-%s", code, interval, day_str)
+	proc := func() (interface{}, error) {
+		items, err := services.GetTokenTimesPrice(code, interval, count)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
-		return items,err
+		return items, err
 	}
-	SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 
 	//
 	////timestampstr:=c.Param("timestamp")
@@ -347,22 +348,22 @@ func TokenDayPricesHandler(c *gin.Context) {
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_day_datas/{token}/{days}/{timestamp} [get]
 func TokenDayDatasHandler(c *gin.Context) {
-	code:=c.Param("token")
-	day_str:=c.Param("days")
+	code := c.Param("token")
+	day_str := c.Param("days")
 
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-	ckey:=fmt.Sprintf("TokenDayDatasHandler-%s-%s",code,day_str)
-	proc:= func()(interface{},error) {
-		days,_:=strconv.Atoi(day_str)
+	ckey := fmt.Sprintf("TokenDayDatasHandler-%s-%s", code, day_str)
+	proc := func() (interface{}, error) {
+		days, _ := strconv.Atoi(day_str)
 		//timestampstr:=c.Param("timestamp")
 		//timestamp,_:=strconv.Atoi(timestampstr)
-		bs,err:=services.GetTokenDayData(code,days)
+		bs, err := services.GetTokenDayData(code, days)
 		if err == nil {
-			return json.RawMessage(bs),nil
+			return json.RawMessage(bs), nil
 		}
-		return nil,err
+		return nil, err
 	}
-	SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 
 	//
 	//days,_:=strconv.Atoi(day_str)
@@ -397,8 +398,8 @@ func PairLpPriceSignHandler(c *gin.Context) {
 	timestamp, _ := strconv.Atoi(timestampstr)
 
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-	ckey:=fmt.Sprintf("PairLpPriceSignHandler-%s",code)
-	proc:= func()(interface{},error) {
+	ckey := fmt.Sprintf("PairLpPriceSignHandler-%s", code)
+	proc := func() (interface{}, error) {
 		resTokenView := new(services.DataPriceView)
 		//var addres []*services.PriceView
 		sc := sync.RWMutex{}
@@ -417,8 +418,8 @@ func PairLpPriceSignHandler(c *gin.Context) {
 				sc.Lock()
 				resTokenView.Signs = append(resTokenView.Signs, token)
 				sc.Unlock()
-			}else{
-				log.Println("PairLpPriceSignHandler",err)
+			} else {
+				log.Println("PairLpPriceSignHandler", err)
 			}
 
 		}
@@ -432,30 +433,30 @@ func PairLpPriceSignHandler(c *gin.Context) {
 		sumPrice := float64(0.0)
 		if len(resTokenView.Signs) == 0 {
 			err = errors.New("数据不可用")
-			return nil,err
+			return nil, err
 		}
 		if len(resTokenView.Signs) < len(utils.Nodes)/2+1 {
 			err = errors.New("节点不够用")
-			return nil,err
+			return nil, err
 
 		}
 		for _, node := range resTokenView.Signs {
 			sumPrice += node.PriceUsd
 		}
-		resTokenView.Timestamp=int64(timestamp)
+		resTokenView.Timestamp = int64(timestamp)
 		resTokenView.PriceUsd = sumPrice / float64(len(resTokenView.Signs))
-		resTokenView.BigPrice=services.GetUnDecimalPrice(float64(resTokenView.PriceUsd)).String()
-		resTokenView.Sign=services.SignMsg(resTokenView.GetHash())
-		return resTokenView,nil
+		resTokenView.BigPrice = services.GetUnDecimalPrice(float64(resTokenView.PriceUsd)).String()
+		resTokenView.Sign = services.SignMsg(resTokenView.GetHash())
+		return resTokenView, nil
 	}
-	SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 
-//	c.JSON(200, resTokenView)
-//	return
-//END:
-//	if err == nil {
-//		ErrJson(c, err.Error())
-//	}
+	//	c.JSON(200, resTokenView)
+	//	return
+	//END:
+	//	if err == nil {
+	//		ErrJson(c, err.Error())
+	//	}
 }
 
 // @Tags default
@@ -471,26 +472,25 @@ func PairLpPriceSignHandler(c *gin.Context) {
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/lp_price/{pair}/{timestamp} [get]
 func PairLpPriceHandler(c *gin.Context) {
-	code:=c.Param("pair")
-	timestampstr:=c.Param("timestamp")
-	timestamp,_:=strconv.Atoi(timestampstr)
-	res,err:=services.GetPairInfo(code)
+	code := c.Param("pair")
+	timestampstr := c.Param("timestamp")
+	timestamp, _ := strconv.Atoi(timestampstr)
+	res, err := services.GetPairInfo(code)
 	if err == nil {
 		//price:=services.BlockPrice{}.GetPrice()
-		sulpply,_:=strconv.ParseFloat(res.TotalSupply,64)
-		allUsd,_:=strconv.ParseFloat(res.ReserveUSD,64)
-		tPriceView:=new(services.PriceView)
-		tPriceView.Timestamp=int64(timestamp)
-		tPriceView.PriceUsd=allUsd/sulpply
-		tPriceView.PriceUsd= math.Trunc(tPriceView.PriceUsd*100)/100
-		tPriceView.BigPrice=services.GetUnDecimalPrice(float64(tPriceView.PriceUsd)).String()
-		tPriceView.Sign=services.SignMsg(tPriceView.GetHash())
-		c.JSON(200,tPriceView)
+		sulpply, _ := strconv.ParseFloat(res.TotalSupply, 64)
+		allUsd, _ := strconv.ParseFloat(res.ReserveUSD, 64)
+		tPriceView := new(services.PriceView)
+		tPriceView.Timestamp = int64(timestamp)
+		tPriceView.PriceUsd = allUsd / sulpply
+		tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*100) / 100
+		tPriceView.BigPrice = services.GetUnDecimalPrice(float64(tPriceView.PriceUsd)).String()
+		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+		c.JSON(200, tPriceView)
 		return
 	}
 	if err != nil {
-		ErrJson(c,err.Error())
+		ErrJson(c, err.Error())
 		return
 	}
 }
-
