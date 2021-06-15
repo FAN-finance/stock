@@ -223,7 +223,7 @@ var doc = `{
         },
         "/pub/dex/ftx_chart_prices/btc/{count}/{interval}/{timestamp}": {
             "get": {
-                "description": "获取杠杆代币不同时间区间的价格图表信息",
+                "description": "获取杠杆btc代币不同时间区间的价格图表信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -233,7 +233,7 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取杠杆代币不同时间区间的价格图表信息",
+                "summary": "获取杠杆btc代币不同时间区间的价格图表信息",
                 "operationId": "FtxChartPricesHandler",
                 "parameters": [
                     {
@@ -253,13 +253,6 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "enum": [
-                            1,
-                            2,
-                            3,
-                            4,
-                            96
-                        ],
                         "type": "integer",
                         "description": "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；",
                         "name": "interval",
@@ -1318,6 +1311,45 @@ var doc = `{
                 }
             }
         },
+        "/pub/stock/market_status": {
+            "get": {
+                "description": "获取美股市场开盘状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取美股市场开盘状态:",
+                "operationId": "UsaMarketStatusHandler",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "unix 秒数； 0表示当前时间",
+                        "name": "timestamp",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "status",
+                        "schema": {
+                            "$ref": "#/definitions/controls.resMarketStatus"
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/stock/stat": {
             "get": {
                 "description": "当前节点状态:记录数,钱包地址",
@@ -1418,6 +1450,14 @@ var doc = `{
             "properties": {
                 "Error": {
                     "type": "string"
+                }
+            }
+        },
+        "controls.resMarketStatus": {
+            "type": "object",
+            "properties": {
+                "isOpening": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1558,6 +1598,9 @@ var doc = `{
                 "node": {
                     "type": "string"
                 },
+                "nodeAddress": {
+                    "type": "string"
+                },
                 "priceUsd": {
                     "type": "number"
                 },
@@ -1613,6 +1656,9 @@ var doc = `{
                     "type": "string"
                 },
                 "node": {
+                    "type": "string"
+                },
+                "nodeAddress": {
                     "type": "string"
                 },
                 "priceUsd": {
@@ -1704,6 +1750,10 @@ var doc = `{
                 },
                 "node": {
                     "description": "节点名字",
+                    "type": "string"
+                },
+                "nodeAddress": {
+                    "description": "节点地址",
                     "type": "string"
                 },
                 "price": {

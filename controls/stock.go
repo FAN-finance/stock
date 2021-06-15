@@ -11,6 +11,7 @@ import (
 	"stock/utils"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type coinvs struct {
@@ -217,6 +218,34 @@ func StockInfoHandler(c *gin.Context) {
 		return
 	}
 }
+
+type resMarketStatus struct{
+	IsOpening bool
+}
+// @Tags default
+// @Summary　获取美股市场开盘状态:
+// @Description 获取美股市场开盘状态
+// @ID UsaMarketStatusHandler
+// @Accept  json
+// @Produce  json
+// @Param     timestamp   query    int     false    "unix 秒数； 0表示当前时间" default(0)
+// @Success 200 {object} resMarketStatus	"status"
+// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/stock/market_status [get]
+func UsaMarketStatusHandler(c *gin.Context) {
+
+	timestampstr := c.Query("timestamp")
+	timestamp, _ := strconv.Atoi(timestampstr)
+	if timestamp == 0 {
+		timestamp = int(time.Now().Unix())
+	}
+	resMarketStatus := new(resMarketStatus)
+	services.InitCalendar()
+	resMarketStatus.IsOpening = services.IsWorkTime(int64(timestamp))
+	c.JSON(200, resMarketStatus)
+	return
+}
+
 
 func getAvgPrice(code string, timestamp int) (avgPrice float64, err error) {
 	err = utils.Orm.Model(services.ViewStock{}).Select("avg(price)").Order("timestamp desc").Limit(2500).Where("code= ? and timestamp<= ? ", code, timestamp).Scan(&avgPrice).Error

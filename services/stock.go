@@ -3,6 +3,9 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/rickar/cal/v2"
+	"github.com/rickar/cal/v2/aa"
+	"github.com/rickar/cal/v2/us"
 	"log"
 	"stock/utils"
 	"time"
@@ -189,4 +192,66 @@ func GetCarStock(dataUrl string) {
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+/*
+	日历支持以下节日排除
+	新年元旦，
+　　马丁·路德·金纪念日，
+　　华盛顿诞辰，
+　　耶稣受难日，
+　　美国阵亡战士纪念日，
+　　美国独立日，
+　　美国劳工日，
+　　感恩节，
+　　圣诞节，
+https://www.nyse.com/markets/hours-calendars
+https://www.tradinghours.com/markets/nyse/holidays
+//夏令时（3月11日至11月7日），冬令时（11月8日至次年3月11日）
+//https://zhidao.baidu.com/question/374792000.html
+//https://zhidao.baidu.com/question/76638117.html
+
+*/
+var stockCalendar *cal.BusinessCalendar
+func InitCalendar(){
+	if stockCalendar!=nil{
+		return
+	}
+	c := cal.NewBusinessCalendar()
+	c.Name = "Bigco, Inc."
+	c.Description = "Default company calendar"
+	c.AddHoliday(
+		us.NewYear,
+		us.MlkDay,
+		us.PresidentsDay,
+		aa.GoodFriday,
+		us.MemorialDay,
+		us.IndependenceDay,
+		us.LaborDay,
+		//us.ColumbusDay,
+		//us.VeteransDay,
+		us.ThanksgivingDay,
+		us.ChristmasDay,
+	)
+	c.SetWorkHours(9*time.Hour+30*time.Minute, 16*time.Hour)
+	stockCalendar =c
+}
+func IsWorkTime(timestamp int64) bool{
+	tmpCa:=stockCalendar
+	if !IsSummerTime(timestamp){
+		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 17*time.Hour)
+	}
+	tmpDate:=time.Unix(timestamp,0)
+	tmpDate=tmpDate.In(locUsaStock)
+	return tmpCa.IsWorkTime(tmpDate)
+}
+var locUsaStock = time.FixedZone("usa-stock", -4*60*60)
+//夏令时判断:（3月11日至11月7日），冬令时（11月8日至次年3月11日）
+func IsSummerTime(timeStamp int64)bool{
+	tmpDate:=time.Unix(timeStamp,0)
+	tmpDate=tmpDate.In(locUsaStock)
+	y:=tmpDate.Year()
+	stime := time.Date(y, 3,11, 0, 0, 0, 0, locUsaStock)
+	etime := time.Date(y, 11, 8, 0, 0, 0, 0, locUsaStock)
+	return tmpDate.After(stime)&& tmpDate.Before(etime)
 }
