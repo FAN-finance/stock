@@ -219,14 +219,12 @@ func StockInfoHandler(c *gin.Context) {
 	}
 }
 
-type resMarketStatus struct {
+type resMarketStatus struct{
 	IsOpening bool
-	OpenTime  time.Time
 }
-
 // @Tags default
 // @Summary　获取美股市场开盘状态:
-// @Description 获取美股市场开盘状态
+// @Description 获取美股市场开盘状态,支持节假日,夏令时
 // @ID UsaMarketStatusHandler
 // @Accept  json
 // @Produce  json
@@ -243,10 +241,13 @@ func UsaMarketStatusHandler(c *gin.Context) {
 	}
 	resMarketStatus := new(resMarketStatus)
 	services.InitCalendar()
-	resMarketStatus.IsOpening, resMarketStatus.OpenTime = services.IsWorkTime(int64(timestamp))
+	resMarketStatus.IsOpening = services.IsWorkTime(int64(timestamp))
+
+
 	c.JSON(200, resMarketStatus)
 	return
 }
+
 
 func getAvgPrice(code string, timestamp int) (avgPrice float64, err error) {
 	err = utils.Orm.Model(services.ViewStock{}).Select("avg(price)").Order("timestamp desc").Limit(2500).Where("code= ? and timestamp<= ? ", code, timestamp).Scan(&avgPrice).Error
