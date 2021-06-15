@@ -224,7 +224,7 @@ type resMarketStatus struct{
 }
 // @Tags default
 // @Summary　获取美股市场开盘状态:
-// @Description 获取美股市场开盘状态
+// @Description 获取美股市场开盘状态,支持节假日,夏令时
 // @ID UsaMarketStatusHandler
 // @Accept  json
 // @Produce  json
@@ -242,6 +242,8 @@ func UsaMarketStatusHandler(c *gin.Context) {
 	resMarketStatus := new(resMarketStatus)
 	services.InitCalendar()
 	resMarketStatus.IsOpening = services.IsWorkTime(int64(timestamp))
+
+
 	c.JSON(200, resMarketStatus)
 	return
 }
