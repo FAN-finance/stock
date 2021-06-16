@@ -42,6 +42,7 @@ type StockData struct {
 	//合约代码
 	Code            string
 	IsMarketOpening bool
+	MarketOpenTime  int64
 	//	计算平均价格的节点的签名　Sign_Hash值由 Timestamp　DataType BigPrice Code计算
 	Sign  []byte
 	Price float64 `json:"Price" gorm:"DEFAULT:null;"` //平均价

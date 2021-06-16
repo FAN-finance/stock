@@ -376,7 +376,9 @@ func StockAggreHandler(c *gin.Context) {
 	//sdata.StockCode=code
 	//sdata.DataType = dataType
 	//sdata.SetSign()
-	sdata.IsMarketOpening = services.UsdStockTime()
+	// sdata.IsMarketOpening = services.UsdStockTime()
+	services.InitCalendar()
+	sdata.IsMarketOpening, sdata.MarketOpenTime = services.IsWorkTime(int64(timestamp))
 	c.JSON(200, sdata)
 	return
 
