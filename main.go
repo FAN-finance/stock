@@ -83,7 +83,7 @@ func main() {
 	//domainDir:=router.Group("/nft")
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api:=router.Group("/pub")
-	api.GET("/stock/info", controls.StockInfoHandler)
+	api.GET("/stock/info", controls.StockInfoHandler);
 	api.GET("/stock/market_status/:timestamp", controls.UsaMarketStatusHandler)
 	api.POST("/internal/stock_avgprice", controls.StockAvgPriceHandler)
 	api.POST("/internal/token_avgprice", controls.TokenAvgHlPriceHandler)
