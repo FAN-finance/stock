@@ -213,8 +213,9 @@ https://www.tradinghours.com/markets/nyse/holidays
 
 */
 var stockCalendar *cal.BusinessCalendar
-func InitCalendar(){
-	if stockCalendar!=nil{
+
+func InitCalendar() {
+	if stockCalendar != nil {
 		return
 	}
 	c := cal.NewBusinessCalendar()
@@ -234,24 +235,26 @@ func InitCalendar(){
 		us.ChristmasDay,
 	)
 	c.SetWorkHours(9*time.Hour+30*time.Minute, 16*time.Hour)
-	stockCalendar =c
+	stockCalendar = c
 }
-func IsWorkTime(timestamp int64) bool{
-	tmpCa:=stockCalendar
-	if !IsSummerTime(timestamp){
+func IsWorkTime(timestamp int64) (bool, int64) {
+	tmpCa := stockCalendar
+	if !IsSummerTime(timestamp) {
 		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 17*time.Hour)
 	}
-	tmpDate:=time.Unix(timestamp,0)
-	tmpDate=tmpDate.In(locUsaStock)
-	return tmpCa.IsWorkTime(tmpDate)
+	tmpDate := time.Unix(timestamp, 0)
+	tmpDate = tmpDate.In(locUsaStock)
+	return tmpCa.IsWorkTime(tmpDate), tmpCa.WorkdayStart(tmpDate).Unix()
 }
+
 var locUsaStock = time.FixedZone("usa-stock", -4*60*60)
+
 //夏令时判断:（3月11日至11月7日），冬令时（11月8日至次年3月11日）
-func IsSummerTime(timeStamp int64)bool{
-	tmpDate:=time.Unix(timeStamp,0)
-	tmpDate=tmpDate.In(locUsaStock)
-	y:=tmpDate.Year()
-	stime := time.Date(y, 3,11, 0, 0, 0, 0, locUsaStock)
+func IsSummerTime(timeStamp int64) bool {
+	tmpDate := time.Unix(timeStamp, 0)
+	tmpDate = tmpDate.In(locUsaStock)
+	y := tmpDate.Year()
+	stime := time.Date(y, 3, 11, 0, 0, 0, 0, locUsaStock)
 	etime := time.Date(y, 11, 8, 0, 0, 0, 0, locUsaStock)
-	return tmpDate.After(stime)&& tmpDate.Before(etime)
+	return tmpDate.After(stime) && tmpDate.Before(etime)
 }
