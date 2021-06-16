@@ -228,13 +228,13 @@ type resMarketStatus struct{
 // @ID UsaMarketStatusHandler
 // @Accept  json
 // @Produce  json
-// @Param     timestamp   query    int     false    "unix 秒数； 0表示当前时间" default(0)
+// @Param     timestamp   path    int     false    "unix 秒数； 0表示当前时间" default(0)
 // @Success 200 {object} resMarketStatus	"status"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/stock/market_status [get]
+// @Router /pub/stock/market_status/{timestamp} [get]
 func UsaMarketStatusHandler(c *gin.Context) {
 
-	timestampstr := c.Query("timestamp")
+	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
 	if timestamp == 0 {
 		timestamp = int(time.Now().Unix())
