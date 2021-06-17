@@ -9,6 +9,7 @@ import (
 	"math"
 	"math/big"
 	"os"
+	"time"
 )
 import "github.com/ethereum/go-ethereum/common"
 
@@ -291,6 +292,7 @@ func GenKeyFile() {
 
 var EcKey *ecdsa.PrivateKey
 var WalletAddre string
+var Uptime time.Time
 
 func InitNodeKey() {
 	GenKeyFile()
@@ -305,4 +307,5 @@ func InitNodeKey() {
 	addre := crypto.PubkeyToAddress(pubKey)
 	WalletAddre = addre.Hex()
 	log.Println("WalletAddre:", WalletAddre)
+	Uptime=time.Now()
 }

@@ -136,6 +136,7 @@ func NodeStatHandler(c *gin.Context) {
 	utils.Orm.Model(services.BlockPrice{}).Select("max(created_at)").Scan(&stat.BlockPricesUpdateAt)
 
 	stat.WalletAddre=services.WalletAddre
+	stat.Uptime=services.Uptime
 	c.JSON(200,stat)
 }
 
@@ -153,6 +154,7 @@ type NodeStat struct {
 	CionPricesUpdateAt time.Time
 	//eth价格信息最后更新时间
 	BlockPricesUpdateAt time.Time
+	Uptime time.Time
 
 }
 // @Tags default
