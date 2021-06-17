@@ -190,7 +190,7 @@ func StockInfoHandler(c *gin.Context) {
 		snode.DataType = dataType
 		snode.NodeAddress = services.WalletAddre
 		snode.Price = (math.Trunc(float64(avgPrice)*1000) / 1000)
-		snode.BigPrice = services.GetUnDecimalUsdPrice(float64(snode.Price), 18).String()
+		snode.BigPrice = services.GetUnDecimalPrice(float64(snode.Price)).String()
 		snode.Timestamp = int64(timestamp)
 		snode.SetSign()
 		c.JSON(200, snode)
@@ -437,7 +437,7 @@ func StockAvgPriceHandler(c *gin.Context) {
 		sdata := new(services.StockNode)
 		sdata.Price = sumPrice / float64(len(nodePrices))
 		sdata.Price = (math.Trunc(float64(sdata.Price)*1000) / 1000)
-		sdata.BigPrice = services.GetUnDecimalUsdPrice(float64(sdata.Price), 18).String()
+		sdata.BigPrice = services.GetUnDecimalPrice(float64(sdata.Price)).String()
 		sdata.Timestamp = int64(timestamp)
 		sdata.StockCode = stockCode
 		sdata.DataType = dataType
