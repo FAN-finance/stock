@@ -169,6 +169,7 @@ func (s *DataCoinPriceView) GetHash() []byte {
 var stockAddres = map[string]string{
 	"AAPL": "0xD87f6eCC45ABAD69446DA79a19D1E5Cf3B779098",
 	"TSLA": "0x681E954a65573fC3152b909dDD75d510285eBB0D",
+	"USD": "0x0b529110E1E45c33157B30d400786C29505BF3cd",
 }
 
 func (s *StockNode) GetHash() []byte {

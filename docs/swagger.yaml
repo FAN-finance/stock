@@ -26,6 +26,8 @@ definitions:
     properties:
       isOpening:
         type: boolean
+      openTime:
+        type: integer
     type: object
   main.NodeStat:
     properties:
@@ -43,6 +45,8 @@ definitions:
         type: integer
       stockUpdateAt:
         description: 股票信息最后更新时间
+        type: string
+      uptime:
         type: string
       walletAddre:
         description: 钱包地址
@@ -199,6 +203,8 @@ definitions:
         type: integer
       isMarketOpening:
         type: boolean
+      marketOpenTime:
+        type: integer
       sign:
         description: 计算平均价格的节点的签名　Sign_Hash值由 Timestamp　DataType BigPrice Code计算
         items:
@@ -1120,6 +1126,7 @@ paths:
       - default: AAPL
         description: 美股代码
         enum:
+        - USD
         - AAPL
         - TSLA
         in: path
@@ -1236,6 +1243,7 @@ paths:
         enum:
         - AAPL
         - TSLA
+        - USD
         in: query
         name: code
         required: true

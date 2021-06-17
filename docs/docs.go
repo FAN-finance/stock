@@ -1100,6 +1100,7 @@ var doc = `{
                 "parameters": [
                     {
                         "enum": [
+                            "USD",
                             "AAPL",
                             "TSLA"
                         ],
@@ -1267,7 +1268,8 @@ var doc = `{
                     {
                         "enum": [
                             "AAPL",
-                            "TSLA"
+                            "TSLA",
+                            "USD"
                         ],
                         "type": "string",
                         "default": "AAPL",
@@ -1465,6 +1467,9 @@ var doc = `{
             "properties": {
                 "isOpening": {
                     "type": "boolean"
+                },
+                "openTime": {
+                    "type": "integer"
                 }
             }
         },
@@ -1489,6 +1494,9 @@ var doc = `{
                 },
                 "stockUpdateAt": {
                     "description": "股票信息最后更新时间",
+                    "type": "string"
+                },
+                "uptime": {
                     "type": "string"
                 },
                 "walletAddre": {
@@ -1715,6 +1723,9 @@ var doc = `{
                 },
                 "isMarketOpening": {
                     "type": "boolean"
+                },
+                "marketOpenTime": {
+                    "type": "integer"
                 },
                 "sign": {
                     "description": "计算平均价格的节点的签名　Sign_Hash值由 Timestamp　DataType BigPrice Code计算",

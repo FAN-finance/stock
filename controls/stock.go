@@ -156,7 +156,7 @@ END:
 // @ID StockInfoHandler
 // @Accept  json
 // @Produce  json
-// @Param     code   query    string     true        "美股代码" default(AAPL) Enums(AAPL,TSLA)
+// @Param     code   query    string     true        "美股代码" default(AAPL) Enums(AAPL,TSLA,USD)
 // @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockNode	"stock info"
@@ -179,10 +179,14 @@ func StockInfoHandler(c *gin.Context) {
 	//	if err == nil {
 	//	}
 	//}
-
-	avgPrice, err := services.GetMsStatData(code, dataType)
+	var err error
+	avgPrice:=0.0
+	if code=="USD"{
+		avgPrice=1.0
+	}else{
+		avgPrice, err = services.GetMsStatData(code, dataType)
+	}
 	if err == nil {
-
 		log.Println("avgPrice", avgPrice)
 		//info.Price=avgPrice
 		snode := new(services.StockNode)
@@ -262,7 +266,7 @@ func getAvgPrice(code string, timestamp int) (avgPrice float64, err error) {
 // @ID StockAggreHandler
 // @Accept  json
 // @Produce  json
-// @Param     code   path    string     true        "美股代码" default(AAPL)  Enums(AAPL,TSLA)
+// @Param     code   path    string     true        "美股代码" default(AAPL)  Enums(USD,AAPL,TSLA)
 // @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockData	"stock info list"
