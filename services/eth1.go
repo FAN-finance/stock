@@ -112,6 +112,7 @@ type ethPricePayload struct {
 var EthConn *ethclient.Client
 var EthAuth *bind.TransactOpts
 func InitEConn( infura string ) {
+	log.Println("init InitEConn")
 	conn1, err := ethclient.Dial(fmt.Sprintf("wss://mainnet.infura.io/ws/v3/%s",infura))
 	if err != nil {
 		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
@@ -121,6 +122,8 @@ func InitEConn( infura string ) {
 	}
 	EthConn = conn1
 	//conn.SendTransaction()
+
+	log.Println("init finish InitEConn")
 }
 func InitEConnLocal( ) {
 	conn1, err := ethclient.Dial("ws://localhost:8546")

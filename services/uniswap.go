@@ -115,27 +115,28 @@ type FtxChartDate struct {
 	Btc_low float64
 }
 
-func GetFtxTimesPrice(interval, count int) ([]*FtxChartDate, error) {
+func GetFtxTimesPrice(coin_type string ,interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
 	sql := `
-select cast(dates.id / ? as SIGNED) as id1,
+select truncate((dates.id-1) / ?,0) as id1,
 #        min(dates.date) datestr,
        min(dates.secon1) timestamp,
-       cast(avg(bulls.btc_bull) as decimal(9,3)) bull,
-       cast(max(bulls.btc_bull)as decimal(9,3)) hight,
-       cast(avg(bulls.btc_bull)as decimal(9,3)) low,
-       cast( avg(bulls.btc) as decimal(9,3))btc,
-       cast(max(bulls.btc)as decimal(9,3)) btc_hight,
-       cast(avg(bulls.btc)as decimal(9,3)) btc_low
+       cast(avg(bulls.bull) as decimal(9,3)) bull,
+       cast(max(bulls.bull)as decimal(9,3)) hight,
+       cast(avg(bulls.bull)as decimal(9,3)) low,
+       cast( avg(bulls.raw_price) as decimal(9,3))btc,
+       cast(max(bulls.raw_price)as decimal(9,3)) btc_hight,
+       cast(avg(bulls.raw_price)as decimal(9,3)) btc_low
 from stock.dates dates
-         left join coin_bulls bulls on dates.secon1 < bulls.id and dates.secon2 > bulls.id
+         left join coin_bull bulls on dates.secon1 < bulls.timestamp and dates.secon2 > bulls.timestamp
 where dates.secon1 > unix_timestamp()-15*60*?*?
   and dates.secon1 < unix_timestamp()
-and bulls.id > unix_timestamp()-15*60*?*?
-  and bulls.id < unix_timestamp()
+and bulls.timestamp > unix_timestamp()-15*60*?*?
+  and bulls.timestamp < unix_timestamp()
+and bulls.coin_type=?
 group by id1 limit ?;
 `
-	err := utils.Orm.Raw(sql, interval, interval, count, interval, count, count).Scan(&datas).Error
+	err := utils.Orm.Raw(sql, interval, interval, count, interval, count, coin_type,count).Scan(&datas).Error
 	return datas, err
 }
 func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*BlockPrice, error) {

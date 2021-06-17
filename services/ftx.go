@@ -3,6 +3,7 @@ package services
 import (
 	"log"
 	"math"
+	"regexp"
 	"stock/utils"
 	"strconv"
 	"time"
@@ -11,44 +12,50 @@ import (
 func CacuBullPrice(lastAjustPriceBull, lastAjustPric, curPric float64) float64{
 	return lastAjustPriceBull*((curPric-lastAjustPric)/lastAjustPric*3 +1)
 }
+func getMultipleFromCoinType(coinType string ) int{
+	preg:=regexp.MustCompile("(\\d+)x")
+	items:=preg.FindStringSubmatch(coinType)
+	multi,_:=strconv.Atoi(items[1])
+	return multi
+}
 
 /**/
 
-var FirstBull ,LastBullAJ *CoinBull
-func setFirstBull()  {
+var FirstBull ,LastBullAJ= map[string]*CoinBull{}, map[string]*CoinBull{}
+func setFirstBull(coinType string)  {
 	firstBull := new(CoinBull)
-	err := utils.Orm.First(firstBull).Error
+	err := utils.Orm.Where("coin_type=?",coinType).First(firstBull).Error
 	if err != nil {
 		log.Fatal(err)
 	}
-	FirstBull=firstBull
+	FirstBull[coinType]=firstBull
 	//return firstBull
 }
 
-func setLastBullAJ() {
+func setLastBullAJ(coinType string)  {
 	lastAj := new(CoinBull)
-	err:= utils.Orm.Order("id desc").First(lastAj, "is_ajust_point=?", 1).Error
+	err:= utils.Orm.Order("id desc").First(lastAj, "coin_type=? and is_ajust_point=?", coinType,1).Error
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("lastaj %v", lastAj)
-	LastBullAJ=lastAj
+	LastBullAJ[coinType]=lastAj
 	//return lastAj
 }
-func LastBullID() uint{
-	lastAj := new(CoinBull)
-	err:= utils.Orm.Order("id desc").First(lastAj).Error
+func LastBullTimeStamp(coinType string) int64{
+	cb := new(CoinBull)
+	err:= utils.Orm.Order("id desc").Where("coin_type=?",coinType).First(cb).Error
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("lastja %v", lastAj)
-	return lastAj.ID
+	log.Println("lastbullTime %v", cb)
+	return cb.Timestamp
 }
-func initCoinBull(){
+func initCoinBull(coinType string){
 	var err error
 	utils.Orm.AutoMigrate(CoinBull{})
 	bullCount := int64(0)
-	utils.Orm.Model(CoinBull{}).Count(&bullCount)
+	utils.Orm.Model(CoinBull{}).Where("coin_type=?",coinType).Count(&bullCount)
 	if bullCount == 0 {
 		firstCoin := new(Coin)
 		err = utils.Orm.Model(Coin{}).First(firstCoin).Error
@@ -56,42 +63,52 @@ func initCoinBull(){
 			log.Fatal(err)
 		}
 		cb := new(CoinBull)
-		cb.Btc = getCoinUSdPriceFromStr("1", firstCoin.Usd)
-		cb.BtcBull = 10000
-		cb.BaseChange = 0
+		cb.CoinType=coinType
+
+		coin_name:=coinType[:3]
+		rawPrice:="1"
+		if coin_name=="eth"{
+			rawPrice=firstCoin.Eth
+		}
+		cb.RawPrice = getCoinUSdPriceFromStr(rawPrice, firstCoin.Usd)
+		cb.Bull = 10000
+		cb.RawChange = 0
 		cb.BullChange = 0
 		cb.IsAjustPoint = true
-		cb.ID = 1
+		//cb.ID = 1
 		err=utils.Orm.Save(cb).Error
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 }
-func SetAllBulls() {
-	initCoinBull()
-	setFirstBull()
-	setLastBullAJ()
-	lastBullId:=LastBullID()
+func SetAllBulls(coinType string) {
+	initCoinBull(coinType)
+	setFirstBull(coinType)
+	setLastBullAJ(coinType)
+	lastBullTime:=LastBullTimeStamp(coinType)
+	//lastBullTime,_=SetBullsFromID(lastBullTime,coinType)
+	//return
 	proc:=func()error{
-		lastId,err:=SetBullsFromID(lastBullId)
+		lastId,err:=SetBullsFromID(lastBullTime,coinType)
 		if err==nil{
-			lastBullId=lastId
+			lastBullTime=lastId
 		}
 		return err
 	}
-	utils.IntervalSync("SetAllBull",10,proc)
+	utils.IntervalSync("SetAllBull"+coinType,10,proc)
 }
-func SetBullsFromID(lastBullId uint) (uint,error) {
-	//initCoinBull()
-	//setFirstBull()
-	//setLastBullAJ()
+
+//only for coin from congecko
+func SetBullsFromID(lastBullTime int64,coinType string) (int64,error) {
+	//initCoinBull(coinType)
+	//setFirstBull(coinType)
+	//setLastBullAJ(coinType)
 
 	var err error
-	//firstBull :=FirstBull()
-	//lastAj :=LastBullAJ()
 
-	rows, err := utils.Orm.Model(Coin{}).Where("id>?",lastBullId).Select("id","usd").Rows()
+	coin_name:=coinType[:3]
+	rows, err := utils.Orm.Model(Coin{}).Where(" id>?", lastBullTime).Rows()
 	//rows,err:=utils.Orm.Raw("SELECT cast(usd as decimal(10,2))as `usd`,id FROM `coins` order by `usd` asc;").Rows()
 	if err != nil {
 		log.Println(err)
@@ -101,8 +118,8 @@ func SetBullsFromID(lastBullId uint) (uint,error) {
 	counter:=0
 	for rows.Next() {
 		counter++
-		if counter>10000{
-			//return
+		if counter>10{
+			//return 0,nil
 		}
 		coin := new(Coin)
 		err=utils.Orm.ScanRows(rows, coin)
@@ -111,22 +128,28 @@ func SetBullsFromID(lastBullId uint) (uint,error) {
 			return 0,err
 		}
 		cb := new(CoinBull)
-		cb.Btc = getCoinUSdPriceFromStr("1", coin.Usd)
-		cb.BtcBull = CacuBullPrice(LastBullAJ.BtcBull, LastBullAJ.Btc, cb.Btc)
-		cb.BaseChange = RoundPercentageChange(FirstBull.Btc,cb.Btc, 1)
-		cb.BullChange = RoundPercentageChange(FirstBull.BtcBull,cb.BtcBull, 1)
-		ajChange:= RoundPercentageChange(LastBullAJ.BtcBull,cb.BtcBull, 1)
-		cb.Timestamp = time.Unix(coin.ID, 0).UTC()
+		cb.CoinType=coinType
+		rawPrice:="1"
+		if coin_name=="eth"{
+			rawPrice=coin.Eth
+		}
+
+		cb.RawPrice = getCoinUSdPriceFromStr(rawPrice, coin.Usd)
+		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Bull, LastBullAJ[coinType].RawPrice, cb.RawPrice)
+		cb.RawChange = RoundPercentageChange(FirstBull[coinType].RawPrice,cb.RawPrice, 1)
+		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull,cb.Bull, 1)
+		ajChange:= RoundPercentageChange(LastBullAJ[coinType].Bull,cb.Bull, 1)
+		cb.Timestamp = int64(coin.ID)
 		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
 		if  math.Abs(ajChange) > 10 {
 			cb.IsAjustPoint = true
-			LastBullAJ = cb
+			LastBullAJ[coinType] = cb
 		}
-		cb.ID=uint(coin.ID)
+		//cb.ID=uint(coin.ID)
 		err=utils.Orm.Create(cb).Error
-		lastBullId=cb.ID
+		lastBullTime =cb.Timestamp
 	}
-	return lastBullId,err
+	return lastBullTime,err
 }
 func RoundPercentageChange(oldValue,newValue float64,deciaml int) float64{
 	return float64(int(math.Trunc((newValue-oldValue)/oldValue* math.Pow10(deciaml+2))))/ math.Pow10(deciaml)
@@ -139,15 +162,22 @@ func getCoinUSdPriceFromStr(coin,usd string)float64{
 }
 type CoinBull struct {
 	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	Timestamp time.Time
-	//btc-usd价格
-	Btc float64
+	//原币价格抓取时对应的时间秒数
+	Timestamp int64
+	//杠杆币的类型：btc3x eth3x vix3x ust20x gold10x eur20x ndx10x
+	CoinType string
 	//bull价格
-	BtcBull float64
+	Bull float64
 	//bull相对于原点变化
 	BullChange float64
-	//源btc相对于原点变化
-	BaseChange float64
+	//原币 usd价格
+	RawPrice float64
+	//原币相对于原点变化
+	RawChange float64
+	//是否是调仓点
 	IsAjustPoint bool
+	CreatedAt time.Time
+}
+func (CoinBull CoinBull)TableName()string{
+	return "coin_bull"
 }

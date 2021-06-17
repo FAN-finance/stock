@@ -221,7 +221,7 @@ var doc = `{
                 }
             }
         },
-        "/pub/dex/ftx_chart_prices/btc/{count}/{interval}/{timestamp}": {
+        "/pub/dex/ftx_chart_prices/{coin_type}/{count}/{interval}/{timestamp}": {
             "get": {
                 "description": "获取杠杆btc代币不同时间区间的价格图表信息",
                 "consumes": [
@@ -237,10 +237,19 @@ var doc = `{
                 "operationId": "FtxChartPricesHandler",
                 "parameters": [
                     {
+                        "enum": [
+                            "btc3x",
+                            "eth3x",
+                            "vix3x",
+                            "ust20x",
+                            "gold10x",
+                            "eur20x",
+                            "ndx10x"
+                        ],
                         "type": "string",
-                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
-                        "description": "token地址",
-                        "name": "token",
+                        "default": "btc3x",
+                        "description": "ftx类型",
+                        "name": "coin_type",
                         "in": "path",
                         "required": true
                     },
@@ -930,7 +939,7 @@ var doc = `{
                 }
             }
         },
-        "/pub/internal/ftx_price/btc": {
+        "/pub/internal/ftx_price/{coin_type}": {
             "get": {
                 "description": "获取btc杠杆币价格，内部单节点模式",
                 "consumes": [
@@ -942,14 +951,23 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取btc杠杆币价格，内部单节点模式",
+                "summary": "获取btc杠杆币价格，内部单节点模式 目前",
                 "operationId": "FtxPriceHandler",
                 "parameters": [
                     {
+                        "enum": [
+                            "btc3x",
+                            "eth3x",
+                            "vix3x",
+                            "ust20x",
+                            "gold10x",
+                            "eur20x",
+                            "ndx10x"
+                        ],
                         "type": "string",
-                        "default": "btc",
-                        "description": "btc币价",
-                        "name": "coin",
+                        "default": "btc3x",
+                        "description": "ftx类型",
+                        "name": "coin_type",
                         "in": "path",
                         "required": true
                     },

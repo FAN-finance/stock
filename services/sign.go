@@ -133,11 +133,13 @@ func (s *HLDataPriceView) GetHash() []byte {
 }
 func (s *CoinPriceView) GetHash() []byte {
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	bgPrice,_:=big.NewInt(0).SetString(s.BigPrice,10)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
 		[]byte(s.Coin),
 		[]byte(s.VsCoin),
-		[]byte(s.BigPrice),
+		common.LeftPadBytes(bgPrice.Bytes(), 32),
+		//[]byte(s.BigPrice),
 	)
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
@@ -150,11 +152,13 @@ func (s *CoinPriceView) GetHash() []byte {
 
 func (s *DataCoinPriceView) GetHash() []byte {
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	bgPrice,_:=big.NewInt(0).SetString(s.BigPrice,10)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
 		[]byte(s.Coin),
 		[]byte(s.VsCoin),
-		[]byte(s.BigPrice),
+		common.LeftPadBytes(bgPrice.Bytes(), 32),
+		//[]byte(s.BigPrice),
 	)
 	// normally we sign prefixed hash
 	// as in solidity with `ECDSA.toEthSignedMessageHash`
