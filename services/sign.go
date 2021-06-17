@@ -29,8 +29,13 @@ func GetUnDecimalPrice(price float64) *big.Int {
 }
 func GetUnDecimalUsdPrice(price float64, decimal int) *big.Int {
 	pint := new(big.Int)
-	mint := int64(price * math.Pow10(decimal))
-	pint.SetInt64(mint)
+	//mint := int64(price * math.Pow10(decimal))
+	//pint.SetInt64(mint)
+
+	pfloat:=new(big.Float)
+	pfloat.SetFloat64(price)
+	pfloat=pfloat.Mul(pfloat,new(big.Float).SetFloat64(math.Pow10(decimal)))
+	pfloat.Int(pint)
 	//pint = pint.Mul(pint, big.NewInt(int64(math.Pow10(14))))
 	//pint,_=pfloat.Int(nil)
 	return pint

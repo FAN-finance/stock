@@ -156,7 +156,7 @@ func TokenPriceHandler(c *gin.Context) {
 		tPriceView.DataType = dataType
 		tPriceView.PriceUsd = res.PriceUsd
 		tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*1000) / 1000
-		tPriceView.BigPrice = services.GetUnDecimalUsdPrice(float64(res.PriceUsd), 3).String()
+		tPriceView.BigPrice = services.GetUnDecimalUsdPrice(float64(res.PriceUsd), 18).String()
 		tPriceView.NodeAddress = services.WalletAddre
 		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 		c.JSON(200, tPriceView)
@@ -216,7 +216,7 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata := new(services.HLPriceView)
 		sdata.PriceUsd = sumPrice / float64(len(nodePrices))
 		sdata.PriceUsd = (math.Trunc(float64(sdata.PriceUsd)*1000) / 1000)
-		sdata.BigPrice = services.GetUnDecimalUsdPrice(float64(sdata.PriceUsd), 3).String()
+		sdata.BigPrice = services.GetUnDecimalUsdPrice(float64(sdata.PriceUsd), 18).String()
 		sdata.Timestamp = int64(timestamp)
 		sdata.Code = code
 		sdata.DataType = dataType
