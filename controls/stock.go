@@ -196,7 +196,9 @@ func StockInfoHandler(c *gin.Context) {
 		snode.Price = (math.Trunc(float64(avgPrice)*1000) / 1000)
 		snode.BigPrice = services.GetUnDecimalPrice(float64(snode.Price)).String()
 		snode.Timestamp = int64(timestamp)
-		snode.SetSign()
+		if services.IsSignTime(0) {
+			snode.SetSign()
+		}
 		c.JSON(200, snode)
 		return
 	}
@@ -239,17 +241,19 @@ type resMarketStatus struct {
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/market_status/{timestamp} [get]
 func UsaMarketStatusHandler(c *gin.Context) {
-
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
 	if timestamp == 0 {
 		timestamp = int(time.Now().Unix())
 	}
 	resMarketStatus := new(resMarketStatus)
-	services.InitCalendar()
+
 	resMarketStatus.IsOpening, resMarketStatus.OpenTime = services.IsWorkTime(int64(timestamp))
 	c.JSON(200, resMarketStatus)
 	return
+}
+func init(){
+	services.InitCalendar()
 }
 
 func getAvgPrice(code string, timestamp int) (avgPrice float64, err error) {
@@ -381,7 +385,6 @@ func StockAggreHandler(c *gin.Context) {
 	//sdata.DataType = dataType
 	//sdata.SetSign()
 	// sdata.IsMarketOpening = services.UsdStockTime()
-	services.InitCalendar()
 	sdata.IsMarketOpening, sdata.MarketOpenTime = services.IsWorkTime(int64(timestamp))
 	c.JSON(200, sdata)
 	return
@@ -446,7 +449,9 @@ func StockAvgPriceHandler(c *gin.Context) {
 		sdata.StockCode = stockCode
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
-		sdata.SetSign()
+		if services.IsSignTime(0) {
+			sdata.SetSign()
+		}
 		c.JSON(200, sdata)
 		return
 	}

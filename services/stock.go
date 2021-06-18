@@ -247,6 +247,20 @@ func IsWorkTime(timestamp int64) (bool, int64) {
 	tmpDate = tmpDate.In(locUsaStock)
 	return tmpCa.IsWorkTime(tmpDate), tmpCa.WorkdayStart(tmpDate).Unix()
 }
+func IsSignTime(timestamp int64) bool {
+	if timestamp ==0{
+		timestamp=time.Now().Unix()
+	}
+	tmpCa := stockCalendar
+	if !IsSummerTime(timestamp) {
+		tmpCa.SetWorkHours(11*time.Hour+30*time.Minute, 17*time.Hour)
+	}else{
+		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 17*time.Hour)
+	}
+	tmpDate := time.Unix(timestamp, 0)
+	tmpDate = tmpDate.In(locUsaStock)
+	return tmpCa.IsWorkTime(tmpDate)
+}
 
 var locUsaStock = time.FixedZone("usa-stock", -4*60*60)
 
