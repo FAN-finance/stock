@@ -32,9 +32,9 @@ func GetUnDecimalUsdPrice(price float64, decimal int) *big.Int {
 	//mint := int64(price * math.Pow10(decimal))
 	//pint.SetInt64(mint)
 
-	pfloat:=new(big.Float)
+	pfloat := new(big.Float)
 	pfloat.SetFloat64(price)
-	pfloat=pfloat.Mul(pfloat,new(big.Float).SetFloat64(math.Pow10(decimal)))
+	pfloat = pfloat.Mul(pfloat, new(big.Float).SetFloat64(math.Pow10(decimal)))
 	pfloat.Int(pint)
 	//pint = pint.Mul(pint, big.NewInt(int64(math.Pow10(14))))
 	//pint,_=pfloat.Int(nil)
@@ -133,7 +133,7 @@ func (s *HLDataPriceView) GetHash() []byte {
 }
 func (s *CoinPriceView) GetHash() []byte {
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
-	bgPrice,_:=big.NewInt(0).SetString(s.BigPrice,10)
+	bgPrice, _ := big.NewInt(0).SetString(s.BigPrice, 10)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
 		[]byte(s.Coin),
@@ -152,7 +152,7 @@ func (s *CoinPriceView) GetHash() []byte {
 
 func (s *DataCoinPriceView) GetHash() []byte {
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
-	bgPrice,_:=big.NewInt(0).SetString(s.BigPrice,10)
+	bgPrice, _ := big.NewInt(0).SetString(s.BigPrice, 10)
 	hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
 		[]byte(s.Coin),
@@ -169,11 +169,11 @@ func (s *DataCoinPriceView) GetHash() []byte {
 	return prefixedHash
 }
 
-//代码 苹果代码 AAPL ,特斯拉代码 TSLA
+//代码 苹果代码 AAPL ,特斯拉代码 TSLA USD 稳定币
 var stockAddres = map[string]string{
 	"AAPL": "0xD87f6eCC45ABAD69446DA79a19D1E5Cf3B779098",
 	"TSLA": "0x681E954a65573fC3152b909dDD75d510285eBB0D",
-	"USD": "0x6d18127043f0f7d563cffc0b664eef80039db907",
+	"USD":  "0x6d18127043f0f7d563cffc0b664eef80039db907",
 }
 
 func (s *StockNode) GetHash() []byte {
@@ -261,6 +261,7 @@ func SignMsg(message []byte) []byte {
 	sig[64] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
 	return sig
 }
+
 //https://github.com/ethereum/go-ethereum/blob/55599ee95d4151a2502465e0afc7c47bd1acba77/internal/ethapi/api.go#L452-L459
 func Verify(hash, sig []byte, addre string) (bool, error) {
 	if len(sig) != 65 {
@@ -269,8 +270,8 @@ func Verify(hash, sig []byte, addre string) (bool, error) {
 	if sig[64] != 27 && sig[64] != 28 {
 		return false, fmt.Errorf("invalid Ethereum signature (V is not 27 or 28)")
 	}
-	tmpSig:=make([]byte,len(sig))
-	copy(tmpSig,sig)
+	tmpSig := make([]byte, len(sig))
+	copy(tmpSig, sig)
 
 	tmpSig[64] -= 27 // Transform yellow paper V from 27/28 to 0/1
 	pubKey, err := crypto.SigToPub(hash, tmpSig)
@@ -317,5 +318,5 @@ func InitNodeKey() {
 	addre := crypto.PubkeyToAddress(pubKey)
 	WalletAddre = addre.Hex()
 	log.Println("WalletAddre:", WalletAddre)
-	Uptime=time.Now()
+	Uptime = time.Now()
 }
