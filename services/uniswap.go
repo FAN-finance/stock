@@ -156,7 +156,8 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 		}
 		gql += `\n}\n"}`
 
-		bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
+		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
+		err=err1
 		if err == nil {
 			//使其直接返回字符串
 			bs = bytes.TrimPrefix(bs, []byte(`{"data":`))

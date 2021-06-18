@@ -56,6 +56,7 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 			//bs, err = ioutil.ReadAll(res.Body)
 			if resp == nil {
 				err = errors.New("err resp nil")
+				log.Println("ReqRes",err)
 			} else if resp.StatusCode != 200 && resp.StatusCode != 206 {
 				err = errors.New("err status:" + resp.Status)
 			}
