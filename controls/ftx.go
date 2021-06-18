@@ -8,11 +8,10 @@ import (
 	"log"
 	"math"
 	"stock/services"
-	"strconv"
 	"stock/utils"
+	"strconv"
 	"sync"
 )
-
 
 // @Tags default
 // @Summary　获取ftx token价格信息
@@ -123,16 +122,17 @@ END:
 	}
 }
 
-var ftxAddres =map[string]string{
-	"btc3x": "0x161459189a9Fe1EF3F367FeED8b1682f5582f96c",
-	"eth3x": "0x91dF141c33e43Fc97B0b6746A95f7bfc639D76bD",
-	"vix3x": "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
-	"ust20x": "0x36DeBA1578B11912F6a39f0E2060C5b15cF21c3c",
+var ftxAddres = map[string]string{
+	"btc3x":   "0x161459189a9Fe1EF3F367FeED8b1682f5582f96c",
+	"eth3x":   "0x91dF141c33e43Fc97B0b6746A95f7bfc639D76bD",
+	"vix3x":   "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
+	"ust20x":  "0x36DeBA1578B11912F6a39f0E2060C5b15cF21c3c",
 	"gold10x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
-	"eur20x": "0x2Be088a27150fc122233356dFBF3a0C01684329C",
-	"ndx10x": "0x9578BF55c12C66E222344c3244Db6eA8b2498aca",
-	"usd": "0x6d18127043f0f7d563cffc0b664eef80039db907",
+	"eur20x":  "0x2Be088a27150fc122233356dFBF3a0C01684329C",
+	"ndx10x":  "0x9578BF55c12C66E222344c3244Db6eA8b2498aca",
+	"usd":     "0x761946b65164555a1a63a6f119308b3c9b06831f",
 }
+
 // @Tags default
 // @Summary　获取ftx coin最近一小时最高最低价格信息,内部单节点
 // @Description 获取ftx coin最近一小时最高最低价格信息
@@ -157,7 +157,7 @@ func FtxPriceHandler(c *gin.Context) {
 	//err:=utils.Orm.Order("id desc").Where("coin_type=?",coin).First(cb).Error
 	vp := new(HLValuePair)
 	if coin_type == "usd" {
-		vp.High = 1;
+		vp.High = 1
 		vp.Low = 1
 	} else {
 		intreval := "60s"
@@ -222,7 +222,6 @@ WHERE
 	return
 }
 
-
 // @Tags default
 // @Summary　获取杠杆btc代币不同时间区间的价格图表信息
 // @Description 获取杠杆btc代币不同时间区间的价格图表信息
@@ -238,24 +237,23 @@ WHERE
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/ftx_chart_prices/{coin_type}/{count}/{interval}/{timestamp} [get]
 func FtxChartPricesHandler(c *gin.Context) {
-	coin_type:=c.Param("coin_type")
+	coin_type := c.Param("coin_type")
 	//code:="btc"
-	interval_str:=c.Param("interval")
-	interval,_:=strconv.Atoi(interval_str)
-	count_str:=c.Param("count")
-	count,_:=strconv.Atoi(count_str)
-
+	interval_str := c.Param("interval")
+	interval, _ := strconv.Atoi(interval_str)
+	count_str := c.Param("count")
+	count, _ := strconv.Atoi(count_str)
 
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-	ckey:=fmt.Sprintf("FtxChartPricesHandler-%s-%s",interval_str,count_str)
-	proc:= func()(interface{},error) {
-		items,err:=services.GetFtxTimesPrice(coin_type,interval,count)
+	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s", interval_str, count_str)
+	proc := func() (interface{}, error) {
+		items, err := services.GetFtxTimesPrice(coin_type, interval, count)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
-		return items,err
+		return items, err
 	}
-	SetCacheResExpire(c,ckey,false,600,proc,c.Query("debug")=="1")
+	SetCacheResExpire(c, ckey, false, 600, proc, c.Query("debug") == "1")
 	//
 	////timestampstr:=c.Param("timestamp")
 	////timestamp,_:=strconv.Atoi(timestampstr)
