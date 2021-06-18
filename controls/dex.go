@@ -158,7 +158,9 @@ func TokenPriceHandler(c *gin.Context) {
 		tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*1000) / 1000
 		tPriceView.BigPrice = services.GetUnDecimalPrice(float64(res.PriceUsd)).String()
 		tPriceView.NodeAddress = services.WalletAddre
-		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+		if tPriceView.PriceUsd>0.001 {
+			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+		}
 		c.JSON(200, tPriceView)
 		return
 	}
@@ -221,7 +223,9 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.Code = code
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
-		sdata.Sign = services.SignMsg(sdata.GetHash())
+		if sdata.PriceUsd>0.001 {
+			sdata.Sign = services.SignMsg(sdata.GetHash())
+		}
 		c.JSON(200, sdata)
 		return
 	}
