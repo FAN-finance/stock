@@ -285,6 +285,88 @@
                 }
             }
         },
+        "/pub/dex/ftx_price/{coin_type}/{data_type}/{timestamp}": {
+            "get": {
+                "description": "获取ftx token价格信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取ftx token价格信息",
+                "operationId": "FtxPriceSignHandler",
+                "parameters": [
+                    {
+                        "enum": [
+                            "usd",
+                            "btc3x",
+                            "eth3x",
+                            "vix3x",
+                            "ust20x",
+                            "gold10x",
+                            "eur20x",
+                            "ndx10x"
+                        ],
+                        "type": "string",
+                        "default": "btc3x",
+                        "description": "ftx类型",
+                        "name": "coin_type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "调试",
+                        "name": "debug",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "token price info",
+                        "schema": {
+                            "$ref": "#/definitions/services.HLDataPriceView"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/dex/lp_price/{pair}/{timestamp}": {
             "get": {
                 "description": "获取lp价格信息",
@@ -745,6 +827,81 @@
                 }
             }
         },
+        "/pub/internal/dex/ftx_price/{coin_type}/{timestamp}": {
+            "get": {
+                "description": "获取ftx coin最近一小时最高最低价格信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取ftx coin最近一小时最高最低价格信息,内部单节点",
+                "operationId": "FtxPriceHandler",
+                "parameters": [
+                    {
+                        "enum": [
+                            "usd",
+                            "btc3x",
+                            "eth3x",
+                            "vix3x",
+                            "ust20x",
+                            "gold10x",
+                            "eur20x",
+                            "ndx10x"
+                        ],
+                        "type": "string",
+                        "default": "btc3x",
+                        "description": "ftx类型",
+                        "name": "coin_type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Price View",
+                        "schema": {
+                            "$ref": "#/definitions/services.HLPriceView"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/internal/dex/lp_price/{pair}/{timestamp}": {
             "get": {
                 "description": "内部单节点获取lp价格信息",
@@ -899,68 +1056,6 @@
                         "description": "Price View",
                         "schema": {
                             "$ref": "#/definitions/services.HLPriceView"
-                        },
-                        "headers": {
-                            "sign": {
-                                "type": "string",
-                                "description": "签名信息"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "失败时，有相应测试日志输出",
-                        "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/pub/internal/ftx_price/{coin_type}": {
-            "get": {
-                "description": "获取btc杠杆币价格，内部单节点模式",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "default"
-                ],
-                "summary": "获取btc杠杆币价格，内部单节点模式 目前",
-                "operationId": "FtxPriceHandler",
-                "parameters": [
-                    {
-                        "enum": [
-                            "btc3x",
-                            "eth3x",
-                            "vix3x",
-                            "ust20x",
-                            "gold10x",
-                            "eur20x",
-                            "ndx10x"
-                        ],
-                        "type": "string",
-                        "default": "btc3x",
-                        "description": "ftx类型",
-                        "name": "coin_type",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1620383144,
-                        "description": "unix 秒数",
-                        "name": "timestamp",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Coin Price",
-                        "schema": {
-                            "$ref": "#/definitions/services.CoinPriceView"
                         },
                         "headers": {
                             "sign": {

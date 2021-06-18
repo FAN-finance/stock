@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+
+
 func CacuBullPrice(lastAjustPriceBull, lastAjustPric, curPric float64) float64{
 	return lastAjustPriceBull*((curPric-lastAjustPric)/lastAjustPric*3 +1)
 }

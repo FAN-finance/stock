@@ -122,8 +122,8 @@ END:
 	}
 }
 type HLValuePair struct{
-	Hight float64
-	Low float64
+	High float64
+	Low  float64
 }
 
 // @Tags default
@@ -159,8 +159,8 @@ func TokenPriceHandler(c *gin.Context) {
 		}
 		vp:=new(HLValuePair)
 		for _, item := range items {
-			vp.Hight=math.Max(vp.Hight,item.Price)
-			vp.Low=math.Min(vp.Hight,item.Price)
+			vp.High =math.Max(vp.High,item.Price)
+			vp.Low=math.Min(vp.High,item.Price)
 		}
 		return vp, err
 	}
@@ -191,7 +191,7 @@ func TokenPriceHandler(c *gin.Context) {
 		tPriceView.Timestamp = int64(timestamp)
 		tPriceView.DataType = dataType
 		if dataType==1{
-			tPriceView.PriceUsd = vp.Hight
+			tPriceView.PriceUsd = vp.High
 		}
 		if dataType==2{
 			tPriceView.PriceUsd = vp.Low

@@ -141,6 +141,7 @@ group by id1 limit ?;
 	err := utils.Orm.Raw(sql, interval, interval, count, interval, count, coin_type,count).Scan(&datas).Error
 	return datas, err
 }
+
 func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*BlockPrice, error) {
 	//{"operationName":"blocks","variables":{},"query":"query blocks {
 	//	\nt1620871200: token(id: \"0xbc396689893d065f41bc2c6ecbee5e0085233447\", block: {number: 12423239}) {\n    derivedETH\n    __typename\n  }\n
