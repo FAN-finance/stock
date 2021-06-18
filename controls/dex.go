@@ -121,10 +121,14 @@ END:
 		ErrJson(c, err.Error())
 	}
 }
+type HLValuePair struct{
+	Hight float64
+	Low float64
+}
 
 // @Tags default
-// @Summary　获取token价格信息,内部单节点
-// @Description 内部单节点获取token信息,含pair的lp Token内容
+// @Summary　获取token最近一小时最高最低价格信息,内部单节点
+// @Description 获取token最近一小时最高最低价格信息
 // @ID TokenPriceHandler
 // @Accept  json
 // @Produce  json
@@ -141,12 +145,44 @@ func TokenPriceHandler(c *gin.Context) {
 	timestamp, _ := strconv.Atoi(timestampstr)
 	dataTypeStr := c.Query("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
-	res, err := services.GetTokenInfo(code)
-	if err == nil {
-		price := services.BlockPrice{}.GetPrice()
-		fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
-		res.PriceUsd = fprice * price
 
+	intreval:="60s"
+	count:=60
+	//intreval:="hour"
+	//count:=20
+	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	ckey := fmt.Sprintf("TokenPriceHandler-%s-%s-%d", code, intreval, count)
+	proc := func() (interface{}, error) {
+		items, err := services.GetTokenTimesPrice(code,  intreval, count)
+		if err != nil {
+			return nil, err
+		}
+		vp:=new(HLValuePair)
+		for _, item := range items {
+			vp.Hight=math.Max(vp.Hight,item.Price)
+			vp.Low=math.Min(vp.Hight,item.Price)
+		}
+		return vp, err
+	}
+	var res interface{}
+	var err error
+	if c.Query("debug") == "1" {
+		res, err = proc()
+	} else {
+		log.Println("cache process",ckey)
+		res, err = utils.CacheFromLru(1, ckey, int(100), proc)
+	}
+	if err == nil {
+
+	}
+	//res, err := services.GetTokenInfo(code)
+	if err == nil {
+		//price := services.BlockPrice{}.GetPrice()
+		//fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
+		//res.PriceUsd = fprice * price
+
+		vp:=res.(*HLValuePair)
+		log.Println(*vp)
 		tPriceView := new(services.HLPriceView)
 		tPriceView.Code = code
 		if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
@@ -154,9 +190,14 @@ func TokenPriceHandler(c *gin.Context) {
 		}
 		tPriceView.Timestamp = int64(timestamp)
 		tPriceView.DataType = dataType
-		tPriceView.PriceUsd = res.PriceUsd
+		if dataType==1{
+			tPriceView.PriceUsd = vp.Hight
+		}
+		if dataType==2{
+			tPriceView.PriceUsd = vp.Low
+		}
 		tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*1000) / 1000
-		tPriceView.BigPrice = services.GetUnDecimalPrice(float64(res.PriceUsd)).String()
+		tPriceView.BigPrice = services.GetUnDecimalPrice(float64(tPriceView.PriceUsd)).String()
 		tPriceView.NodeAddress = services.WalletAddre
 		if tPriceView.PriceUsd>0.001 {
 			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())

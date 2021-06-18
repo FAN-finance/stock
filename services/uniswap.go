@@ -48,6 +48,8 @@ func getTokenTimes(interval string, count int) []int64 {
 	now := time.Now().UTC().Truncate(time.Minute)
 	span := time.Hour
 	switch interval {
+	case "60s":
+		span = time.Second * 60
 	case "15minite":
 		span = time.Minute * 15
 	case "hour":
@@ -175,11 +177,11 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 				preTime := uint64(0)
 				for idx, item := range bps {
 					key := fmt.Sprintf("t%d", item.BlockTime)
-					log.Println("key", key, item.ID)
 					resItem, ok := res[key]
 					if ok {
 						ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
 						item.Price = RoundPrice(ethValue * item.Price)
+						//log.Println("key", key, item.Price,ethValue)
 					} else {
 						if idx > 0 {
 							item.Price = bps[idx-1].Price
@@ -204,7 +206,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	return bps, err
 }
 func RoundPrice(price float64) float64 {
-	return float64(int(math.Trunc(price*math.Pow10(2)))) / math.Pow10(2)
+	return float64(int(math.Trunc(price*math.Pow10(3)))) / math.Pow10(3)
 }
 
 type LpSnapPairInfo struct {

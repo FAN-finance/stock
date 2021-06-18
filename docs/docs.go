@@ -262,13 +262,6 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "enum": [
-                            1,
-                            2,
-                            3,
-                            4,
-                            96
-                        ],
                         "type": "integer",
                         "description": "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；",
                         "name": "interval",
@@ -876,7 +869,7 @@ var doc = `{
         },
         "/pub/internal/dex/token_price/{token}/{timestamp}": {
             "get": {
-                "description": "内部单节点获取token信息,含pair的lp Token内容",
+                "description": "获取token最近一小时最高最低价格信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -886,7 +879,7 @@ var doc = `{
                 "tags": [
                     "default"
                 ],
-                "summary": "获取token价格信息,内部单节点",
+                "summary": "获取token最近一小时最高最低价格信息,内部单节点",
                 "operationId": "TokenPriceHandler",
                 "parameters": [
                     {
