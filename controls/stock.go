@@ -180,10 +180,10 @@ func StockInfoHandler(c *gin.Context) {
 	//	}
 	//}
 	var err error
-	avgPrice:=0.0
-	if code=="USD"{
-		avgPrice=1.0
-	}else{
+	avgPrice := 0.0
+	if code == "USD" {
+		avgPrice = 1.0
+	} else {
 		avgPrice, err = services.GetMsStatData(code, dataType)
 	}
 	if err == nil {
@@ -252,7 +252,7 @@ func UsaMarketStatusHandler(c *gin.Context) {
 	c.JSON(200, resMarketStatus)
 	return
 }
-func init(){
+func init() {
 	services.InitCalendar()
 }
 
@@ -386,6 +386,11 @@ func StockAggreHandler(c *gin.Context) {
 	//sdata.SetSign()
 	// sdata.IsMarketOpening = services.UsdStockTime()
 	sdata.IsMarketOpening, sdata.MarketOpenTime = services.IsWorkTime(int64(timestamp))
+	// set IsMarketOpening state
+	if len(avgNodesPrice) == 0 || avgNodesPrice[0].Sign == nil {
+		sdata.IsMarketOpening = false
+	}
+
 	c.JSON(200, sdata)
 	return
 
