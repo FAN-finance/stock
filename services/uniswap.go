@@ -169,7 +169,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 			if err == nil {
 				//log.Println(res)
 				if len(res)==0{
-					return nil ,errors.New("网络错误，稍后重试")
+					return nil ,errors.New("没找到任何数据，稍后重试")
 				}
 				preTime := uint64(0)
 				for idx, item := range bps {
