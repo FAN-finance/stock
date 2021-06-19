@@ -199,6 +199,9 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 				}
 			}
 		}
+		if err != nil {
+			log.Println(string(bs))
+		}
 		//log.Println(gql ,string(bs),err)
 	}
 	if err != nil {

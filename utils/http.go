@@ -55,8 +55,14 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 		if err == nil {
 			//bs, err = ioutil.ReadAll(res.Body)
 			if resp == nil {
+				retry += 1
+				if retry < 3 {
+					log.Println("retry resp nil")
+					time.Sleep(time.Millisecond * 100)
+					goto RETRY
+				}
 				err = errors.New("err resp nil")
-				log.Println("ReqRes",err)
+				log.Println("ReqRes", err)
 			} else if resp.StatusCode != 200 && resp.StatusCode != 206 {
 				err = errors.New("err status:" + resp.Status)
 			}
