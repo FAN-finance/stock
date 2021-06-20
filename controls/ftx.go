@@ -123,7 +123,7 @@ END:
 }
 
 var ftxAddres = map[string]string{
-	"btc3x":   "0x161459189a9Fe1EF3F367FeED8b1682f5582f96c",
+	"btc3x":   "0x57d0cbc7caf07ab6c81d83a6df682ce731545ae9",
 	"eth3x":   "0x91dF141c33e43Fc97B0b6746A95f7bfc639D76bD",
 	"vix3x":   "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
 	"ust20x":  "0x36DeBA1578B11912F6a39f0E2060C5b15cF21c3c",
