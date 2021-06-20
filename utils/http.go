@@ -56,7 +56,7 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 			//bs, err = ioutil.ReadAll(res.Body)
 			if resp == nil {
 				retry += 1
-				if retry < 3 {
+				if retry < 5 {
 					log.Println("retry resp nil")
 					time.Sleep(time.Millisecond * 100)
 					goto RETRY
