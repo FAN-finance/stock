@@ -2,13 +2,21 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"log"
 	"math"
+	"math/big"
 	"stock/utils"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -532,4 +540,93 @@ func GetPairInfo(pairAddre string) (pair *PairInfo, err error) {
 		}
 	}
 	return nil, err
+}
+
+
+func SubPairlog(FromBlock int64,contractAddressHex string) {
+	contractAbi, err := abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	logTransferSig := []byte("Sync(uint112,uint112)")
+	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
+
+	fromBlockNum:=new(big.Int)
+	toBlockNum:=new(big.Int)
+	contractAddress := common.HexToAddress(contractAddressHex)
+	query := ethereum.FilterQuery{
+		Addresses: []common.Address{contractAddress},
+		FromBlock: fromBlockNum.SetInt64(12676762),
+		ToBlock: toBlockNum.SetInt64(12676762),
+		Topics:[][]common.Hash{[]common.Hash{logTransferSigHash}},
+	}
+
+
+
+	logs1,err:=EthConn.FilterLogs(context.Background(), query)
+	for _, item := range logs1 {
+		log.Println(item) // pointer to event log
+
+		if  item.Topics[0].Hex()==logTransferSigHash.Hex(){
+
+			log.Printf("Log Name: Sync\n")
+
+
+			transferEvent:=new(FanswapV2PairSync)
+			err := contractAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			//transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
+			//transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
+
+			log.Printf("res0: %d\n",BintTrunc(transferEvent.Reserve0,18))
+			log.Printf("res1: %d\n", BintTrunc(transferEvent.Reserve1,6))
+		}
+	}
+	return
+
+	logs := make(chan types.Log)
+	sub, err := EthConn.SubscribeFilterLogs(context.Background(), query, logs)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("sublog",FromBlock,contractAddressHex)
+	count:=0
+	for {
+		count++;
+		if count>10{
+			return
+		}
+		select {
+		case err := <-sub.Err():
+			log.Fatal(err)
+		case vLog := <-logs:
+			log.Println(vLog) // pointer to event log
+
+			if  vLog.Topics[0].Hex()==logTransferSigHash.Hex(){
+
+				log.Printf("Log Name: Sync\n")
+
+
+				transferEvent:=new(FanswapV2PairSync)
+				err := contractAbi.UnpackIntoInterface(&transferEvent, "Sync", vLog.Data)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				//transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
+				//transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
+
+				log.Printf("res0: %s\n", transferEvent.Reserve0)
+				log.Printf("res1: %s\n", transferEvent.Reserve1)
+			}
+		}
+	}
+}
+func BintTrunc(bint *big.Int,decimal int)int64{
+	return bint.Quo(bint,big.NewInt( int64(math.Pow10(decimal)))).Int64()
+
 }
