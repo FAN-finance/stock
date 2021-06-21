@@ -27,8 +27,8 @@ type TokenDayData struct {
 	TotalLiquidityUSD   string `json:"totalLiquidityUSD"`
 }
 
-//var SwapGraphApi = "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2"
-//var tokenDayDataGraph = `{"operationName":"tokenDayDatas","variables":{"tokenAddr":"%s","skip":0},"query":"query tokenDayDatas($tokenAddr: String\u0021, $skip: Int\u0021) {\n  tokenDayDatas(first: %d, skip: $skip, orderBy: date, orderDirection: desc, where: {token: $tokenAddr}) {\n    id\n    date\n    priceUSD\n    totalLiquidityToken\n    totalLiquidityUSD\n    totalLiquidityETH\n    dailyVolumeETH\n    dailyVolumeToken\n    dailyVolumeUSD\n    __typename\n  }\n}\n"}`
+var SwapBlockGraphApi = "https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks"
+var blockGraph = `{"operationName":"blocks","variables":{},"query":"query blocks {\n  t1624159500: blocks(first: 1, orderBy: timestamp, orderDirection: desc, where: {timestamp_gt: 1624159500, timestamp_lt: 1624160100}) {\n    number\n    __typename\n  }\n  t1624073100: blocks(first: 1, orderBy: timestamp, orderDirection: desc, where: {timestamp_gt: 1624073100, timestamp_lt: 1624073700}) {\n    number\n    __typename\n  }\n  t1623641100: blocks(first: 1, orderBy: timestamp, orderDirection: desc, where: {timestamp_gt: 1623641100, timestamp_lt: 1623641700}) {\n    number\n    __typename\n  }\n}\n"}`
 
 var SwapGraphApi = "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2"
 var tokenDayDataGraph = `{"operationName":"tokenDayDatas","variables":{"tokenAddr":"%s","skip":0},"query":"query tokenDayDatas($tokenAddr: String\u0021, $skip: Int\u0021) {\n  tokenDayDatas(first: %d, skip: $skip, orderBy: date, orderDirection: desc, where: {token: $tokenAddr}) {\n    id\n    date\n    priceUSD\n    totalLiquidityToken\n    totalLiquidityUSD\n    totalLiquidityETH\n    dailyVolumeETH\n    dailyVolumeToken\n    dailyVolumeUSD\n    __typename\n  }\n}\n"}`
@@ -48,7 +48,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	if count == 0 {
 		count = 10
 	}
-	now := time.Now().UTC().Add(-4*time.Minute).Truncate(time.Minute)
+	now := time.Now().UTC().Add(-5*time.Minute).Truncate(time.Minute)
 	span := time.Hour
 	switch interval {
 	case "60s":
