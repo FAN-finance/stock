@@ -45,7 +45,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	if count == 0 {
 		count = 10
 	}
-	now := time.Now().UTC().Truncate(3*time.Minute)
+	now := time.Now().UTC().Truncate(time.Second*120)
 	span := time.Hour
 	switch interval {
 	case "60s":
