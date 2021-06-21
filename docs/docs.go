@@ -32,7 +32,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/pub/coin_price/{coin}/{vs_coin}": {
+        "/pub/coin_price/{coin}/{vs_coin}/{timestamp}": {
             "get": {
                 "description": "获取币价换算，多节点签名版",
                 "consumes": [
@@ -196,7 +196,7 @@ var doc = `{
                         "default": 1620383144,
                         "description": "unix 秒数",
                         "name": "timestamp",
-                        "in": "query"
+                        "in": "path"
                     }
                 ],
                 "responses": {

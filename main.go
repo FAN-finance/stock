@@ -101,7 +101,7 @@ func main() {
 	api.GET("/internal/dex/token_info/:token/:timestamp", controls.TokenInfoHandler)
 	api.GET("/internal/coin_price/:coin/:vs_coin", controls.CoinPriceHandler)
 	api.GET("/internal/dex/ftx_price/:coin_type/:timestamp", controls.FtxPriceHandler)
-	api.GET("/coin_price/:coin/:vs_coin", controls.CoinPriceSignHandler)
+	api.GET("/coin_price/:coin/:vs_coin/:timestamp", controls.CoinPriceSignHandler)
 	api.GET("/dex/token_price/:token/:data_type/:timestamp", controls.TokenPriceSignHandler)
 	api.GET("/dex/ftx_price/:coin_type/:data_type/:timestamp", controls.FtxPriceSignHandler)
 	api.GET("/dex/token_day_datas/:token/:days/:timestamp", controls.TokenDayDatasHandler)

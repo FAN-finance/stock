@@ -53,7 +53,7 @@ func CoinPriceHandler(c *gin.Context) {
 		vsCoinField = "1 as vs_coin"
 	}
 	cs := new(coinvs)
-	err := utils.Orm.Order("id desc").Select("id", coinField, vsCoinField).Find(cs).Error
+	err := utils.Orm.Order("id desc").Select("id", coinField, vsCoinField).First(cs).Error
 	log.Println(cs)
 
 	if err == nil {
@@ -85,15 +85,15 @@ func CoinPriceHandler(c *gin.Context) {
 // @Produce  json
 // @Param     coin   path    string     true        "目标币价" default(eth) Enums(btc,aed,ars,aud,bch,bdt,bhd,bits,bmd,bnb,brl,byn,cad,chf,clp,cny,czk,dkk,dot,eos,eth,eur,gbp,hkd,huf,idr,ils,inr,jpy,krw,kwd,link,lkr,ltc,mmk,mxn,myr,ngn,nok,nzd,php,pkr,pln,rub,sar,sats,sek,sgd,thb,try,twd,uah,usd,vef,vnd,xag,xau,xdr,xlm,xrp,yfi,zar)
 // @Param     vs_coin   path    string     true        "vs币价" default(usd) Enums(btc,aed,ars,aud,bch,bdt,bhd,bits,bmd,bnb,brl,byn,cad,chf,clp,cny,czk,dkk,dot,eos,eth,eur,gbp,hkd,huf,idr,ils,inr,jpy,krw,kwd,link,lkr,ltc,mmk,mxn,myr,ngn,nok,nzd,php,pkr,pln,rub,sar,sats,sek,sgd,thb,try,twd,uah,usd,vef,vnd,xag,xau,xdr,xlm,xrp,yfi,zar)
-// @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
+// @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.CoinPriceView	"CoinPriceView"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/coin_price/{coin}/{vs_coin} [get]
+// @Router /pub/coin_price/{coin}/{vs_coin}/{timestamp} [get]
 func CoinPriceSignHandler(c *gin.Context) {
 	coin := c.Param("coin")
 	vsCoin := c.Param("vs_coin")
-	timestampstr := c.Query("timestamp")
+	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
 
 	resTokenView := new(services.DataCoinPriceView)

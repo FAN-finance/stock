@@ -318,7 +318,7 @@ info:
   title: stock-info-api
   version: "1.0"
 paths:
-  /pub/coin_price/{coin}/{vs_coin}:
+  /pub/coin_price/{coin}/{vs_coin}/{timestamp}:
     get:
       consumes:
       - application/json
@@ -465,7 +465,7 @@ paths:
         type: string
       - default: 1620383144
         description: unix 秒数
-        in: query
+        in: path
         name: timestamp
         type: integer
       produces:
