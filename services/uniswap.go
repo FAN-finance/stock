@@ -27,6 +27,9 @@ type TokenDayData struct {
 	TotalLiquidityUSD   string `json:"totalLiquidityUSD"`
 }
 
+//var SwapGraphApi = "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2"
+//var tokenDayDataGraph = `{"operationName":"tokenDayDatas","variables":{"tokenAddr":"%s","skip":0},"query":"query tokenDayDatas($tokenAddr: String\u0021, $skip: Int\u0021) {\n  tokenDayDatas(first: %d, skip: $skip, orderBy: date, orderDirection: desc, where: {token: $tokenAddr}) {\n    id\n    date\n    priceUSD\n    totalLiquidityToken\n    totalLiquidityUSD\n    totalLiquidityETH\n    dailyVolumeETH\n    dailyVolumeToken\n    dailyVolumeUSD\n    __typename\n  }\n}\n"}`
+
 var SwapGraphApi = "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2"
 var tokenDayDataGraph = `{"operationName":"tokenDayDatas","variables":{"tokenAddr":"%s","skip":0},"query":"query tokenDayDatas($tokenAddr: String\u0021, $skip: Int\u0021) {\n  tokenDayDatas(first: %d, skip: $skip, orderBy: date, orderDirection: desc, where: {token: $tokenAddr}) {\n    id\n    date\n    priceUSD\n    totalLiquidityToken\n    totalLiquidityUSD\n    totalLiquidityETH\n    dailyVolumeETH\n    dailyVolumeToken\n    dailyVolumeUSD\n    __typename\n  }\n}\n"}`
 
@@ -45,7 +48,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	if count == 0 {
 		count = 10
 	}
-	now := time.Now().UTC().Add(-2*time.Minute).Truncate(time.Minute)
+	now := time.Now().UTC().Add(-4*time.Minute).Truncate(time.Minute)
 	span := time.Hour
 	switch interval {
 	case "60s":
