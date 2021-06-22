@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tidwall/gjson"
 	"log"
 	"math"
 	"math/big"
@@ -85,13 +86,13 @@ func getTokenTimes(interval string, count int) []int64 {
 	return timeItems
 }
 
-func getBlockPrices(timeItems []int64) ([]*BlockPrice, error) {
+func getBlockPrices(timeItems []int64, maxBlockHeight int64) ([]*BlockPrice, error) {
 	bps := []*BlockPrice{}
 
 	sql := ""
 	args := []interface{}{}
 	for idx, item := range timeItems {
-		sql += fmt.Sprintf("(select id,price, %d as block_time1 from block_prices where block_time< ? order by block_time desc limit 1)", item)
+		sql += fmt.Sprintf("(select id,price, %d as block_time1 from block_prices where block_time< ? and id < %d order by block_time desc limit 1)", item, maxBlockHeight)
 		if idx < len(timeItems)-1 {
 			sql += " union all"
 		}
@@ -110,14 +111,6 @@ func getBlockPrices(timeItems []int64) ([]*BlockPrice, error) {
 	//	bp.BlockTime=uint64(item)
 	//	bps=append(bps,bp)
 	//}
-	return bps, err
-}
-
-func getBlockPricesById(maxBlockHeight int64) ([]*BlockPrice, error) {
-	bps := []*BlockPrice{}
-	sql := ""
-	sql = fmt.Sprintf("select  id,price, block_time from block_prices where id < %d ORDER BY id DESC limit 0, 60 ;", maxBlockHeight+1)
-	err := utils.Orm.Raw(sql).Scan(&bps).Error
 	return bps, err
 }
 
@@ -173,11 +166,10 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	//times=[]int64{12427306,12429525}
 	times := getTokenTimes(interval, count)
 	log.Println(times)
-	bps, err := getBlockPrices(times)
-	/*body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
 	result := gjson.Parse(string(body))
 	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
-	bps, err := getBlockPricesById(blockHeight)*/
+	bps, err := getBlockPrices(times, blockHeight)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for _, item := range bps {
@@ -318,7 +310,10 @@ func GetTokenInfosForStat(tokenAddre string, ethPrice float64) (OneDayStat, erro
 	times = []int64{twoDay.Unix(), oneDay.Unix(), now.Unix()}
 	//times=[]int64{12427306,12429525}
 	//times = getTokenTimes(interval, count)
-	bps, err := getBlockPrices(times)
+	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	result := gjson.Parse(string(body))
+	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
+	bps, err := getBlockPrices(times, blockHeight)
 	log.Println(times)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
