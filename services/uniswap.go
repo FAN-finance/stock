@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tidwall/gjson"
 	"log"
 	"math"
 	"math/big"
@@ -57,7 +58,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	if count == 0 {
 		count = 10
 	}
-	now := time.Now().UTC().Add(-10*time.Minute).Truncate(time.Minute)
+	now := time.Now().UTC().Add(-10 * time.Minute).Truncate(time.Minute)
 	span := time.Hour
 	switch interval {
 	case "60s":
@@ -113,6 +114,14 @@ func getBlockPrices(timeItems []int64) ([]*BlockPrice, error) {
 	return bps, err
 }
 
+func getBlockPricesById(maxBlockHeight int64) ([]*BlockPrice, error) {
+	bps := []*BlockPrice{}
+	sql := ""
+	sql = fmt.Sprintf("select  id,price, block_time from block_prices where id < %d ORDER BY id DESC limit 0, 60 ;", maxBlockHeight+1)
+	err := utils.Orm.Raw(sql).Scan(&bps).Error
+	return bps, err
+}
+
 type FtxChartDate struct {
 	Timestamp uint
 	//杠杆币价格
@@ -129,7 +138,7 @@ type FtxChartDate struct {
 	Btc_low float64
 }
 
-func GetFtxTimesPrice(coin_type string ,interval, count int) ([]*FtxChartDate, error) {
+func GetFtxTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
 	sql := `
 select truncate((dates.id-1) / ?,0) as id1,
@@ -150,9 +159,11 @@ and bulls.timestamp > unix_timestamp()-15*60*?*?
 and bulls.coin_type=?
 group by id1 limit ?;
 `
-	err := utils.Orm.Raw(sql, interval, interval, count, interval, count, coin_type,count).Scan(&datas).Error
+	err := utils.Orm.Raw(sql, interval, interval, count, interval, count, coin_type, count).Scan(&datas).Error
 	return datas, err
 }
+
+const getBlockHeight = `{"query":"{\n  _meta \n  \t{block\n      {number}\n  \t}\n}\n","variables":null}`
 
 func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*BlockPrice, error) {
 	//{"operationName":"blocks","variables":{},"query":"query blocks {
@@ -162,8 +173,12 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	//var times []int64
 	//times=[]int64{12427306,12429525}
 	times := getTokenTimes(interval, count)
-	bps, err := getBlockPrices(times)
 	log.Println(times)
+	//bps, err := getBlockPrices(times)
+	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	result := gjson.Parse(string(body))
+	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
+	bps, err := getBlockPricesById(blockHeight)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for _, item := range bps {
@@ -172,7 +187,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 		gql += `\n}\n"}`
 
 		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
-		err=err1
+		err = err1
 		if err == nil {
 			//使其直接返回字符串
 			bs = bytes.TrimPrefix(bs, []byte(`{"data":`))
@@ -184,8 +199,8 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 			err = json.Unmarshal(bs, &res)
 			if err == nil {
 				//log.Println(res)
-				if len(res)==0{
-					return nil ,errors.New("没找到任何数据，稍后重试")
+				if len(res) == 0 {
+					return nil, errors.New("没找到任何数据，稍后重试")
 				}
 				preTime := uint64(0)
 				for idx, item := range bps {
@@ -304,8 +319,13 @@ func GetTokenInfosForStat(tokenAddre string, ethPrice float64) (OneDayStat, erro
 	times = []int64{twoDay.Unix(), oneDay.Unix(), now.Unix()}
 	//times=[]int64{12427306,12429525}
 	//times = getTokenTimes(interval, count)
-	bps, err := getBlockPrices(times)
 	log.Println(times)
+	//bps, err := getBlockPrices(times)
+
+	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	result := gjson.Parse(string(body))
+	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
+	bps, err := getBlockPricesById(blockHeight)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for _, item := range bps {
@@ -543,45 +563,43 @@ func GetPairInfo(pairAddre string) (pair *PairInfo, err error) {
 	return nil, err
 }
 
-
 type TokenPrice struct {
-	ID uint
-	PairAddre string
+	ID         uint
+	PairAddre  string
 	TokenAddre string
 	TokenIndex int
-	Reserve0 float64
-	Reserve1 float64
+	Reserve0   float64
+	Reserve1   float64
 	TokenPrice float64
 }
 
-func SubPairlog(FromBlock int64,contractAddressHex ,tokenAddreHex string) {
-	pairAddre:=common.HexToAddress(contractAddressHex)
-	tokenAddre:=common.HexToAddress(tokenAddreHex)
-	tokenIndex :=""
-	fw,err:=NewFanswapV2Pair(common.HexToAddress(contractAddressHex),EthConn)
+func SubPairlog(FromBlock int64, contractAddressHex, tokenAddreHex string) {
+	pairAddre := common.HexToAddress(contractAddressHex)
+	tokenAddre := common.HexToAddress(tokenAddreHex)
+	tokenIndex := ""
+	fw, err := NewFanswapV2Pair(common.HexToAddress(contractAddressHex), EthConn)
 	if err != nil {
 		log.Fatal(err)
 	}
-	var token0,token1 common.Address
-	token1,err=fw.Token0(&bind.CallOpts{Pending: true})
+	var token0, token1 common.Address
+	token1, err = fw.Token0(&bind.CallOpts{Pending: true})
 	if err != nil {
 		log.Fatal(err)
 	}
-	token1,err=fw.Token0(&bind.CallOpts{Pending: true})
+	token1, err = fw.Token0(&bind.CallOpts{Pending: true})
 	if err != nil {
 		log.Fatal(err)
 	}
-	if token1==tokenAddre{
-		tokenIndex ="token1"
+	if token1 == tokenAddre {
+		tokenIndex = "token1"
 	}
-	if token0==tokenAddre{
-		tokenIndex ="token0"
+	if token0 == tokenAddre {
+		tokenIndex = "token0"
 	}
-	if tokenIndex ==""{
+	if tokenIndex == "" {
 		log.Fatal("token配制错误")
 	}
 	log.Println(tokenIndex)
-
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
 	if err != nil {
@@ -590,37 +608,36 @@ func SubPairlog(FromBlock int64,contractAddressHex ,tokenAddreHex string) {
 	logTransferSig := []byte("Sync(uint112,uint112)")
 	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
 
-	fromBlockNum:=new(big.Int)
-	toBlockNum:=new(big.Int)
+	fromBlockNum := new(big.Int)
+	toBlockNum := new(big.Int)
 	contractAddress := pairAddre
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{contractAddress},
 		FromBlock: fromBlockNum.SetInt64(12676762),
-		ToBlock: toBlockNum.SetInt64(12676762),
-		Topics:[][]common.Hash{[]common.Hash{logTransferSigHash}},
+		ToBlock:   toBlockNum.SetInt64(12676762),
+		Topics:    [][]common.Hash{[]common.Hash{logTransferSigHash}},
 	}
 
-	logs1,err:=EthConn.FilterLogs(context.Background(), query)
+	logs1, err := EthConn.FilterLogs(context.Background(), query)
 	for _, item := range logs1 {
 		log.Println(item) // pointer to event log
 
-		if  item.Topics[0].Hex()==logTransferSigHash.Hex(){
+		if item.Topics[0].Hex() == logTransferSigHash.Hex() {
 
 			log.Printf("Log Name: Sync\n")
 
-
-			transferEvent:=new(FanswapV2PairSync)
+			transferEvent := new(FanswapV2PairSync)
 			err := contractAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
 			if err != nil {
 				log.Fatal(err)
 			}
 			//transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
 			//transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
-			log.Printf("res0: %v\n", BintTrunc(transferEvent.Reserve0,18,2))
-			log.Printf("res1: %v\n", BintTrunc(transferEvent.Reserve1,6,2))
-			tp:=new(TokenPrice)
-			tp.Reserve0=BintTrunc(transferEvent.Reserve0,18,2)
-			tp.Reserve1=BintTrunc(transferEvent.Reserve1,6,2)
+			log.Printf("res0: %v\n", BintTrunc(transferEvent.Reserve0, 18, 2))
+			log.Printf("res1: %v\n", BintTrunc(transferEvent.Reserve1, 6, 2))
+			tp := new(TokenPrice)
+			tp.Reserve0 = BintTrunc(transferEvent.Reserve0, 18, 2)
+			tp.Reserve1 = BintTrunc(transferEvent.Reserve1, 6, 2)
 			//tp.TokenIndex=
 		}
 	}
@@ -632,11 +649,11 @@ func SubPairlog(FromBlock int64,contractAddressHex ,tokenAddreHex string) {
 		log.Fatal(err)
 	}
 
-	log.Println("sublog",FromBlock,contractAddressHex)
-	count:=0
+	log.Println("sublog", FromBlock, contractAddressHex)
+	count := 0
 	for {
-		count++;
-		if count>10{
+		count++
+		if count > 10 {
 			return
 		}
 		select {
@@ -645,12 +662,11 @@ func SubPairlog(FromBlock int64,contractAddressHex ,tokenAddreHex string) {
 		case vLog := <-logs:
 			log.Println(vLog) // pointer to event log
 
-			if  vLog.Topics[0].Hex()==logTransferSigHash.Hex(){
+			if vLog.Topics[0].Hex() == logTransferSigHash.Hex() {
 
 				log.Printf("Log Name: Sync\n")
 
-
-				transferEvent:=new(FanswapV2PairSync)
+				transferEvent := new(FanswapV2PairSync)
 				err := contractAbi.UnpackIntoInterface(&transferEvent, "Sync", vLog.Data)
 				if err != nil {
 					log.Fatal(err)
@@ -665,10 +681,10 @@ func SubPairlog(FromBlock int64,contractAddressHex ,tokenAddreHex string) {
 		}
 	}
 }
-func BintTrunc(bint *big.Int,decimal int,point int) float64{
-	 bint.Quo(bint,big.NewInt(int64(math.Pow10(decimal-point))))
-	 bf:=new(big.Float)
-	 bf.SetInt(bint).Quo(bf,big.NewFloat(math.Pow10(point)))
-	 tmpfloat,_:=bf.Float64()
-	 return  tmpfloat
+func BintTrunc(bint *big.Int, decimal int, point int) float64 {
+	bint.Quo(bint, big.NewInt(int64(math.Pow10(decimal-point))))
+	bf := new(big.Float)
+	bf.SetInt(bint).Quo(bf, big.NewFloat(math.Pow10(point)))
+	tmpfloat, _ := bf.Float64()
+	return tmpfloat
 }
