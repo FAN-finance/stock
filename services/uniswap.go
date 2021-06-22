@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -56,7 +57,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	if count == 0 {
 		count = 10
 	}
-	now := time.Now().UTC().Add(-5*time.Minute).Truncate(time.Minute)
+	now := time.Now().UTC().Add(-10*time.Minute).Truncate(time.Minute)
 	span := time.Hour
 	switch interval {
 	case "60s":
@@ -543,7 +544,45 @@ func GetPairInfo(pairAddre string) (pair *PairInfo, err error) {
 }
 
 
-func SubPairlog(FromBlock int64,contractAddressHex string) {
+type TokenPrice struct {
+	ID uint
+	PairAddre string
+	TokenAddre string
+	TokenIndex int
+	Reserve0 float64
+	Reserve1 float64
+	TokenPrice float64
+}
+
+func SubPairlog(FromBlock int64,contractAddressHex ,tokenAddreHex string) {
+	pairAddre:=common.HexToAddress(contractAddressHex)
+	tokenAddre:=common.HexToAddress(tokenAddreHex)
+	tokenIndex :=""
+	fw,err:=NewFanswapV2Pair(common.HexToAddress(contractAddressHex),EthConn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var token0,token1 common.Address
+	token1,err=fw.Token0(&bind.CallOpts{Pending: true})
+	if err != nil {
+		log.Fatal(err)
+	}
+	token1,err=fw.Token0(&bind.CallOpts{Pending: true})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if token1==tokenAddre{
+		tokenIndex ="token1"
+	}
+	if token0==tokenAddre{
+		tokenIndex ="token0"
+	}
+	if tokenIndex ==""{
+		log.Fatal("token配制错误")
+	}
+	log.Println(tokenIndex)
+
+
 	contractAbi, err := abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
 	if err != nil {
 		log.Fatal(err)
@@ -553,15 +592,13 @@ func SubPairlog(FromBlock int64,contractAddressHex string) {
 
 	fromBlockNum:=new(big.Int)
 	toBlockNum:=new(big.Int)
-	contractAddress := common.HexToAddress(contractAddressHex)
+	contractAddress := pairAddre
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{contractAddress},
 		FromBlock: fromBlockNum.SetInt64(12676762),
 		ToBlock: toBlockNum.SetInt64(12676762),
 		Topics:[][]common.Hash{[]common.Hash{logTransferSigHash}},
 	}
-
-
 
 	logs1,err:=EthConn.FilterLogs(context.Background(), query)
 	for _, item := range logs1 {
@@ -577,12 +614,14 @@ func SubPairlog(FromBlock int64,contractAddressHex string) {
 			if err != nil {
 				log.Fatal(err)
 			}
-
 			//transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
 			//transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
-
-			log.Printf("res0: %d\n",BintTrunc(transferEvent.Reserve0,18))
-			log.Printf("res1: %d\n", BintTrunc(transferEvent.Reserve1,6))
+			log.Printf("res0: %v\n", BintTrunc(transferEvent.Reserve0,18,2))
+			log.Printf("res1: %v\n", BintTrunc(transferEvent.Reserve1,6,2))
+			tp:=new(TokenPrice)
+			tp.Reserve0=BintTrunc(transferEvent.Reserve0,18,2)
+			tp.Reserve1=BintTrunc(transferEvent.Reserve1,6,2)
+			//tp.TokenIndex=
 		}
 	}
 	return
@@ -626,7 +665,10 @@ func SubPairlog(FromBlock int64,contractAddressHex string) {
 		}
 	}
 }
-func BintTrunc(bint *big.Int,decimal int)int64{
-	return bint.Quo(bint,big.NewInt( int64(math.Pow10(decimal)))).Int64()
-
+func BintTrunc(bint *big.Int,decimal int,point int) float64{
+	 bint.Quo(bint,big.NewInt(int64(math.Pow10(decimal-point))))
+	 bf:=new(big.Float)
+	 bf.SetInt(bint).Quo(bf,big.NewFloat(math.Pow10(point)))
+	 tmpfloat,_:=bf.Float64()
+	 return  tmpfloat
 }
