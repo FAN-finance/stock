@@ -319,13 +319,8 @@ func GetTokenInfosForStat(tokenAddre string, ethPrice float64) (OneDayStat, erro
 	times = []int64{twoDay.Unix(), oneDay.Unix(), now.Unix()}
 	//times=[]int64{12427306,12429525}
 	//times = getTokenTimes(interval, count)
+	bps, err := getBlockPrices(times)
 	log.Println(times)
-	//bps, err := getBlockPrices(times)
-
-	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
-	result := gjson.Parse(string(body))
-	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
-	bps, err := getBlockPricesById(blockHeight)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for _, item := range bps {
