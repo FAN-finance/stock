@@ -92,7 +92,7 @@ func getBlockPrices(timeItems []int64, maxBlockHeight int64) ([]*BlockPrice, err
 	sql := ""
 	args := []interface{}{}
 	for idx, item := range timeItems {
-		sql += fmt.Sprintf("(select id,price, %d as block_time1 from block_prices where block_time< ? and id < %d order by block_time desc limit 1)", item, maxBlockHeight)
+		sql += fmt.Sprintf("(select id,price, %d as block_time1 from block_prices where block_time< ? and id < %d order by block_time desc limit 1)", item, maxBlockHeight+1)
 		if idx < len(timeItems)-1 {
 			sql += " union all"
 		}
