@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tidwall/gjson"
 	"log"
 	"math"
 	"math/big"
@@ -57,7 +58,8 @@ func getTokenTimes(interval string, count int) []int64 {
 	if count == 0 {
 		count = 10
 	}
-	now := time.Now().UTC().Add(-10*time.Minute).Truncate(time.Minute)
+	//now := time.Now().UTC().Add(-10 * time.Minute).Truncate(time.Minute)
+	now := time.Now().UTC().Add(0 * time.Minute).Truncate(time.Minute)
 	span := time.Hour
 	switch interval {
 	case "60s":
@@ -85,13 +87,13 @@ func getTokenTimes(interval string, count int) []int64 {
 	return timeItems
 }
 
-func getBlockPrices(timeItems []int64) ([]*BlockPrice, error) {
+func getBlockPrices(timeItems []int64, maxBlockHeight int64) ([]*BlockPrice, error) {
 	bps := []*BlockPrice{}
 
 	sql := ""
 	args := []interface{}{}
 	for idx, item := range timeItems {
-		sql += fmt.Sprintf("(select id,price, %d as block_time1 from block_prices where block_time< ? order by block_time desc limit 1)", item)
+		sql += fmt.Sprintf("(select id,price, %d as block_time1 from block_prices where block_time< ? and id < %d order by block_time desc limit 1)", item, maxBlockHeight+1)
 		if idx < len(timeItems)-1 {
 			sql += " union all"
 		}
@@ -129,7 +131,7 @@ type FtxChartDate struct {
 	Btc_low float64
 }
 
-func GetFtxTimesPrice(coin_type string ,interval, count int) ([]*FtxChartDate, error) {
+func GetFtxTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
 	sql := `
 select truncate((dates.id-1) / ?,0) as id1,
@@ -150,9 +152,11 @@ and bulls.timestamp > unix_timestamp()-15*60*?*?
 and bulls.coin_type=?
 group by id1 limit ?;
 `
-	err := utils.Orm.Raw(sql, interval, interval, count, interval, count, coin_type,count).Scan(&datas).Error
+	err := utils.Orm.Raw(sql, interval, interval, count, interval, count, coin_type, count).Scan(&datas).Error
 	return datas, err
 }
+
+const getBlockHeight = `{"query":"{\n  _meta \n  \t{block\n      {number}\n  \t}\n}\n","variables":null}`
 
 func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*BlockPrice, error) {
 	//{"operationName":"blocks","variables":{},"query":"query blocks {
@@ -162,8 +166,11 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	//var times []int64
 	//times=[]int64{12427306,12429525}
 	times := getTokenTimes(interval, count)
-	bps, err := getBlockPrices(times)
 	log.Println(times)
+	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	result := gjson.Parse(string(body))
+	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
+	bps, err := getBlockPrices(times, blockHeight)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for _, item := range bps {
@@ -172,7 +179,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 		gql += `\n}\n"}`
 
 		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
-		err=err1
+		err = err1
 		if err == nil {
 			//使其直接返回字符串
 			bs = bytes.TrimPrefix(bs, []byte(`{"data":`))
@@ -184,8 +191,8 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 			err = json.Unmarshal(bs, &res)
 			if err == nil {
 				//log.Println(res)
-				if len(res)==0{
-					return nil ,errors.New("没找到任何数据，稍后重试")
+				if len(res) == 0 {
+					return nil, errors.New("没找到任何数据，稍后重试")
 				}
 				preTime := uint64(0)
 				for idx, item := range bps {
@@ -304,7 +311,10 @@ func GetTokenInfosForStat(tokenAddre string, ethPrice float64) (OneDayStat, erro
 	times = []int64{twoDay.Unix(), oneDay.Unix(), now.Unix()}
 	//times=[]int64{12427306,12429525}
 	//times = getTokenTimes(interval, count)
-	bps, err := getBlockPrices(times)
+	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	result := gjson.Parse(string(body))
+	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
+	bps, err := getBlockPrices(times, blockHeight)
 	log.Println(times)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
@@ -543,15 +553,14 @@ func GetPairInfo(pairAddre string) (pair *PairInfo, err error) {
 	return nil, err
 }
 
-
 type TokenPrice struct {
 	ID uint
 	PairAddre string
 	TokenAddre string `gorm:"index"`
 	//token0  0; token1 1
 	TokenIndex int
-	Reserve0 float64
-	Reserve1 float64
+	Reserve0   float64
+	Reserve1   float64
 	TokenPrice float64
 	BlockNumber uint64 `gorm:"index"`
 	BlockTime int64
@@ -695,6 +704,7 @@ func SubPairlog(fromBlock int64, tpc *TokenPairConf) {
 		}
 	}
 }
+
 func BintTrunc(bigInt *big.Int,decimal int,point int) float64{
 	bint:=big.NewInt(0)
 	bint.Set(bigInt)

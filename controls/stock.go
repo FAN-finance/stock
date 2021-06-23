@@ -386,9 +386,10 @@ func StockAggreHandler(c *gin.Context) {
 	//sdata.SetSign()
 	// sdata.IsMarketOpening = services.UsdStockTime()
 	sdata.IsMarketOpening, sdata.MarketOpenTime = services.IsWorkTime(int64(timestamp))
-	// set IsMarketOpening state
 	if len(avgNodesPrice) == 0 || avgNodesPrice[0].Sign == nil {
 		sdata.IsMarketOpening = false
+	} else {
+		sdata.IsMarketOpening = true
 	}
 
 	c.JSON(200, sdata)
@@ -457,6 +458,7 @@ func StockAvgPriceHandler(c *gin.Context) {
 		if services.IsSignTime(0) {
 			sdata.SetSign()
 		}
+		sdata.SetSign()
 		c.JSON(200, sdata)
 		return
 	}
