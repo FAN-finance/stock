@@ -153,16 +153,36 @@ func TokenPriceHandler(c *gin.Context) {
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf("TokenPriceHandler-%s-%s-%d", code, intreval, count)
 	proc := func() (interface{}, error) {
-		items, err := services.GetTokenTimesPrice(code,  intreval, count)
-		if err != nil {
-			return nil, err
+		//items, err := services.GetTokenTimesPrice(code,  intreval, count)
+		//if err != nil {
+		//	return nil, err
+		//}
+		//vp:=new(HLValuePair)
+		//for _, item := range items {
+		//	vp.High =math.Max(vp.High,item.Price)
+		//	vp.Low=math.Min(vp.High,item.Price)
+		//}
+		//return vp, err
+
+		vp := new(HLValuePair)
+		err := utils.Orm.Raw(`
+select *
+from (
+         select max(prices.token_price) high, min(prices.token_price) low
+         from token_prices prices
+         where prices.token_addre=? and prices.block_number >
+               (select t.id from block_prices t where t.block_time > unix_timestamp() - 3600 limit 1)
+     ) a
+where a.high is not null`,code).First(vp).Error
+		if err == nil {
+			return vp, err
 		}
-		vp:=new(HLValuePair)
-		for _, item := range items {
-			vp.High =math.Max(vp.High,item.Price)
-			vp.Low=math.Min(vp.High,item.Price)
-		}
+		err = utils.Orm.Raw(`select prices.token_price high, prices.token_price low
+			from token_prices prices where prices.token_addre=?
+			order by id desc
+			limit 1;`,code).First(vp).Error
 		return vp, err
+
 	}
 	var res interface{}
 	var err error

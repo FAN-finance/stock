@@ -567,6 +567,7 @@ type TokenPrice struct {
 	//eth or bsc
 	ChainName string
 }
+var chainUsdtDecimal=map[string]int{"bsc":18,"eth":6}
 func saveSyncLog(item types.Log,tpc *TokenPairConf){
 	transferEvent:=new(FanswapV2PairSync)
 	err := pairAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
@@ -583,13 +584,14 @@ func saveSyncLog(item types.Log,tpc *TokenPairConf){
 	tp.TokenIndex=tpc.TokenIndex
 	tp.ChainName=tpc.ChainName
 
-	token0Decimal,token1Decimal:=6,6 //eth-usdtDicimal
+	token0Decimal:=chainUsdtDecimal[tpc.ChainName]
+	token1Decimal:=chainUsdtDecimal[tpc.ChainName] // usdtDicimal
 	if tp.TokenIndex==0{
 		token0Decimal=tpc.TokenDecimals
 	}else{
 		token1Decimal=tpc.TokenDecimals
 	}
-	//log.Println(token0Decimal,token1Decimal,transferEvent)
+	log.Println(token0Decimal,token1Decimal,transferEvent.Reserve0,transferEvent.Reserve1,transferEvent)
 	tp.Reserve0=BintTrunc(transferEvent.Reserve0,token0Decimal,2)
 	tp.Reserve1=BintTrunc(transferEvent.Reserve1,token1Decimal,2)
 	if tp.TokenIndex==0{
@@ -622,7 +624,29 @@ type TokenPairConf struct {
 	//token0  0; token1 1　由SubPairlog计算
 	TokenIndex int
 }
-func SubPairlog(fromBlock int64, tpc *TokenPairConf) {
+
+func GetTokenPriceLastBlock(tokenAddre ,ChainName string)(startBlock int64){
+	err:=utils.Orm.Raw(`	select t.block_number from token_prices t
+		where t.token_addre=?  order by t.id desc limit 1;`,tokenAddre).Scan(&startBlock).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+	if startBlock==0{
+		err=utils.Orm.Raw(`select t.id from block_prices t
+where t.block_time>unix_timestamp()-3600*24*5 order by t.id limit 1`).Scan(&startBlock).Error
+		if startBlock==0{
+			log.Fatal(err)
+		}
+	}
+	return
+}
+func SubPairlog(tpc *TokenPairConf) {
+	fromBlock:=int64(0)
+	if tpc.ChainName=="bsc"{
+		fromBlock=8540473
+	}else {
+		fromBlock = GetTokenPriceLastBlock(tpc.TokenAddre,tpc.ChainName)
+	}
 	pairAddressHex ,tokenAddreHex:= tpc.PairAddre, tpc.TokenAddre
 	pairAddre:=common.HexToAddress(pairAddressHex)
 	tokenAddre:=common.HexToAddress(tokenAddreHex)

@@ -125,6 +125,20 @@ func InitEConn( infura string ) {
 
 	log.Println("init finish InitEConn")
 }
+
+func InitBConn(  ) {
+	log.Println("init InitBscConn")
+	conn1, err := ethclient.Dial( "wss://bsc-ws-node.nariox.org:443")
+	if err != nil {
+		log.Fatalf("Failed to connect to the bsc Ethereum client: %v", err)
+		if err == nil {
+		}
+	}
+	EthConn = conn1
+	//conn.SendTransaction()
+	log.Println("init finish InitBscConn")
+}
+
 func InitEConnLocal( ) {
 	conn1, err := ethclient.Dial("ws://localhost:8546")
 	if err != nil {
