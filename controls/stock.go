@@ -457,6 +457,7 @@ func StockAvgPriceHandler(c *gin.Context) {
 		if services.IsSignTime(0) {
 			sdata.SetSign()
 		}
+		sdata.SetSign()
 		c.JSON(200, sdata)
 		return
 	}
