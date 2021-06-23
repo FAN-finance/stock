@@ -387,6 +387,7 @@ func StockAggreHandler(c *gin.Context) {
 	// sdata.IsMarketOpening = services.UsdStockTime()
 	sdata.IsMarketOpening, sdata.MarketOpenTime = services.IsWorkTime(int64(timestamp))
 	// set IsMarketOpening state
+	sdata.IsMarketOpening = true
 	if len(avgNodesPrice) == 0 || avgNodesPrice[0].Sign == nil {
 		sdata.IsMarketOpening = false
 	}
