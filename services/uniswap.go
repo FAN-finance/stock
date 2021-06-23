@@ -547,125 +547,157 @@ func GetPairInfo(pairAddre string) (pair *PairInfo, err error) {
 type TokenPrice struct {
 	ID uint
 	PairAddre string
-	TokenAddre string
+	TokenAddre string `gorm:"index"`
+	//token0  0; token1 1
 	TokenIndex int
 	Reserve0 float64
 	Reserve1 float64
 	TokenPrice float64
+	BlockNumber uint64 `gorm:"index"`
+	BlockTime int64
+	//eth or bsc
+	ChainName string
+}
+func saveSyncLog(item types.Log,tpc *TokenPairConf){
+	transferEvent:=new(FanswapV2PairSync)
+	err := pairAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
+	//transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
+	//log.Printf("res0: %v\n", BintTrunc(transferEvent.Reserve0,18,2))
+	//log.Printf("res1: %v\n", BintTrunc(transferEvent.Reserve1,6,2))
+	tp:=new(TokenPrice)
+	tp.PairAddre= tpc.PairAddre
+	tp.TokenAddre=tpc.TokenAddre
+	tp.TokenIndex=tpc.TokenIndex
+	tp.ChainName=tpc.ChainName
+
+	token0Decimal,token1Decimal:=6,6 //eth-usdtDicimal
+	if tp.TokenIndex==0{
+		token0Decimal=tpc.TokenDecimals
+	}else{
+		token1Decimal=tpc.TokenDecimals
+	}
+	//log.Println(token0Decimal,token1Decimal,transferEvent)
+	tp.Reserve0=BintTrunc(transferEvent.Reserve0,token0Decimal,2)
+	tp.Reserve1=BintTrunc(transferEvent.Reserve1,token1Decimal,2)
+	if tp.TokenIndex==0{
+		tp.TokenPrice=tp.Reserve1/tp.Reserve0
+	}else{
+		tp.TokenPrice=tp.Reserve0/tp.Reserve1
+	}
+	tp.TokenPrice=RoundPrice(tp.TokenPrice)
+	tp.BlockNumber=item.BlockNumber
+	//log.Printf("%v",tp)
+	utils.Orm.Save(tp)
 }
 
-func SubPairlog(FromBlock int64,contractAddressHex ,tokenAddreHex string) {
-	pairAddre:=common.HexToAddress(contractAddressHex)
+var pairAbi, _ = abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
+func initPairAbi(){
+	//pairAbi, err := abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+}
+type TokenPairConf struct {
+	//required
+	PairAddre string
+	//required
+	TokenAddre string
+	//required
+	TokenDecimals int
+	//eth or bsc
+	ChainName string
+	//token0  0; token1 1　由SubPairlog计算
+	TokenIndex int
+}
+func SubPairlog(fromBlock int64, tpc *TokenPairConf) {
+	pairAddressHex ,tokenAddreHex:= tpc.PairAddre, tpc.TokenAddre
+	pairAddre:=common.HexToAddress(pairAddressHex)
 	tokenAddre:=common.HexToAddress(tokenAddreHex)
-	tokenIndex :=""
-	fw,err:=NewFanswapV2Pair(common.HexToAddress(contractAddressHex),EthConn)
+	tokenIndex :=100
+	fw,err:=NewFanswapV2Pair(common.HexToAddress(pairAddressHex),EthConn)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var token0,token1 common.Address
-	token1,err=fw.Token0(&bind.CallOpts{Pending: true})
+	token0,err=fw.Token0(&bind.CallOpts{Pending: true})
 	if err != nil {
 		log.Fatal(err)
 	}
-	token1,err=fw.Token0(&bind.CallOpts{Pending: true})
+	token1,err=fw.Token1(&bind.CallOpts{Pending: true})
 	if err != nil {
 		log.Fatal(err)
 	}
 	if token1==tokenAddre{
-		tokenIndex ="token1"
+		tokenIndex =1
 	}
 	if token0==tokenAddre{
-		tokenIndex ="token0"
+		tokenIndex =0
 	}
-	if tokenIndex ==""{
+	if tokenIndex ==100{
 		log.Fatal("token配制错误")
 	}
-	log.Println(tokenIndex)
+	tpc.TokenIndex=tokenIndex
+	log.Println("get tokenIndex:",tokenIndex)
 
-
-	contractAbi, err := abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
-	if err != nil {
-		log.Fatal(err)
-	}
+	//log.Println(tokenIndex)
 	logTransferSig := []byte("Sync(uint112,uint112)")
 	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
 
 	fromBlockNum:=new(big.Int)
-	toBlockNum:=new(big.Int)
-	contractAddress := pairAddre
+	//toBlockNum:=new(big.Int)
 	query := ethereum.FilterQuery{
-		Addresses: []common.Address{contractAddress},
-		FromBlock: fromBlockNum.SetInt64(12676762),
-		ToBlock: toBlockNum.SetInt64(12676762),
+		Addresses: []common.Address{pairAddre},
+		FromBlock: fromBlockNum.SetInt64(fromBlock),
+		//ToBlock: toBlockNum.SetInt64(12676762),
 		Topics:[][]common.Hash{[]common.Hash{logTransferSigHash}},
 	}
-
+	log.Println("getlog", fromBlock,pairAddressHex)
 	logs1,err:=EthConn.FilterLogs(context.Background(), query)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println("getlog len(logs)",len(logs1))
 	for _, item := range logs1 {
-		log.Println(item) // pointer to event log
-
+		//log.Println(item) // pointer to event log
 		if  item.Topics[0].Hex()==logTransferSigHash.Hex(){
-
-			log.Printf("Log Name: Sync\n")
-
-
-			transferEvent:=new(FanswapV2PairSync)
-			err := contractAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
-			if err != nil {
-				log.Fatal(err)
-			}
-			//transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
-			//transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
-			log.Printf("res0: %v\n", BintTrunc(transferEvent.Reserve0,18,2))
-			log.Printf("res1: %v\n", BintTrunc(transferEvent.Reserve1,6,2))
-			tp:=new(TokenPrice)
-			tp.Reserve0=BintTrunc(transferEvent.Reserve0,18,2)
-			tp.Reserve1=BintTrunc(transferEvent.Reserve1,6,2)
-			//tp.TokenIndex=
+			//log.Printf("Log Name: Sync\n")
+			saveSyncLog(item,tpc)
+			fromBlock =int64(item.BlockNumber)
 		}
 	}
-	return
-
+	log.Println("begin sublog fromBlock",fromBlock)
 	logs := make(chan types.Log)
+	query.FromBlock=fromBlockNum.SetInt64(fromBlock)
 	sub, err := EthConn.SubscribeFilterLogs(context.Background(), query, logs)
+	defer sub.Unsubscribe()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	log.Println("sublog",FromBlock,contractAddressHex)
-	count:=0
+	log.Println("sublog", fromBlock,pairAddressHex)
+	//count:=0
 	for {
-		count++;
-		if count>10{
-			return
-		}
+		//count++;
+		//if count>3{
+		//	return
+		//}
 		select {
 		case err := <-sub.Err():
 			log.Fatal(err)
 		case vLog := <-logs:
-			log.Println(vLog) // pointer to event log
-
+			//log.Println(vLog) // pointer to event log
 			if  vLog.Topics[0].Hex()==logTransferSigHash.Hex(){
-
-				log.Printf("Log Name: Sync\n")
-
-
-				transferEvent:=new(FanswapV2PairSync)
-				err := contractAbi.UnpackIntoInterface(&transferEvent, "Sync", vLog.Data)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				//transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
-				//transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
-
-				log.Printf("res0: %s\n", transferEvent.Reserve0)
-				log.Printf("res1: %s\n", transferEvent.Reserve1)
+				saveSyncLog(vLog,tpc)
 			}
 		}
 	}
 }
-func BintTrunc(bint *big.Int,decimal int,point int) float64{
+func BintTrunc(bigInt *big.Int,decimal int,point int) float64{
+	bint:=big.NewInt(0)
+	bint.Set(bigInt)
 	 bint.Quo(bint,big.NewInt(int64(math.Pow10(decimal-point))))
 	 bf:=new(big.Float)
 	 bf.SetInt(bint).Quo(bf,big.NewFloat(math.Pow10(point)))
