@@ -14,6 +14,24 @@ import (
 )
 
 // @Tags default
+// @Summary　获取token链上价格信息
+// @Description 获取token链上价格信息，使用节点从eth或bsc合约事件监听到的价格变化数据；token信息要提前在节点配制才能被监听
+// @ID TokenChainPriceSignHandler
+// @Accept  json
+// @Produce  json
+// @Param     token   path    string     true        "token地址" default(0xc61624355667e4d5ca9cee25ad339c990a90eaea)
+// @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
+//@Param     debug   query    int     false    "调试" default(0)
+// @Success 200 {object} services.HLDataPriceView	"token price info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/dex/token_chain_price/{token}/{data_type}/{timestamp} [get]
+func TokenChainPriceSignHandler(c *gin.Context) {
+	tokenPriceSignProces(c,"/pub/internal/dex/token_chain_price/%s/%d?data_type=%d")
+}
+
+// @Tags default
 // @Summary　获取token价格信息
 // @Description 获取token价格信息
 // @ID TokenPriceSignHandler
@@ -28,6 +46,10 @@ import (
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_price/{token}/{data_type}/{timestamp} [get]
 func TokenPriceSignHandler(c *gin.Context) {
+	tokenPriceSignProces(c,"/pub/internal/dex/token_price/%s/%d?data_type=%d")
+}
+
+func tokenPriceSignProces(c *gin.Context,providerUrl string) {
 	code := c.Param("token")
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
@@ -45,7 +67,7 @@ func TokenPriceSignHandler(c *gin.Context) {
 	wg := new(sync.WaitGroup)
 	var porcNode = func(nodeUrl string) {
 		defer wg.Done()
-		reqUrl := fmt.Sprintf(nodeUrl+"/pub/internal/dex/token_price/%s/%d?data_type=%d", code, timestamp, dataType)
+		reqUrl := fmt.Sprintf(nodeUrl+providerUrl, code, timestamp, dataType)
 		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
 			token := new(services.HLPriceView)
@@ -127,9 +149,9 @@ type HLValuePair struct{
 }
 
 // @Tags default
-// @Summary　获取token最近一小时最高最低价格信息,内部单节点
+// @Summary　获取token最近一小时最高最低价格信息,内部单节点模式
 // @Description 获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．
-// @ID TokenPriceHandler
+// @ID TokenChainPriceHandler
 // @Accept  json
 // @Produce  json
 // @Param     token   path    string     true        "token地址" default(0xc61624355667e4d5ca9cee25ad339c990a90eaea)
@@ -138,21 +160,9 @@ type HLValuePair struct{
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/internal/dex/token_price/{token}/{timestamp} [get]
-func TokenPriceHandler(c *gin.Context) {
-	code := c.Param("token")
-	timestampstr := c.Param("timestamp")
-	timestamp, _ := strconv.Atoi(timestampstr)
-	dataTypeStr := c.Query("data_type")
-	dataType, _ := strconv.Atoi(dataTypeStr)
-
-	intreval:="60s"
-	count:=60
-	//intreval:="hour"
-	//count:=20
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-	ckey := fmt.Sprintf("TokenPriceHandler-%s-%s-%d", code, intreval, count)
-	proc := func() (interface{}, error) {
+// @Router /pub/internal/dex/token_chain_price/{token}/{timestamp} [get]
+func TokenChainPriceHandler(c *gin.Context) {
+	dataProc := func(code string ) (interface{}, error) {
 		vp := new(HLValuePair)
 		err := utils.Orm.Raw(`
 select *
@@ -173,6 +183,22 @@ where a.high is not null`,code).First(vp).Error
 		return vp, err
 
 	}
+	TokenChainPriceProcess(c,dataProc,"TokenChainPriceHandler")
+
+}
+func TokenChainPriceProcess(c *gin.Context,dataProc func(code string ) (interface{}, error),processName string) {
+	code := c.Param("token")
+	timestampstr := c.Param("timestamp")
+	timestamp, _ := strconv.Atoi(timestampstr)
+	dataTypeStr := c.Query("data_type")
+	dataType, _ := strconv.Atoi(dataTypeStr)
+
+	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	ckey := fmt.Sprintf(processName+"-%s", code)
+
+	proc:= func( ) (interface{}, error){
+		return dataProc(code)
+	}
 	var res interface{}
 	var err error
 	if c.Query("debug") == "1" {
@@ -180,9 +206,6 @@ where a.high is not null`,code).First(vp).Error
 	} else {
 		log.Println("cache process",ckey)
 		res, err = utils.CacheFromLru(1, ckey, int(100), proc)
-	}
-	if err == nil {
-
 	}
 	//res, err := services.GetTokenInfo(code)
 	if err == nil {
@@ -218,6 +241,37 @@ where a.high is not null`,code).First(vp).Error
 		ErrJson(c, err.Error())
 		return
 	}
+}
+
+// @Tags default
+// @Summary　获取token最近一小时最高最低价格信息,内部单节点
+// @Description 获取token最近一小时最高最低价格信息；．
+// @ID TokenPriceHandler
+// @Accept  json
+// @Produce  json
+// @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
+// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
+// @Success 200 {object} services.HLPriceView	"Price View"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/internal/dex/token_price/{token}/{timestamp} [get]
+func TokenPriceHandler(c *gin.Context) {
+	dataProc := func(code string ) (interface{}, error) {
+		intreval:="60s"
+		count:=60
+		items, err := services.GetTokenTimesPrice(code,  intreval, count)
+		if err != nil {
+			return nil, err
+		}
+		vp:=new(HLValuePair)
+		for _, item := range items {
+			vp.High =math.Max(vp.High,item.Price)
+			vp.Low=math.Min(vp.High,item.Price)
+		}
+		return vp, err
+	}
+	TokenChainPriceProcess(c,dataProc,"TokenPriceHandler")
 }
 
 // @Tags default

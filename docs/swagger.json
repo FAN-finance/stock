@@ -246,6 +246,13 @@
                         "required": true
                     },
                     {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4,
+                            96
+                        ],
                         "type": "integer",
                         "description": "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；",
                         "name": "interval",
@@ -406,6 +413,78 @@
                             "items": {
                                 "$ref": "#/definitions/services.PriceView"
                             }
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/dex/token_chain_price/{token}/{data_type}/{timestamp}": {
+            "get": {
+                "description": "获取token链上价格信息，使用节点从eth或bsc合约事件监听到的价格变化数据；token信息要提前在节点配制才能被监听",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token链上价格信息",
+                "operationId": "TokenChainPriceSignHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0xc61624355667e4d5ca9cee25ad339c990a90eaea",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "调试",
+                        "name": "debug",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "token price info",
+                        "schema": {
+                            "$ref": "#/definitions/services.HLDataPriceView"
                         },
                         "headers": {
                             "sign": {
@@ -955,6 +1034,71 @@
                 }
             }
         },
+        "/pub/internal/dex/token_chain_price/{token}/{timestamp}": {
+            "get": {
+                "description": "获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token最近一小时最高最低价格信息,内部单节点模式",
+                "operationId": "TokenChainPriceHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0xc61624355667e4d5ca9cee25ad339c990a90eaea",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Price View",
+                        "schema": {
+                            "$ref": "#/definitions/services.HLPriceView"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/internal/dex/token_info/{token}/{timestamp}": {
             "get": {
                 "description": "内部单节点获取token信息",
@@ -1010,7 +1154,7 @@
         },
         "/pub/internal/dex/token_price/{token}/{timestamp}": {
             "get": {
-                "description": "获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．",
+                "description": "获取token最近一小时最高最低价格信息；．",
                 "consumes": [
                     "application/json"
                 ],
@@ -1025,7 +1169,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "0xc61624355667e4d5ca9cee25ad339c990a90eaea",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
                         "description": "token地址",
                         "name": "token",
                         "in": "path",
