@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 	"log"
-	"math"
 	"stock/services"
 	"stock/utils"
 	"strconv"
@@ -212,8 +212,10 @@ WHERE
 	if dataType == 2 {
 		tPriceView.PriceUsd = vp.Low
 	}
-	tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*1000) / 1000
-	tPriceView.BigPrice = services.GetUnDecimalPrice(float64(tPriceView.PriceUsd)).String()
+
+	//tPriceView.PriceUsd =  math.Trunc(tPriceView.PriceUsd*1000) / 1000
+	tPriceView.PriceUsd,_ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
+	tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 	tPriceView.NodeAddress = services.WalletAddre
 	if tPriceView.PriceUsd > 0.001 {
 		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
