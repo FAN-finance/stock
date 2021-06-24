@@ -61,6 +61,12 @@ func main() {
 		go services.SubCoinsPrice()
 		go services.SetAllBulls("btc3x")
 		go services.SetAllBulls("eth3x")
+		go func(){
+			//监听eth uniswap pair's token价格
+			tpc := services.TokenPairConf{PairAddre: "0x6a9a1847e8e3a19a2ca66698d0151c8950079008", TokenAddre: "0xc61624355667e4d5ca9cee25ad339c990a90eaea", TokenDecimals: 18, ChainName: "eth"}
+			services.SubPairlog( &tpc)
+		}()
+
 	}
 
 	services.InitNodeKey()

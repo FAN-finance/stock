@@ -591,7 +591,7 @@ func saveSyncLog(item types.Log,tpc *TokenPairConf){
 	}else{
 		token1Decimal=tpc.TokenDecimals
 	}
-	log.Println(token0Decimal,token1Decimal,transferEvent.Reserve0,transferEvent.Reserve1,transferEvent)
+	//log.Println(token0Decimal,token1Decimal,transferEvent.Reserve0,transferEvent.Reserve1)
 	tp.Reserve0=BintTrunc(transferEvent.Reserve0,token0Decimal,2)
 	tp.Reserve1=BintTrunc(transferEvent.Reserve1,token1Decimal,2)
 	if tp.TokenIndex==0{

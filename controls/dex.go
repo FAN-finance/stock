@@ -128,11 +128,11 @@ type HLValuePair struct{
 
 // @Tags default
 // @Summary　获取token最近一小时最高最低价格信息,内部单节点
-// @Description 获取token最近一小时最高最低价格信息
+// @Description 获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．
 // @ID TokenPriceHandler
 // @Accept  json
 // @Produce  json
-// @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
+// @Param     token   path    string     true        "token地址" default(0xc61624355667e4d5ca9cee25ad339c990a90eaea)
 // @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
@@ -153,35 +153,24 @@ func TokenPriceHandler(c *gin.Context) {
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf("TokenPriceHandler-%s-%s-%d", code, intreval, count)
 	proc := func() (interface{}, error) {
-		items, err := services.GetTokenTimesPrice(code,  intreval, count)
-		if err != nil {
-			return nil, err
+		vp := new(HLValuePair)
+		err := utils.Orm.Raw(`
+select *
+from (
+        select max(prices.token_price) high, min(prices.token_price) low
+        from token_prices prices
+        where prices.token_addre=? and prices.block_number >
+              (select t.id from block_prices t where t.block_time > unix_timestamp() - 3600 limit 1)
+    ) a
+where a.high is not null`,code).First(vp).Error
+		if err == nil {
+			return vp, err
 		}
-		vp:=new(HLValuePair)
-		for _, item := range items {
-			vp.High =math.Max(vp.High,item.Price)
-			vp.Low=math.Min(vp.High,item.Price)
-		}
+		err = utils.Orm.Raw(`select prices.token_price high, prices.token_price low
+			from token_prices prices where prices.token_addre=?
+			order by id desc
+			limit 1;`,code).First(vp).Error
 		return vp, err
-
-//		vp := new(HLValuePair)
-//		err := utils.Orm.Raw(`
-//select *
-//from (
-//         select max(prices.token_price) high, min(prices.token_price) low
-//         from token_prices prices
-//         where prices.token_addre=? and prices.block_number >
-//               (select t.id from block_prices t where t.block_time > unix_timestamp() - 3600 limit 1)
-//     ) a
-//where a.high is not null`,code).First(vp).Error
-//		if err == nil {
-//			return vp, err
-//		}
-//		err = utils.Orm.Raw(`select prices.token_price high, prices.token_price low
-//			from token_prices prices where prices.token_addre=?
-//			order by id desc
-//			limit 1;`,code).First(vp).Error
-//		return vp, err
 
 	}
 	var res interface{}
