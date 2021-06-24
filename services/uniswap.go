@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/shopspring/decimal"
 	"github.com/tidwall/gjson"
 	"log"
 	"math"
@@ -79,7 +80,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	}
 	timeItems := []int64{}
 	ttime := now.Truncate(span)
-	for i := count - 1; i > -1; i-- {
+	for i := count - 1; i > 0; i-- {
 		item := ttime.Add(-1 * span * time.Duration(i))
 		timeItems = append(timeItems, item.Unix())
 	}
@@ -199,8 +200,11 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 					key := fmt.Sprintf("t%d", item.BlockTime)
 					resItem, ok := res[key]
 					if ok {
-						ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
-						item.Price = RoundPrice(ethValue * item.Price)
+						/*ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
+						log.Println(ethValue);*/
+						ethPrice, _ := decimal.NewFromString(resItem.DerivedETH)
+						price,_:= ethPrice.Mul(decimal.NewFromFloat(item.Price)).Float64()
+						item.Price = RoundPrice(price)
 						//log.Println("key", key, item.Price,ethValue)
 					} else {
 						if idx > 0 {
@@ -228,8 +232,11 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	}
 	return bps, err
 }
+
 func RoundPrice(price float64) float64 {
-	return float64(int(math.Trunc(price*math.Pow10(3)))) / math.Pow10(3)
+	//return float64(int(math.Trunc(price*math.Pow10(3)))) / math.Pow10(3)
+	res,_ := decimal.NewFromFloat(price).Round(18).Float64()
+	return res
 }
 
 type LpSnapPairInfo struct {

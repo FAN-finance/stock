@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/shopspring/decimal"
 	"log"
 	"math"
 	"math/big"
@@ -21,9 +22,11 @@ func GetUnDecimalPrice(price float64) *big.Int {
 	//
 	//pfloat.SetFloat64(f64)
 	//pfloat=pfloat.Mul(pfloat,big.NewFloat(math.Pow10(18)))
-	mint := int64(float64(price) * math.Pow10(4))
-	pint.SetInt64(mint)
-	pint = pint.Mul(pint, big.NewInt(int64(math.Pow10(14))))
+	tempPrice := decimal.NewFromFloat(price).Mul(decimal.NewFromFloat(math.Pow10(18)))
+	//mint := int64(float64(price) * math.Pow10(18))
+	//pint.SetInt64(mint)
+	pint.Set(tempPrice.BigInt())
+	//pint = pint.Mul(pint, big.NewInt(int64(math.Pow10(14))))
 	//pint,_=pfloat.Int(nil)
 	return pint
 }

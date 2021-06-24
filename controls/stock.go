@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 	"log"
 	"math"
 	"stock/services"
@@ -432,9 +433,9 @@ func StockAvgPriceHandler(c *gin.Context) {
 		stockCode := nodePrices[0].StockCode
 		dataType := nodePrices[0].DataType
 
-		sumPrice := float64(0)
+		sumPrice := decimal.NewFromFloat(0.0)
 		for _, node := range nodePrices {
-			sumPrice += node.Price
+			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.Price))
 			//验证数据
 			if timestamp != node.Timestamp || stockCode != node.StockCode || dataType != node.DataType {
 				err = errors.New("需要共识的数据不一致")
@@ -448,9 +449,9 @@ func StockAvgPriceHandler(c *gin.Context) {
 			return
 		}
 		sdata := new(services.StockNode)
-		sdata.Price = sumPrice / float64(len(nodePrices))
-		sdata.Price = (math.Trunc(float64(sdata.Price)*1000) / 1000)
-		sdata.BigPrice = services.GetUnDecimalPrice(float64(sdata.Price)).String()
+		sdata.Price,_ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))),18).Float64()
+		//sdata.Price = (math.Trunc(float64(sdata.Price)*1000) / 1000)
+		sdata.BigPrice = services.GetUnDecimalPrice(sdata.Price).String()
 		sdata.Timestamp = int64(timestamp)
 		sdata.StockCode = stockCode
 		sdata.DataType = dataType

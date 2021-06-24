@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 	"log"
-	"math"
 	"stock/services"
 	"stock/utils"
 	"strconv"
@@ -121,18 +121,19 @@ END:
 		ErrJson(c, err.Error())
 	}
 }
-type HLValuePair struct{
+
+type HLValuePair struct {
 	High float64
 	Low  float64
 }
 
 // @Tags default
 // @Summary　获取token最近一小时最高最低价格信息,内部单节点
-// @Description 获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．
+// @Description 获取token最近一小时最高最低价格信息
 // @ID TokenPriceHandler
 // @Accept  json
 // @Produce  json
-// @Param     token   path    string     true        "token地址" default(0xc61624355667e4d5ca9cee25ad339c990a90eaea)
+// @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
 // @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
@@ -146,8 +147,8 @@ func TokenPriceHandler(c *gin.Context) {
 	dataTypeStr := c.Query("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
-	intreval:="60s"
-	count:=60
+	intreval := "60s"
+	count := 60
 	//intreval:="hour"
 	//count:=20
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
@@ -178,7 +179,7 @@ where a.high is not null`,code).First(vp).Error
 	if c.Query("debug") == "1" {
 		res, err = proc()
 	} else {
-		log.Println("cache process",ckey)
+		log.Println("cache process", ckey)
 		res, err = utils.CacheFromLru(1, ckey, int(100), proc)
 	}
 	if err == nil {
@@ -190,7 +191,7 @@ where a.high is not null`,code).First(vp).Error
 		//fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
 		//res.PriceUsd = fprice * price
 
-		vp:=res.(*HLValuePair)
+		vp := res.(*HLValuePair)
 		log.Println(*vp)
 		tPriceView := new(services.HLPriceView)
 		tPriceView.Code = code
@@ -199,16 +200,17 @@ where a.high is not null`,code).First(vp).Error
 		}
 		tPriceView.Timestamp = int64(timestamp)
 		tPriceView.DataType = dataType
-		if dataType==1{
+		if dataType == 1 {
 			tPriceView.PriceUsd = vp.High
 		}
-		if dataType==2{
+		if dataType == 2 {
 			tPriceView.PriceUsd = vp.Low
 		}
-		tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*1000) / 1000
-		tPriceView.BigPrice = services.GetUnDecimalPrice(float64(tPriceView.PriceUsd)).String()
+		//tPriceView.PriceUsd = math.Trunc( tPriceView.PriceUsd*1000) / 1000
+		tPriceView.PriceUsd, _ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
+		tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 		tPriceView.NodeAddress = services.WalletAddre
-		if tPriceView.PriceUsd>0.001 {
+		if tPriceView.PriceUsd > 0.001 {
 			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 		}
 		c.JSON(200, tPriceView)
@@ -250,9 +252,9 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		code := nodePrices[0].Code
 		dataType := nodePrices[0].DataType
 
-		sumPrice := float64(0)
+		sumPrice := decimal.NewFromFloat(0.0)
 		for _, node := range nodePrices {
-			sumPrice += node.PriceUsd
+			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.PriceUsd))
 			//验证数据
 			if timestamp != node.Timestamp || code != node.Code || dataType != node.DataType {
 				err = errors.New("需要共识的数据不一致")
@@ -266,14 +268,14 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 			return
 		}
 		sdata := new(services.HLPriceView)
-		sdata.PriceUsd = sumPrice / float64(len(nodePrices))
-		sdata.PriceUsd = (math.Trunc(float64(sdata.PriceUsd)*1000) / 1000)
-		sdata.BigPrice = services.GetUnDecimalPrice(float64(sdata.PriceUsd)).String()
+		sdata.PriceUsd,_ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))),18).Float64()
+		//sdata.PriceUsd = (math.Trunc(float64(sdata.PriceUsd)*1000) / 1000)
+		sdata.BigPrice = services.GetUnDecimalPrice(sdata.PriceUsd).String()
 		sdata.Timestamp = int64(timestamp)
 		sdata.Code = code
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
-		if sdata.PriceUsd>0.001 {
+		if sdata.PriceUsd > 0.001 {
 			sdata.Sign = services.SignMsg(sdata.GetHash())
 		}
 		c.JSON(200, sdata)
@@ -484,7 +486,7 @@ func PairLpPriceSignHandler(c *gin.Context) {
 
 		wg.Wait()
 		var err error
-		sumPrice := float64(0.0)
+		sumPrice := decimal.NewFromFloat(0)
 		if len(resTokenView.Signs) == 0 {
 			err = errors.New("数据不可用")
 			return nil, err
@@ -495,11 +497,11 @@ func PairLpPriceSignHandler(c *gin.Context) {
 
 		}
 		for _, node := range resTokenView.Signs {
-			sumPrice += node.PriceUsd
+			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.PriceUsd))
 		}
 		resTokenView.Timestamp = int64(timestamp)
-		resTokenView.PriceUsd = sumPrice / float64(len(resTokenView.Signs))
-		resTokenView.BigPrice = services.GetUnDecimalPrice(float64(resTokenView.PriceUsd)).String()
+		resTokenView.PriceUsd,_ = sumPrice.DivRound(decimal.NewFromInt(int64(len(resTokenView.Signs))),18).Float64()
+		resTokenView.BigPrice = services.GetUnDecimalPrice(resTokenView.PriceUsd).String()
 		resTokenView.Sign = services.SignMsg(resTokenView.GetHash())
 		return resTokenView, nil
 	}
@@ -536,9 +538,10 @@ func PairLpPriceHandler(c *gin.Context) {
 		allUsd, _ := strconv.ParseFloat(res.ReserveUSD, 64)
 		tPriceView := new(services.PriceView)
 		tPriceView.Timestamp = int64(timestamp)
-		tPriceView.PriceUsd = allUsd / sulpply
-		tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*100) / 100
-		tPriceView.BigPrice = services.GetUnDecimalPrice(float64(tPriceView.PriceUsd)).String()
+		//tPriceView.PriceUsd = allUsd / sulpply
+		//tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*100) / 100
+		tPriceView.PriceUsd,_= decimal.NewFromFloat(allUsd).DivRound(decimal.NewFromFloat(sulpply),18 ).Float64()
+		tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 		c.JSON(200, tPriceView)
 		return
