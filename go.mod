@@ -15,6 +15,7 @@ require (
 	github.com/itsjamie/gin-cors v0.0.0-20160420130702-97b4a9da7933
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/rickar/cal/v2 v2.0.0
+	github.com/shopspring/decimal v1.2.0
 	github.com/spf13/pflag v1.0.5
 	github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4
 	github.com/stretchr/testify v1.7.0 // indirect
