@@ -245,7 +245,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 	count, _ := strconv.Atoi(count_str)
 
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s", interval_str, count_str)
+	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s-%s",coin_type, interval_str, count_str)
 	proc := func() (interface{}, error) {
 		items, err := services.GetFtxTimesPrice(coin_type, interval, count)
 		if err != nil {
