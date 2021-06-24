@@ -1026,7 +1026,7 @@ var doc = `{
         },
         "/pub/internal/dex/token_price/{token}/{timestamp}": {
             "get": {
-                "description": "获取token最近一小时最高最低价格信息",
+                "description": "获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．",
                 "consumes": [
                     "application/json"
                 ],
@@ -1041,7 +1041,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
+                        "default": "0xc61624355667e4d5ca9cee25ad339c990a90eaea",
                         "description": "token地址",
                         "name": "token",
                         "in": "path",
