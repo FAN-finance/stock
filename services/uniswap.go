@@ -174,8 +174,12 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	bps, err := getBlockPrices(times, blockHeight)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
-		for _, item := range bps {
-			gql += fmt.Sprintf(`\nt%d: token(id: \"%s\", block: {number: %d}) {\n    derivedETH\n    __typename\n  }`, item.BlockTime, tokenAddre, item.ID)
+		for index, item := range bps {
+			if index == (len(bps)-1) {
+				gql += fmt.Sprintf(`\nt%d: token(id: \"%s\") {\n    derivedETH\n    __typename\n  }`, item.BlockTime, tokenAddre)
+			}else{
+				gql += fmt.Sprintf(`\nt%d: token(id: \"%s\", block: {number: %d}) {\n    derivedETH\n    __typename\n  }`, item.BlockTime, tokenAddre, item.ID)
+			}
 		}
 		gql += `\n}\n"}`
 
