@@ -135,25 +135,38 @@ type FtxChartDate struct {
 func GetFtxTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
 	sql := `
-select truncate((dates.id-1) / ?,0) as id1,
+select truncate((dates.id - 1) / ?, 0) as          id1,
 #        min(dates.date) datestr,
-       min(dates.secon1) timestamp,
-       cast(avg(bulls.bull) as decimal(9,3)) bull,
-       cast(max(bulls.bull)as decimal(9,3)) hight,
-       cast(avg(bulls.bull)as decimal(9,3)) low,
-       cast( avg(bulls.raw_price) as decimal(9,3))btc,
-       cast(max(bulls.raw_price)as decimal(9,3)) btc_hight,
-       cast(avg(bulls.raw_price)as decimal(9,3)) btc_low
+       min(dates.secon1)                           timestamp,
+       cast(avg(bulls.bull) as decimal(9, 3))      bull,
+       cast(max(bulls.bull) as decimal(9, 3))      hight,
+       cast(avg(bulls.bull) as decimal(9, 3))      low,
+       cast(avg(bulls.raw_price) as decimal(9, 3)) btc,
+       cast(max(bulls.raw_price) as decimal(9, 3)) btc_hight,
+       cast(avg(bulls.raw_price) as decimal(9, 3)) btc_low
 from stock.dates dates
-         left join coin_bull bulls on dates.secon1 < bulls.timestamp and dates.secon2 > bulls.timestamp
-where dates.secon1 > unix_timestamp()-15*60*?*?
+         left join (select *
+                    from coin_bull
+                    where coin_bull.timestamp > unix_timestamp() - 15 * 60 * ? * ?
+                      and coin_bull.timestamp < unix_timestamp()
+                      and coin_bull.coin_type = ?) bulls
+                   on dates.secon1 < bulls.timestamp and dates.secon2 > bulls.timestamp
+where dates.secon1 > unix_timestamp() - 15 * 60 * ? * ?
   and dates.secon1 < unix_timestamp()
-and bulls.timestamp > unix_timestamp()-15*60*?*?
-  and bulls.timestamp < unix_timestamp()
-and bulls.coin_type=?
-group by id1 limit ?;
+group by id1
+limit ?
 `
-	err := utils.Orm.Raw(sql, interval, interval, count, interval, count, coin_type, count).Scan(&datas).Error
+	err := utils.Orm.Raw(sql, interval,interval, count, coin_type, interval, count, count).Scan(&datas).Error
+	if err == nil {
+		for idx, data := range datas {
+			if idx>0{
+				if data.Bull==0{
+					data.Bull=datas[idx-1].Bull
+					data.Btc=datas[idx-1].Btc
+				}
+			}
+		}
+	}
 	return datas, err
 }
 
