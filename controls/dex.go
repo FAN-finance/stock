@@ -365,8 +365,8 @@ func TokenInfoHandler(c *gin.Context) {
 		res, err := services.GetTokenInfo(code)
 		if err == nil {
 			price := services.BlockPrice{}.GetPrice()
-			fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
-			res.PriceUsd = fprice * price
+			fprice, _ := decimal.NewFromString(res.DerivedETH)
+			res.PriceUsd,_ = fprice.Mul(decimal.NewFromFloat(price)).Round(18).Float64()
 
 			//ost, err1 := services.GetTokenInfosForStat(code, price)
 			//if err1 != nil {
