@@ -716,6 +716,7 @@ func SubPairlog(tpc *TokenPairConf) {
 	log.Println("begin sublog fromBlock",fromBlock)
 	logs := make(chan types.Log)
 	query.FromBlock=fromBlockNum.SetInt64(fromBlock)
+	RETRY:
 	sub, err := EthConn.SubscribeFilterLogs(context.Background(), query, logs)
 	defer sub.Unsubscribe()
 	if err != nil {
@@ -730,12 +731,15 @@ func SubPairlog(tpc *TokenPairConf) {
 		//}
 		select {
 		case err := <-sub.Err():
-			log.Fatal(err)
+			time.Sleep(1*time.Second)
+			log.Println("subLogERR",err)
+			goto RETRY
 		case vLog := <-logs:
 			//log.Println(vLog) // pointer to event log
 			if  vLog.Topics[0].Hex()==logTransferSigHash.Hex(){
 				saveSyncLog(vLog,tpc)
 			}
+			fromBlock=int64(vLog.BlockNumber)
 		}
 	}
 }
