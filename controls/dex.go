@@ -268,9 +268,13 @@ func TokenPriceHandler(c *gin.Context) {
 			return nil, err
 		}
 		vp:=new(HLValuePair)
-		for _, item := range items {
+		log.Println(items)
+		for index, item := range items {
 			vp.High =math.Max(vp.High,item.Price)
-			vp.Low=math.Min(vp.High,item.Price)
+			if index==0 {
+				vp.Low = item.Price
+			}
+			vp.Low=math.Min(vp.Low,item.Price)
 		}
 		return vp, err
 	}
