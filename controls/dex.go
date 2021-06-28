@@ -268,7 +268,6 @@ func TokenPriceHandler(c *gin.Context) {
 			return nil, err
 		}
 		vp:=new(HLValuePair)
-		log.Println(items)
 		for index, item := range items {
 			vp.High =math.Max(vp.High,item.Price)
 			if index==0 {
@@ -593,13 +592,13 @@ func PairLpPriceHandler(c *gin.Context) {
 	res, err := services.GetPairInfo(code)
 	if err == nil {
 		//price:=services.BlockPrice{}.GetPrice()
-		sulpply, _ := strconv.ParseFloat(res.TotalSupply, 64)
+		supply, _ := strconv.ParseFloat(res.TotalSupply, 64)
 		allUsd, _ := strconv.ParseFloat(res.ReserveUSD, 64)
 		tPriceView := new(services.PriceView)
 		tPriceView.Timestamp = int64(timestamp)
 		//tPriceView.PriceUsd = allUsd / sulpply
 		//tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*100) / 100
-		tPriceView.PriceUsd,_= decimal.NewFromFloat(allUsd).DivRound(decimal.NewFromFloat(sulpply),18 ).Float64()
+		tPriceView.PriceUsd,_= decimal.NewFromFloat(allUsd).DivRound(decimal.NewFromFloat(supply),18 ).Float64()
 		tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 		c.JSON(200, tPriceView)
