@@ -188,7 +188,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for index, item := range bps {
-			if index == (len(bps) - 1) {
+			if interval == "60s" && index == (len(bps)-1) {
 				item.BlockTime += 1
 				gql += fmt.Sprintf(`\nt%d: token(id: \"%s\") {\n    derivedETH\n    __typename\n  }`, item.BlockTime, tokenAddre)
 			} else {
@@ -221,7 +221,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 						/*ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
 						log.Println(ethValue);*/
 						ethPrice, _ := decimal.NewFromString(resItem.DerivedETH)
-						if idx == (len(bps) - 1) {
+						if interval == "60s" && idx == (len(bps)-1) {
 							item.Price = BlockPrice{}.GetPrice()
 						}
 						price, _ := ethPrice.Mul(decimal.NewFromFloat(item.Price)).Float64()
