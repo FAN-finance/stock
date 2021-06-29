@@ -203,11 +203,15 @@ func TokenChainPriceProcess(c *gin.Context,dataProc func(code string ) (interfac
 	}
 	var res interface{}
 	var err error
-	if c.Query("debug") == "1" {
+	if processName=="TokenPriceHandler" {
 		res, err = proc()
-	} else {
-		log.Println("cache process", ckey)
-		res, err = utils.CacheFromLru(1, ckey, int(100), proc)
+	}else{
+		if c.Query("debug") == "1" {
+			res, err = proc()
+		} else {
+			log.Println("cache process", ckey)
+			res, err = utils.CacheFromLru(1, ckey, int(100), proc)
+		}
 	}
 	//res, err := services.GetTokenInfo(code)
 	if err == nil {
