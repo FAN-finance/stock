@@ -221,12 +221,12 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 						/*ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
 						log.Println(ethValue);*/
 						ethPrice, _ := decimal.NewFromString(resItem.DerivedETH)
+						if idx == (len(bps) - 1) {
+							ethPrice = decimal.NewFromFloat(BlockPrice{}.GetPrice())
+						}
 						price, _ := ethPrice.Mul(decimal.NewFromFloat(item.Price)).Float64()
 						item.Price = RoundPrice(price)
 						if idx == (len(bps) - 1) {
-							ethPrice = decimal.NewFromFloat(BlockPrice{}.GetPrice())
-							price, _ = ethPrice.Mul(decimal.NewFromFloat(item.Price)).Float64()
-							item.Price = RoundPrice(price)
 							log.Println(item.Price, resItem.DerivedETH, ethPrice)
 						}
 						//log.Println("key", key, item.Price,ethValue)
