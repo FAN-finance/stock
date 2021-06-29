@@ -107,7 +107,6 @@ func tokenPriceSignProces(c *gin.Context,providerUrl string) {
 			snode := new(services.HLPriceView)
 			json.Unmarshal(bs, snode)
 			snode.Node = nodeUrl
-
 			isMyData, _ := services.Verify(snode.GetHash(), snode.Sign, services.WalletAddre)
 			if isMyData {
 				//log.Println(myData,"124")
@@ -203,15 +202,11 @@ func TokenChainPriceProcess(c *gin.Context,dataProc func(code string ) (interfac
 	}
 	var res interface{}
 	var err error
-	if processName=="TokenPriceHandler" {
+	if c.Query("debug") == "1" {
 		res, err = proc()
-	}else{
-		if c.Query("debug") == "1" {
-			res, err = proc()
-		} else {
-			log.Println("cache process", ckey)
-			res, err = utils.CacheFromLru(1, ckey, int(100), proc)
-		}
+	} else {
+		log.Println("cache process", ckey)
+		res, err = utils.CacheFromLru(1, ckey, int(30), proc)
 	}
 	//res, err := services.GetTokenInfo(code)
 	if err == nil {
