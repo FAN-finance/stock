@@ -189,6 +189,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for index, item := range bps {
 			if interval == "60s" && index == (len(bps)-1) {
+				log.Println("when get the price during one hour")
 				item.BlockTime += 1
 				gql += fmt.Sprintf(`\nt%d: token(id: \"%s\") {\n    derivedETH\n    __typename\n  }`, item.BlockTime, tokenAddre)
 			} else {
