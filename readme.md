@@ -1,32 +1,24 @@
 
 ## stock info api
-为美股预言机，提供数据源服务api
+- 美股报价　：
 
-目前提供苹果和特斯拉每秒的股价
-- 苹果代码 AAPL；特斯拉代码 TSLA
+目前提供苹果和特斯拉每秒的股价；苹果代码 AAPL；特斯拉代码 TSLA
+
+- uniswap
+
+交易所的token pair报价，及图表相关信息
+
+- 加密货币间的兑换价格查询
+
+目前支持的62种加密货币符号如下：btc,aed,ars,aud,bch,bdt,bhd,bits,bmd,bnb,brl,byn,cad,chf,clp,cny,czk,dkk,dot,eos,eth,eur,gbp,hkd,huf,idr,ils,inr,jpy,krw,kwd,link,lkr,ltc,mmk,mxn,myr,ngn,nok,nzd,php,pkr,pln,rub,sar,sats,sek,sgd,thb,try,twd,uah,usd,vef,vnd,xag,xau,xdr,xlm,xrp,yfi,zar
+
+- any-api 单字段查询
+
+- ftx btc3x eth3x
 
 ### 节点eth钱包
 启动时,会自动创建 asset/pkey 私钥文件；应用接口 /pub/stock/node_wallets,会反返回所有节点的钱包地址
 
-### mysql table:
-```mysql
--- auto-generated definition
-create table stocks
-(
-    id         bigint auto_increment
-        primary key,
-    code       varchar(191)    null,
-    price      decimal(19,2)           null,
-    stock_name longtext        null,
-    mk         bigint          null,
-    diff       float default 0 null,
-    timestamp  bigint          null,
-    updated_at datetime(3)     null
-);
-
-create index code_time
-    on stocks (code, timestamp);
-```
 
 ### current nodes ip list 
 - node1: 62.234.169.68
@@ -39,8 +31,8 @@ create index code_time
 - https://snode2.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145 
 
 ### startup 
+启动参数详见min.go 中的"pflag.Parse()"代码段
 ```shell script
-
 
 go build 
 
@@ -81,6 +73,8 @@ Response body:
 
 ```
 ### startup args
+启动参数详见min.go 中的"pflag.Parse()"代码段
+
 ```shell script
 ./stock -h
 Usage of /tmp/go-build868767577/b001/exe/main:
@@ -136,9 +130,6 @@ json中的　Sign字段为签名；　Sign值由　Timestamp／TextPrice／Code�
 #### 签名sign的计算方式
 目前使用 go-ethereum签名方式:
 
-- ~~**message= Code+","+Timestamp+"," +Price**; solidity 无法使用拼串方式生成message,再hash,也没有float字段，hash过程换成如下方法~~
-- ~~sign=crypto.Sign(Keccak256(message),edcasaKey)~~
-
 ```go
 hash := crypto.Keccak256Hash(
 		common.LeftPadBytes(big.NewInt(s.Timestamp).Bytes(), 32),
@@ -158,12 +149,7 @@ sign=crypto.Sign(Keccak256(message),edcasaKey)
  prefixedHash.recover(sign)
 ```
 
- 
- 功能列表:
-- 添加获取pair信息接口
-- 添加获取token信息接口
-- 获取any-api json字段接口
-- 获取apple tsla股票信息接口
+
 
 
 
