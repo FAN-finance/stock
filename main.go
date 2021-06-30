@@ -1,7 +1,6 @@
 package main
 
 import (
-
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
@@ -9,13 +8,13 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"log"
+	"stock/controls"
+	_ "stock/docs"
 	"stock/services"
+	"stock/utils"
 	"strings"
 	"sync"
 	"time"
-	_ "stock/docs"
-	"stock/utils"
-	"stock/controls"
 )
 
 // @title stock-info-api
@@ -32,28 +31,27 @@ import (
 //host 192.168.122.1:8080
 // @BasePath /
 func main() {
-	var dbUrl,serverPort,env,infura,swapGraphApi string
+	var dbUrl, serverPort, env, infura, swapGraphApi string
 	var job bool
 
 	var nodes []string
-	pflag.StringVarP(&dbUrl,"db","d","root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true","mysql database url")
-	pflag.StringVarP(&serverPort,"port","p","8001","api　service port")
+	pflag.StringVarP(&dbUrl, "db", "d", "root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true", "mysql database url")
+	pflag.StringVarP(&serverPort, "port", "p", "8001", "api　service port")
 	//var keyfile,certFile string
 	//pflag.StringVarP(&keyfile,"key","k","./asset/key.pem","pem encoded private key")
 	//pflag.StringVarP(&certFile,"cert","c","./asset/cert.pem","pem encoded x509 cert")
-	pflag.StringSliceVarP(&nodes,"nodes","n",strings.Split("http://localhost:8001,http://localhost:8001",","),"所有节点列表,节点间用逗号分开")
-	pflag.StringVarP(&env,"env","e","debug","环境名字debug prod test")
-	pflag.StringVar(&infura,"infura","infura_proj_id","infura的项目id,需要自行去https://infura.io申请")
+	pflag.StringSliceVarP(&nodes, "nodes", "n", strings.Split("http://49.232.234.250:8001,http://localhost:8001,http://62.234.188.160:8001", ","), "所有节点列表,节点间用逗号分开")
+	pflag.StringVarP(&env, "env", "e", "debug", "环境名字debug prod test")
+	pflag.StringVar(&infura, "infura", "27f0b03a4654478db14295fd1021e1b8", "infura的项目id,需要自行去https://infura.io申请")
 	//https://api.thegraph.com/subgraphs/name/wxf4150/fanswap2 https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2
-	pflag.StringVar(&swapGraphApi,"swapGraphApi","https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2","swap theGraphApi")
-	pflag.BoolVarP(&job,"job","j",true,"是否抓取数据")
-
+	pflag.StringVar(&swapGraphApi, "swapGraphApi", "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2", "swap theGraphApi")
+	pflag.BoolVarP(&job, "job", "j", true, "是否抓取数据")
 
 	pflag.Parse()
-	utils.Nodes=nodes
+	utils.Nodes = nodes
 	utils.InitDb(dbUrl)
 	services.InitEConn(infura)
-	services.SwapGraphApi=swapGraphApi
+	services.SwapGraphApi = swapGraphApi
 
 	if job {
 		//go services.GetStocks()
@@ -61,37 +59,37 @@ func main() {
 		go services.SubCoinsPrice()
 		go services.SetAllBulls("btc3x")
 		go services.SetAllBulls("eth3x")
-		go func(){
+		go func() {
 			//监听eth uniswap pair's token价格
 			tpc := services.TokenPairConf{PairAddre: "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67", TokenAddre: "0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b", TokenDecimals: 18, ChainName: "eth"}
-			services.SubPairlog( &tpc)
+			services.SubPairlog(&tpc)
 		}()
 
 	}
 
 	services.InitNodeKey()
 	//InitKey(keyfile,certFile)
-	if env=="prod"{
+	if env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	log.SetFlags(log.LstdFlags)
-	ReqHeader:=[]string{
-		"Content-Type","Origin","Authorization", "Accept", "tokenId", "tokenid", "authorization","ukey","token","cache-control", "x-requested-with"}
+	ReqHeader := []string{
+		"Content-Type", "Origin", "Authorization", "Accept", "tokenId", "tokenid", "authorization", "ukey", "token", "cache-control", "x-requested-with"}
 	router := gin.Default()
 	router.Use(cors.Middleware(cors.Config{
-		Origins:        "*",
-		Methods:        "GET, PUT, POST, DELETE",
-		RequestHeaders: strings.Join(ReqHeader,", "),
-		ExposedHeaders: "",
-		MaxAge: 360000 * time.Second,
-		Credentials: true,
+		Origins:         "*",
+		Methods:         "GET, PUT, POST, DELETE",
+		RequestHeaders:  strings.Join(ReqHeader, ", "),
+		ExposedHeaders:  "",
+		MaxAge:          360000 * time.Second,
+		Credentials:     true,
 		ValidateHeaders: false,
 	}))
 	//router.Use(controls.TokenCheck())
 	//domainDir:=router.Group("/nft")
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	api:=router.Group("/pub")
-	api.GET("/stock/info", controls.StockInfoHandler);
+	api := router.Group("/pub")
+	api.GET("/stock/info", controls.StockInfoHandler)
 	api.GET("/stock/market_status/:timestamp", controls.UsaMarketStatusHandler)
 	api.POST("/internal/stock_avgprice", controls.StockAvgPriceHandler)
 	api.POST("/internal/token_avgprice", controls.TokenAvgHlPriceHandler)
@@ -117,12 +115,12 @@ func main() {
 	api.GET("/dex/token_chart_prices/:token/:count/:interval/:timestamp", controls.TokenDayPricesHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
-	router.NoRoute(func(c *gin.Context){
-		controls.ErrJson(c,"none api router")
+	router.NoRoute(func(c *gin.Context) {
+		controls.ErrJson(c, "none api router")
 		//c.JSON(404,controls.ApiErr{Error:"none api router"})
 	})
-	go router.RunTLS(":8002","./asset/tls.pem","./asset/tls.pem")
-	log.Fatal(router.Run(":"+serverPort))
+	go router.RunTLS(":8002", "./asset/tls.pem", "./asset/tls.pem")
+	log.Fatal(router.Run(":" + serverPort))
 }
 
 // @Tags default
@@ -136,21 +134,20 @@ func main() {
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/stat [get]
 func NodeStatHandler(c *gin.Context) {
-	stat:=NodeStat{}
+	stat := NodeStat{}
 	utils.Orm.Model(services.ViewStock{}).Count(&(stat.StockRows))
 	utils.Orm.Model(services.ViewStock{}).Select("max(updated_at) ").Scan(&stat.StockUpdateAt)
 
-	coinMaxid:=0
+	coinMaxid := 0
 	utils.Orm.Model(services.Coin{}).Select("max(id)").Scan(&coinMaxid)
-	stat.CionPricesUpdateAt=time.Unix(int64(coinMaxid),0)
+	stat.CionPricesUpdateAt = time.Unix(int64(coinMaxid), 0)
 
 	utils.Orm.Model(services.BlockPrice{}).Select("max(created_at)").Scan(&stat.BlockPricesUpdateAt)
 
-	stat.WalletAddre=services.WalletAddre
-	stat.Uptime=services.Uptime
-	c.JSON(200,stat)
+	stat.WalletAddre = services.WalletAddre
+	stat.Uptime = services.Uptime
+	c.JSON(200, stat)
 }
-
 
 type NodeStat struct {
 	//节点名
@@ -165,9 +162,9 @@ type NodeStat struct {
 	CionPricesUpdateAt time.Time
 	//eth价格信息最后更新时间
 	BlockPricesUpdateAt time.Time
-	Uptime time.Time
-
+	Uptime              time.Time
 }
+
 // @Tags default
 // @Summary　所有节点状态:记录数,钱包地址
 // @Description 所有节点状态:记录数,钱包地址
@@ -181,21 +178,21 @@ func NodeStatsHandler(c *gin.Context) {
 	var err error
 
 	var addres []*NodeStat
-	sc:=sync.RWMutex{}
-	wg:= new(sync.WaitGroup)
-	var porcNode=func(nodeUrl string) {
+	sc := sync.RWMutex{}
+	wg := new(sync.WaitGroup)
+	var porcNode = func(nodeUrl string) {
 		defer wg.Done()
-		reqUrl := nodeUrl+"/pub/stock/stat"
+		reqUrl := nodeUrl + "/pub/stock/stat"
 		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
-			stat:=new(NodeStat)
-			err=json.Unmarshal(bs,stat)
+			stat := new(NodeStat)
+			err = json.Unmarshal(bs, stat)
 			if err == nil {
 				log.Println(err)
 			}
-			stat.Node=nodeUrl
+			stat.Node = nodeUrl
 			sc.Lock()
-			addres=append(addres,stat)
+			addres = append(addres, stat)
 			sc.Unlock()
 		}
 	}
@@ -204,23 +201,21 @@ func NodeStatsHandler(c *gin.Context) {
 		go porcNode(nurl)
 	}
 	wg.Wait()
-	c.JSON(200,addres)
+	c.JSON(200, addres)
 	return
 
 	if err != nil {
-		controls.ErrJson(c,err.Error())
+		controls.ErrJson(c, err.Error())
 		return
 	}
 }
 
-
-
-
 type VerObj struct {
 	//stockInfo json: {"code":"AAPL","price":128.1,"name":"苹果","timestamp":1620292445,"UpdatedAt":"2021-05-06T17:14:05.878+08:00"}
 	Data json.RawMessage `swaggertype:"object"`
-	Sign []byte `swaggertype:"string" format:"base64" example:"UhRVNsT8B5Za6oO3APH0T9ebPMKHxDDhkscYuILl7lDepDMzyBaQsEu9vwTRIfoYBS8udfEanI/DUAhwnIdFJf9woIv7Oo+OS6q3sF3B5Vx9NN2ipXJ4wjTf2ct7FbS1vXAvTXSmA2svj+LF8P1PIEClITBqu/EWZXTpHvAlbGAAeF+hHO7/FquLHVDavLC+OENyb0CP+NvH+ytZ69tav0DqbGp+NGGil/ImZpPsetbOxwuhC/U1CV6Ap8qgRWe8s6IpOawXDAavLMHUmXVvORDf/XVzaQUJ5ob+vTsSTZwQsvj/4jmsODFt8eKFYL/7vyN/i3HkiDwhq0w85kqHgg=="`
+	Sign []byte          `swaggertype:"string" format:"base64" example:"UhRVNsT8B5Za6oO3APH0T9ebPMKHxDDhkscYuILl7lDepDMzyBaQsEu9vwTRIfoYBS8udfEanI/DUAhwnIdFJf9woIv7Oo+OS6q3sF3B5Vx9NN2ipXJ4wjTf2ct7FbS1vXAvTXSmA2svj+LF8P1PIEClITBqu/EWZXTpHvAlbGAAeF+hHO7/FquLHVDavLC+OENyb0CP+NvH+ytZ69tav0DqbGp+NGGil/ImZpPsetbOxwuhC/U1CV6Ap8qgRWe8s6IpOawXDAavLMHUmXVvORDf/XVzaQUJ5ob+vTsSTZwQsvj/4jmsODFt8eKFYL/7vyN/i3HkiDwhq0w85kqHgg=="`
 }
+
 //// @Tags default
 //// @Summary　签名验证:
 //// @Description 签名验证
@@ -247,5 +242,3 @@ type VerObj struct {
 //		return
 //	}
 //}
-
-
