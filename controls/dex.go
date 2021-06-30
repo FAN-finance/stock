@@ -29,7 +29,7 @@ import (
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_chain_price/{token}/{data_type}/{timestamp} [get]
 func TokenChainPriceSignHandler(c *gin.Context) {
-	tokenPriceSignProces(c,"/pub/internal/dex/token_chain_price/%s/%d?data_type=%d")
+	tokenPriceSignProces(c, "/pub/internal/dex/token_chain_price/%s/%d?data_type=%d")
 }
 
 // @Tags default
@@ -47,10 +47,10 @@ func TokenChainPriceSignHandler(c *gin.Context) {
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_price/{token}/{data_type}/{timestamp} [get]
 func TokenPriceSignHandler(c *gin.Context) {
-	tokenPriceSignProces(c,"/pub/internal/dex/token_price/%s/%d?data_type=%d")
+	tokenPriceSignProces(c, "/pub/internal/dex/token_price/%s/%d?data_type=%d")
 }
 
-func tokenPriceSignProces(c *gin.Context,providerUrl string) {
+func tokenPriceSignProces(c *gin.Context, providerUrl string) {
 	code := c.Param("token")
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
@@ -163,7 +163,7 @@ type HLValuePair struct {
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_chain_price/{token}/{timestamp} [get]
 func TokenChainPriceHandler(c *gin.Context) {
-	dataProc := func(code string ) (interface{}, error) {
+	dataProc := func(code string) (interface{}, error) {
 		vp := new(HLValuePair)
 		err := utils.Orm.Raw(`
 select *
@@ -173,21 +173,21 @@ from (
         where prices.token_addre=? and prices.block_number >
               (select t.id from block_prices t where t.block_time > unix_timestamp() - 3600 limit 1)
     ) a
-where a.high is not null`,code).First(vp).Error
+where a.high is not null`, code).First(vp).Error
 		if err == nil {
 			return vp, err
 		}
 		err = utils.Orm.Raw(`select prices.token_price high, prices.token_price low
 			from token_prices prices where prices.token_addre=?
 			order by id desc
-			limit 1;`,code).First(vp).Error
+			limit 1;`, code).First(vp).Error
 		return vp, err
 
 	}
-	TokenChainPriceProcess(c,dataProc,"TokenChainPriceHandler")
+	TokenChainPriceProcess(c, dataProc, "TokenChainPriceHandler")
 
 }
-func TokenChainPriceProcess(c *gin.Context,dataProc func(code string ) (interface{}, error),processName string) {
+func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interface{}, error), processName string) {
 	code := c.Param("token")
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
@@ -197,7 +197,7 @@ func TokenChainPriceProcess(c *gin.Context,dataProc func(code string ) (interfac
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf(processName+"-%s", code)
 
-	proc:= func( ) (interface{}, error){
+	proc := func() (interface{}, error) {
 		return dataProc(code)
 	}
 	var res interface{}
@@ -259,24 +259,24 @@ func TokenChainPriceProcess(c *gin.Context,dataProc func(code string ) (interfac
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_price/{token}/{timestamp} [get]
 func TokenPriceHandler(c *gin.Context) {
-	dataProc := func(code string ) (interface{}, error) {
-		intreval:="60s"
-		count:=60
-		items, err := services.GetTokenTimesPrice(code,  intreval, count)
+	dataProc := func(code string) (interface{}, error) {
+		intreval := "60s"
+		count := 60
+		items, err := services.GetTokenTimesPrice(code, intreval, count)
 		if err != nil {
 			return nil, err
 		}
-		vp:=new(HLValuePair)
+		vp := new(HLValuePair)
 		for index, item := range items {
-			vp.High =math.Max(vp.High,item.Price)
-			if index==0 {
+			vp.High = math.Max(vp.High, item.Price)
+			if index == 0 {
 				vp.Low = item.Price
 			}
-			vp.Low=math.Min(vp.Low,item.Price)
+			vp.Low = math.Min(vp.Low, item.Price)
 		}
 		return vp, err
 	}
-	TokenChainPriceProcess(c,dataProc,"TokenPriceHandler")
+	TokenChainPriceProcess(c, dataProc, "TokenPriceHandler")
 }
 
 // @Tags default
@@ -325,7 +325,7 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 			return
 		}
 		sdata := new(services.HLPriceView)
-		sdata.PriceUsd,_ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))),18).Float64()
+		sdata.PriceUsd, _ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))), 18).Float64()
 		//sdata.PriceUsd = (math.Trunc(float64(sdata.PriceUsd)*1000) / 1000)
 		sdata.BigPrice = services.GetUnDecimalPrice(sdata.PriceUsd).String()
 		sdata.Timestamp = int64(timestamp)
@@ -368,7 +368,7 @@ func TokenInfoHandler(c *gin.Context) {
 		if err == nil {
 			price := services.BlockPrice{}.GetPrice()
 			fprice, _ := decimal.NewFromString(res.DerivedETH)
-			res.PriceUsd,_ = fprice.Mul(decimal.NewFromFloat(price)).Round(18).Float64()
+			res.PriceUsd, _ = fprice.Mul(decimal.NewFromFloat(price)).Round(18).Float64()
 
 			//ost, err1 := services.GetTokenInfosForStat(code, price)
 			//if err1 != nil {
@@ -400,6 +400,33 @@ func TokenInfoHandler(c *gin.Context) {
 	//	ErrJson(c,err.Error())
 	//	return
 	//}
+}
+
+// @Tags default
+// @Summary　获取token信息,内部单节点
+// @Description 内部单节点获取token信息
+// @ID PairTokenInfoHandler
+// @Accept  json
+// @Produce  json
+// @Param     pair   path    string     true        "token地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
+// @Param     token   path    string     true        "token地址" default(0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b)
+// @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
+// @Success 200 {object} services.TokenInfo	"stock info"
+// @Header 200 {string} sign "签名信息"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/internal/dex/pair/token_info/{pair}/{token}/{timestamp} [get]
+func PairTokenInfoHandler(c *gin.Context) {
+	pair := c.Param("pair")
+	token := c.Param("token")
+	ckey := fmt.Sprintf("PairTokenInfoHandler-%s-%s", pair, token)
+	proc := func() (interface{}, error) {
+		res, err := services.GetTokenInfoOfPair(pair, token)
+		if err == nil {
+			return res, nil
+		}
+		return res, err
+	}
+	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 }
 
 // @Tags default
@@ -557,7 +584,7 @@ func PairLpPriceSignHandler(c *gin.Context) {
 			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.PriceUsd))
 		}
 		resTokenView.Timestamp = int64(timestamp)
-		resTokenView.PriceUsd,_ = sumPrice.DivRound(decimal.NewFromInt(int64(len(resTokenView.Signs))),18).Float64()
+		resTokenView.PriceUsd, _ = sumPrice.DivRound(decimal.NewFromInt(int64(len(resTokenView.Signs))), 18).Float64()
 		resTokenView.BigPrice = services.GetUnDecimalPrice(resTokenView.PriceUsd).String()
 		resTokenView.Sign = services.SignMsg(resTokenView.GetHash())
 		return resTokenView, nil
@@ -597,7 +624,7 @@ func PairLpPriceHandler(c *gin.Context) {
 		tPriceView.Timestamp = int64(timestamp)
 		//tPriceView.PriceUsd = allUsd / sulpply
 		//tPriceView.PriceUsd = math.Trunc(tPriceView.PriceUsd*100) / 100
-		tPriceView.PriceUsd,_= decimal.NewFromFloat(allUsd).DivRound(decimal.NewFromFloat(supply),18 ).Float64()
+		tPriceView.PriceUsd, _ = decimal.NewFromFloat(allUsd).DivRound(decimal.NewFromFloat(supply), 18).Float64()
 		tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 		c.JSON(200, tPriceView)

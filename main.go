@@ -103,7 +103,10 @@ func main() {
 	api.GET("/dex/lp_price/:pair/:timestamp", controls.PairLpPriceSignHandler)
 	api.GET("/internal/dex/token_price/:token/:timestamp", controls.TokenPriceHandler)
 	api.GET("/internal/dex/token_chain_price/:token/:timestamp", controls.TokenChainPriceHandler)
+
 	api.GET("/internal/dex/token_info/:token/:timestamp", controls.TokenInfoHandler)
+	api.GET("/internal/dex/pair/token_info/:pair/:token/:timestamp", controls.PairTokenInfoHandler)
+
 	api.GET("/internal/coin_price/:coin/:vs_coin", controls.CoinPriceHandler)
 	api.GET("/internal/dex/ftx_price/:coin_type/:timestamp", controls.FtxPriceHandler)
 	api.GET("/coin_price/:coin/:vs_coin/:timestamp", controls.CoinPriceSignHandler)

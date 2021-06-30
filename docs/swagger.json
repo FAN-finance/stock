@@ -1034,6 +1034,67 @@
                 }
             }
         },
+        "/pub/internal/dex/pair/token_info/{pair}/{token}/{timestamp}": {
+            "get": {
+                "description": "内部单节点获取token信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "获取token信息,内部单节点",
+                "operationId": "PairTokenInfoHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
+                        "description": "token地址",
+                        "name": "pair",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.TokenInfo"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/internal/dex/token_chain_price/{token}/{timestamp}": {
             "get": {
                 "description": "获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．",
@@ -1051,7 +1112,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "0xc61624355667e4d5ca9cee25ad339c990a90eaea",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
                         "description": "token地址",
                         "name": "token",
                         "in": "path",
