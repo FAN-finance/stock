@@ -47,6 +47,8 @@ func main() {
 	pflag.StringVar(&swapGraphApi, "swapGraphApi", "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2", "swap theGraphApi")
 	pflag.BoolVarP(&job, "job", "j", true, "是否抓取数据")
 
+	//pflag.BoolVarP(&job, "job", "j", false, "是否抓取数据")
+	//nodes =  strings.Split("http://localhost:8001,http://localhost:8001,http://localhost:8001",",")
 	pflag.Parse()
 	utils.Nodes = nodes
 	utils.InitDb(dbUrl)
@@ -92,7 +94,9 @@ func main() {
 	api.GET("/stock/info", controls.StockInfoHandler)
 	api.GET("/stock/market_status/:timestamp", controls.UsaMarketStatusHandler)
 	api.POST("/internal/stock_avgprice", controls.StockAvgPriceHandler)
+
 	api.POST("/internal/token_avgprice", controls.TokenAvgHlPriceHandler)
+
 	//api.GET("/stock/aggre_info", StockAggreHandler)
 	api.GET("/stock/aggre_info/:code/:data_type/:timestamp", controls.StockAggreHandler)
 	api.GET("/stock/stat", NodeStatHandler)
@@ -101,7 +105,10 @@ func main() {
 	api.GET("/stock/any_apis", controls.NodeAnyApisHandler)
 	api.GET("/internal/dex/lp_price/:pair/:timestamp", controls.PairLpPriceHandler)
 	api.GET("/dex/lp_price/:pair/:timestamp", controls.PairLpPriceSignHandler)
+
 	api.GET("/internal/dex/token_price/:token/:timestamp", controls.TokenPriceHandler)
+	api.GET("/internal/dex/pair/token_price/:pair/:token/:timestamp", controls.PairTokenPriceHandler)
+
 	api.GET("/internal/dex/token_chain_price/:token/:timestamp", controls.TokenChainPriceHandler)
 
 	api.GET("/internal/dex/token_info/:token/:timestamp", controls.TokenInfoHandler)
@@ -110,12 +117,18 @@ func main() {
 	api.GET("/internal/coin_price/:coin/:vs_coin", controls.CoinPriceHandler)
 	api.GET("/internal/dex/ftx_price/:coin_type/:timestamp", controls.FtxPriceHandler)
 	api.GET("/coin_price/:coin/:vs_coin/:timestamp", controls.CoinPriceSignHandler)
+
 	api.GET("/dex/token_price/:token/:data_type/:timestamp", controls.TokenPriceSignHandler)
+	api.GET("/dex/pair/token_price/:pair/:token/:data_type/:timestamp", controls.PairTokenPriceSignHandler)
+
 	api.GET("/dex/token_chain_price/:token/:data_type/:timestamp", controls.TokenChainPriceSignHandler)
 	api.GET("/dex/ftx_price/:coin_type/:data_type/:timestamp", controls.FtxPriceSignHandler)
 	api.GET("/dex/token_day_datas/:token/:days/:timestamp", controls.TokenDayDatasHandler)
 	api.GET("/dex/ftx_chart_prices/:coin_type/:count/:interval/:timestamp", controls.FtxChartPricesHandler)
+
 	api.GET("/dex/token_chart_prices/:token/:count/:interval/:timestamp", controls.TokenDayPricesHandler)
+	api.GET("/dex/pair/token_chart_prices/:pair/:token/:count/:interval/:timestamp", controls.PairTokenDayPricesHandler)
+
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context) {

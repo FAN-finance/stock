@@ -192,7 +192,6 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 			gql += fmt.Sprintf(`\nt%d: token(id: \"%s\", block: {number: %d}) {\n    derivedETH\n  }`, item.BlockTime, tokenAddre, item.ID)
 		}
 		gql += `\n}\n"}`
-
 		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
 		err = err1
 		if err == nil {
@@ -203,6 +202,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 			res := map[string]struct {
 				DerivedETH string `json:"derivedETH"`
 			}{}
+
 			err = json.Unmarshal(bs, &res)
 			if err == nil {
 				//log.Println(res)
@@ -250,8 +250,63 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	return bps, err
 }
 
+func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, count int) ([]*BlockPrice, error) {
+	times := getTokenTimes(interval, count)
+	log.Println(times)
+	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	result := gjson.Parse(string(body))
+	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
+	bps, err := getBlockPrices(times, blockHeight)
+	if err == nil {
+		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
+		for _, item := range bps {
+			gql += fmt.Sprintf(`\nt%d: pair(id: \"%s\", block: {number: %d}) { \n    \ttoken0{id},\n     token1{id},\n     token0Price,\n     token1Price }`, item.BlockTime, pairAddr, item.ID)
+		}
+		gql += `\n}\n"}`
+
+		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
+		err = err1
+		if err == nil {
+			//使其直接返回字符串
+			dataJson := gjson.ParseBytes(bs).Get("data")
+			if dataJson.Exists() {
+				//log.Println(res)
+				preTime := uint64(0)
+				for idx, item := range bps {
+					key := fmt.Sprintf("t%d", item.BlockTime)
+					resItem := dataJson.Get(key)
+					if resItem.Exists() {
+						token0Address := resItem.Get("token0").Get("id").Str
+						item.Price = RoundPrice(resItem.Get("token0Price").Float())
+						if token0Address == tokenAddr {
+							item.Price = RoundPrice(resItem.Get("token1Price").Float())
+						}
+						item.CreatedAt = time.Unix(int64(item.BlockTime), 0)
+					} else {
+						if idx > 0 {
+							item.Price = bps[idx-1].Price
+						}
+					}
+					if len(bps) > 1 {
+						preTime, item.BlockTime = item.BlockTime, preTime //bps[idx-1].BlockTime
+					}
+				}
+				if len(bps) > 1 {
+					bps = bps[1:len(bps)]
+				}
+			}
+		}
+		if err != nil {
+			log.Println(string(bs))
+		}
+	}
+	if err != nil {
+		log.Println(err)
+	}
+	return bps, err
+}
+
 func RoundPrice(price float64) float64 {
-	//return float64(int(math.Trunc(price*math.Pow10(3)))) / math.Pow10(3)
 	res, _ := decimal.NewFromFloat(price).Round(18).Float64()
 	return res
 }
@@ -508,7 +563,7 @@ type HLDataPriceView struct {
 	//最高最低价１最高　２最低价
 	DataType int
 	//Sign_Hash值由 Timestamp，DataType,Code,BigPrice
-	Sign     []byte
+	Sign     []byte         `json:",omitempty"`
 	Signs    []*HLPriceView `json:",omitempty"`
 	AvgSigns []*HLPriceView `json:",omitempty"`
 }
