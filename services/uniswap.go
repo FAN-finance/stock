@@ -135,29 +135,37 @@ type FtxChartDate struct {
 
 func GetFtxTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
+
 	sql := `
-select truncate((dates.id - 1) / ?, 0) as          id1,
-#        min(dates.date) datestr,
-       min(dates.secon1)                           timestamp,
-       cast(avg(bulls.bull) as decimal(9, 3))      bull,
-       cast(max(bulls.bull) as decimal(9, 3))      hight,
-       cast(avg(bulls.bull) as decimal(9, 3))      low,
-       cast(avg(bulls.raw_price) as decimal(9, 3)) btc,
-       cast(max(bulls.raw_price) as decimal(9, 3)) btc_hight,
-       cast(avg(bulls.raw_price) as decimal(9, 3)) btc_low
-from stock.dates dates
-         left join (select *
+select bulls.*,dates.secon1 as timestamp
+from (select truncate((dates.id - 1) / @interval, 0) as id1,
+             min(dates.date)                     datestr,
+             min(dates.secon1)                   secon1,
+             max(dates.secon2)                   secon2
+      from stock.dates dates
+      where dates.secon1 >= truncate((unix_timestamp() - 15 * 60 * @interval * @count) / (15 * 60 * @interval), 0) * 15 * 60 * @interval
+        and dates.secon1 < unix_timestamp()
+      group by id1
+     ) dates
+         left join (select
+                            truncate(coin_bull.timestamp / (15 * 60 * @interval), 0) * 15 * 60 * @interval as b_timestamp,
+                           cast(avg(coin_bull.bull) as decimal(9, 3))                          bull,
+                           cast(max(coin_bull.bull) as decimal(9, 3))                          hight,
+                           cast(avg(coin_bull.bull) as decimal(9, 3))                          low,
+                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     btc,
+                           cast(max(coin_bull.raw_price) as decimal(9, 3))                     btc_hight,
+                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     btc_low
                     from coin_bull
-                    where coin_bull.timestamp > unix_timestamp() - 15 * 60 * ? * ?
+                    where coin_bull.timestamp > unix_timestamp() - 15 * 60 * @interval * @count
                       and coin_bull.timestamp < unix_timestamp()
-                      and coin_bull.coin_type = ?) bulls
-                   on dates.secon1 < bulls.timestamp and dates.secon2 > bulls.timestamp
-where dates.secon1 > unix_timestamp() - 15 * 60 * ? * ?
-  and dates.secon1 < unix_timestamp()
-group by id1
-limit ?
-`
-	err := utils.Orm.Raw(sql, interval, interval, count, coin_type, interval, count, count).Scan(&datas).Error
+                      and coin_bull.coin_type = @coin_type
+                    group by truncate(coin_bull.timestamp / (15 * 60 * @interval), 0) * 15 * 60 * @interval
+) bulls
+                   on dates.secon1 <= bulls.b_timestamp and dates.secon2 > bulls.b_timestamp
+order by dates.id1
+limit `+strconv.Itoa(count)+";"
+
+	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count,"coin_type":coin_type}).Scan(&datas).Error
 	if err == nil {
 		for idx, data := range datas {
 			if idx > 0 {
