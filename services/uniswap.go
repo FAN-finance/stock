@@ -271,7 +271,7 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 			dataJson := gjson.ParseBytes(bs).Get("data")
 			if dataJson.Exists() {
 				//log.Println(res)
-				key := fmt.Sprintf("t%d", bps[0].BlockTime)
+				key := fmt.Sprintf("t%d", bps[len(bps)-1].BlockTime)
 				resItem := dataJson.Get(key)
 				if resItem.Exists() == false {
 					return nil, errors.New("no data from thegraph")
