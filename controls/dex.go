@@ -67,8 +67,8 @@ func TokenPriceSignHandler(c *gin.Context) {
 // @Router /pub/dex/pair/token_price/{pair}/{token}/{data_type}/{timestamp} [get]
 func PairTokenPriceSignHandler(c *gin.Context) {
 	pair := c.Param("pair")
-	pair = strings.ToLower(pair)
 	token := c.Param("token")
+	pair = strings.ToLower(pair)
 	token = strings.ToLower(token)
 
 	timestampstr := c.Param("timestamp")
@@ -428,6 +428,8 @@ func PairTokenPriceHandler(c *gin.Context) {
 func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token string) (interface{}, error), processName string) {
 	pair := c.Param("pair")
 	token := c.Param("token")
+	pair = strings.ToLower(pair)
+	token = strings.ToLower(token)
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
 	dataTypeStr := c.Query("data_type")
@@ -620,6 +622,8 @@ func TokenInfoHandler(c *gin.Context) {
 func PairTokenInfoHandler(c *gin.Context) {
 	pair := c.Param("pair")
 	token := c.Param("token")
+	pair = strings.ToLower(pair)
+	token = strings.ToLower(token)
 	ckey := fmt.Sprintf("PairTokenInfoHandler-%s-%s", pair, token)
 	proc := func() (interface{}, error) {
 		res, err := services.GetTokenInfoFromPair(pair, token)
@@ -692,9 +696,9 @@ func TokenDayPricesHandler(c *gin.Context) {
 // @Router /pub/dex/pair/token_chart_prices/{pair}/{token}/{count}/{interval}/{timestamp} [get]
 func PairTokenDayPricesHandler(c *gin.Context) {
 	pair := c.Param("pair")
-	pair = strings.ToLower(pair)
-
 	token := c.Param("token")
+
+	pair = strings.ToLower(pair)
 	token = strings.ToLower(token)
 
 	interval := c.Param("interval")
