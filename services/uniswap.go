@@ -358,8 +358,6 @@ type TokenInfo struct {
 	TxCount            string `json:"txCount"`
 	UntrackedVolumeUSD string `json:"untrackedVolumeUSD"`
 	BlockTime          uint64 `json:",omitempty"`
-	//最近24小时统计
-	OneDayStat OneDayStat `json:"oneDayStat"`
 }
 type OneDayStat struct {
 	VolumeUsd float64 `json:"VolumeUsd"`
@@ -588,13 +586,12 @@ func GetTokenInfo(pairAddre string) (token *TokenInfo, err error) {
 
 const pairInfoGraph = `{"query":"{\n  pair(id:\"%s\") {\n    id,\n    token0Price,\n    token1Price,\n    token0{id,symbol,name,decimals,totalSupply,tradeVolume,tradeVolumeUSD,untrackedVolumeUSD,txCount,totalLiquidity,derivedETH},\n    token1{id,symbol,name,decimals,totalSupply,tradeVolume,tradeVolumeUSD,untrackedVolumeUSD,txCount,totalLiquidity,derivedETH}\n  \n  }\n}\n","variables":null}`
 
-func GetTokenInfoOfPair(pairAddr, tokenAddr string) (token *TokenInfo, err error) {
+func GetTokenInfoFromPair(pairAddr, tokenAddr string) (token *TokenInfo, err error) {
 	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(pairInfoGraph, pairAddr)))
 	if err == nil {
 		//使其直接返回字符串
 
 		pairInfo := gjson.ParseBytes(bs).Get("data").Get("pair")
-		log.Println(pairInfo)
 		token = &TokenInfo{}
 		token0Address := pairInfo.Get("token0").Get("id").Str
 
@@ -604,11 +601,8 @@ func GetTokenInfoOfPair(pairAddr, tokenAddr string) (token *TokenInfo, err error
 			token.PriceUsd = pairInfo.Get("token1Price").Float()
 			tokenJson = pairInfo.Get("token0")
 		}
-
-		log.Println(tokenJson.String())
 		err = json.Unmarshal([]byte(tokenJson.String()), &token)
 
-		//err = json.Unmarshal(bs, &token)
 		if err == nil {
 			return token, err
 		}
