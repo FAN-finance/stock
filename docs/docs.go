@@ -261,6 +261,13 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4,
+                            96
+                        ],
                         "type": "integer",
                         "description": "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；",
                         "name": "interval",
@@ -456,7 +463,7 @@ var doc = `{
                     {
                         "type": "string",
                         "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
-                        "description": "token地址",
+                        "description": "pair地址",
                         "name": "pair",
                         "in": "path",
                         "required": true
@@ -537,7 +544,7 @@ var doc = `{
                     {
                         "type": "string",
                         "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
-                        "description": "token地址",
+                        "description": "pair地址",
                         "name": "pair",
                         "in": "path",
                         "required": true
@@ -1215,7 +1222,7 @@ var doc = `{
                     {
                         "type": "string",
                         "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
-                        "description": "token地址",
+                        "description": "pair地址",
                         "name": "pair",
                         "in": "path",
                         "required": true
@@ -1276,7 +1283,7 @@ var doc = `{
                     {
                         "type": "string",
                         "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
-                        "description": "token地址",
+                        "description": "pair地址",
                         "name": "pair",
                         "in": "path",
                         "required": true
@@ -2162,35 +2169,6 @@ var doc = `{
                 }
             }
         },
-        "services.OneDayStat": {
-            "type": "object",
-            "properties": {
-                "VolumeUsd": {
-                    "type": "number"
-                },
-                "liquidityChange": {
-                    "description": "变化百分比",
-                    "type": "number"
-                },
-                "liquidityUsd": {
-                    "type": "number"
-                },
-                "priceChange": {
-                    "type": "number"
-                },
-                "txCount": {
-                    "type": "number"
-                },
-                "txCountChange": {
-                    "description": "变化百分比",
-                    "type": "number"
-                },
-                "volumeChange": {
-                    "description": "变化百分比",
-                    "type": "number"
-                }
-            }
-        },
         "services.PriceView": {
             "type": "object",
             "properties": {
@@ -2373,10 +2351,6 @@ var doc = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "oneDayStat": {
-                    "description": "最近24小时统计",
-                    "$ref": "#/definitions/services.OneDayStat"
                 },
                 "priceUsd": {
                     "type": "number"

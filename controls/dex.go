@@ -57,7 +57,7 @@ func TokenPriceSignHandler(c *gin.Context) {
 // @ID PairTokenPriceSignHandler
 // @Accept  json
 // @Produce  json
-// @Param     pair   path    string     true        "token地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
+// @Param     pair   path    string     true        "pair地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
 // @Param     token   path    string     true        "token地址" default(0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b)
 // @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
@@ -396,7 +396,7 @@ func TokenPriceHandler(c *gin.Context) {
 // @ID PairTokenPriceHandler
 // @Accept  json
 // @Produce  json
-// @Param     pair   path    string     true        "token地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
+// @Param     pair   path    string     true        "pair地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
 // @Param     token   path    string     true        "token地址" default(0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b)
 // @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
@@ -612,7 +612,7 @@ func TokenInfoHandler(c *gin.Context) {
 // @ID PairTokenInfoHandler
 // @Accept  json
 // @Produce  json
-// @Param     pair   path    string     true        "token地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
+// @Param     pair   path    string     true        "pair地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
 // @Param     token   path    string     true        "token地址" default(0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.TokenInfo	"stock info"
@@ -686,7 +686,7 @@ func TokenDayPricesHandler(c *gin.Context) {
 // @ID PairTokenDayPricesHandler
 // @Accept  json
 // @Produce  json
-// @Param     pair   path    string     true        "token地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
+// @Param     pair   path    string     true        "pair地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
 // @Param     token   path    string     true        "token地址" default(0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b)
 // @Param     count   path    int     true    "获取多少个数据点" default(10)
 // @Param     interval   path    string     true    "数据间隔 15minite hour day 1w(1周) 1m (1月) " default(day) Enums(15minite,hour,day,1w,1m)

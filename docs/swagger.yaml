@@ -138,26 +138,6 @@ definitions:
       timestamp:
         type: integer
     type: object
-  services.OneDayStat:
-    properties:
-      VolumeUsd:
-        type: number
-      liquidityChange:
-        description: 变化百分比
-        type: number
-      liquidityUsd:
-        type: number
-      priceChange:
-        type: number
-      txCount:
-        type: number
-      txCountChange:
-        description: 变化百分比
-        type: number
-      volumeChange:
-        description: 变化百分比
-        type: number
-    type: object
   services.PriceView:
     properties:
       bigPrice:
@@ -286,9 +266,6 @@ definitions:
         type: string
       name:
         type: string
-      oneDayStat:
-        $ref: '#/definitions/services.OneDayStat'
-        description: 最近24小时统计
       priceUsd:
         type: number
       symbol:
@@ -514,6 +491,12 @@ paths:
         required: true
         type: integer
       - description: 数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；
+        enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 96
         in: path
         name: interval
         required: true
@@ -648,7 +631,7 @@ paths:
       operationId: PairTokenDayPricesHandler
       parameters:
       - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
-        description: token地址
+        description: pair地址
         in: path
         name: pair
         required: true
@@ -706,7 +689,7 @@ paths:
       operationId: PairTokenPriceSignHandler
       parameters:
       - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
-        description: token地址
+        description: pair地址
         in: path
         name: pair
         required: true
@@ -1216,7 +1199,7 @@ paths:
       operationId: PairTokenInfoHandler
       parameters:
       - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
-        description: token地址
+        description: pair地址
         in: path
         name: pair
         required: true
@@ -1258,7 +1241,7 @@ paths:
       operationId: PairTokenPriceHandler
       parameters:
       - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
-        description: token地址
+        description: pair地址
         in: path
         name: pair
         required: true
