@@ -281,7 +281,7 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 						if token0Address == tokenAddr {
 							item.Price = RoundPrice(resItem.Get("token1Price").Float())
 						}
-						item.CreatedAt = time.Unix(int64(item.BlockTime), 0)
+						item.CreatedAt = time.Unix(int64(preTime), 0)
 					} else {
 						if idx > 0 {
 							item.Price = bps[idx-1].Price
