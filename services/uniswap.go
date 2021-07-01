@@ -271,12 +271,23 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 			dataJson := gjson.ParseBytes(bs).Get("data")
 			if dataJson.Exists() {
 				//log.Println(res)
+				key := fmt.Sprintf("t%d", bps[0].BlockTime)
+				resItem := dataJson.Get(key)
+				if resItem.Exists() == false {
+					return nil, errors.New("no data from thegraph")
+				}
+				token0Address := resItem.Get("token0").Get("id").Str
+				token1Address := resItem.Get("token1").Get("id").Str
+				if tokenAddr != token0Address && tokenAddr != token1Address {
+					return nil, errors.New("the token address not found in pair")
+				}
+
 				preTime := uint64(0)
 				for idx, item := range bps {
-					key := fmt.Sprintf("t%d", item.BlockTime)
-					resItem := dataJson.Get(key)
+					key = fmt.Sprintf("t%d", item.BlockTime)
+					resItem = dataJson.Get(key)
 					if resItem.Exists() {
-						token0Address := resItem.Get("token0").Get("id").Str
+
 						item.Price = RoundPrice(resItem.Get("token0Price").Float())
 						if token0Address == tokenAddr {
 							item.Price = RoundPrice(resItem.Get("token1Price").Float())
@@ -590,22 +601,26 @@ func GetTokenInfoFromPair(pairAddr, tokenAddr string) (token *TokenInfo, err err
 	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(pairInfoGraph, pairAddr)))
 	if err == nil {
 		//使其直接返回字符串
-
 		pairInfo := gjson.ParseBytes(bs).Get("data").Get("pair")
 		token = &TokenInfo{}
 		token0Address := pairInfo.Get("token0").Get("id").Str
+		token1Address := pairInfo.Get("token1").Get("id").Str
+		if token0Address == tokenAddr || tokenAddr == token1Address {
+			token.PriceUsd = pairInfo.Get("token0Price").Float()
+			tokenJson := pairInfo.Get("token1")
+			if tokenAddr == token0Address {
+				token.PriceUsd = pairInfo.Get("token1Price").Float()
+				tokenJson = pairInfo.Get("token0")
+			}
+			err = json.Unmarshal([]byte(tokenJson.String()), &token)
 
-		token.PriceUsd = pairInfo.Get("token0Price").Float()
-		tokenJson := pairInfo.Get("token1")
-		if tokenAddr == token0Address {
-			token.PriceUsd = pairInfo.Get("token1Price").Float()
-			tokenJson = pairInfo.Get("token0")
+			if err == nil {
+				return token, err
+			}
+		} else {
+			err = errors.New("the token address not found in pair")
 		}
-		err = json.Unmarshal([]byte(tokenJson.String()), &token)
 
-		if err == nil {
-			return token, err
-		}
 	}
 	return nil, err
 }
