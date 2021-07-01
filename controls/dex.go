@@ -622,7 +622,7 @@ func PairTokenInfoHandler(c *gin.Context) {
 	token := c.Param("token")
 	ckey := fmt.Sprintf("PairTokenInfoHandler-%s-%s", pair, token)
 	proc := func() (interface{}, error) {
-		res, err := services.GetTokenInfoOfPair(pair, token)
+		res, err := services.GetTokenInfoFromPair(pair, token)
 		if err == nil {
 			return res, nil
 		}
