@@ -430,6 +430,161 @@
                 }
             }
         },
+        "/pub/dex/pair/token_chart_prices/{pair}/{token}/{count}/{interval}/{timestamp}": {
+            "get": {
+                "description": "从Pair获取token不同时间区间的价格图表信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pair"
+                ],
+                "summary": "从Pair获取token不同时间区间的价格图表信息",
+                "operationId": "PairTokenDayPricesHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
+                        "description": "pair地址",
+                        "name": "pair",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "获取多少个数据点",
+                        "name": "count",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "15minite",
+                            "hour",
+                            "day",
+                            "1w",
+                            "1m"
+                        ],
+                        "type": "string",
+                        "default": "day",
+                        "description": "数据间隔 15minite hour day 1w(1周) 1m (1月) ",
+                        "name": "interval",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.BlockPrice"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/dex/pair/token_price/{pair}/{token}/{data_type}/{timestamp}": {
+            "get": {
+                "description": "从Pair获取token价格信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pair"
+                ],
+                "summary": "从Pair获取token价格信息",
+                "operationId": "PairTokenPriceSignHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
+                        "description": "pair地址",
+                        "name": "pair",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "调试",
+                        "name": "debug",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "token price info",
+                        "schema": {
+                            "$ref": "#/definitions/services.HLDataPriceView"
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/dex/token_chain_price/{token}/{data_type}/{timestamp}": {
             "get": {
                 "description": "获取token链上价格信息，使用节点从eth或bsc合约事件监听到的价格变化数据；token信息要提前在节点配制才能被监听",
@@ -1034,6 +1189,140 @@
                 }
             }
         },
+        "/pub/internal/dex/pair/token_info/{pair}/{token}/{timestamp}": {
+            "get": {
+                "description": "内部单节点从pair获取token信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pair"
+                ],
+                "summary": "从pair获取token信息,内部单节点",
+                "operationId": "PairTokenInfoHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
+                        "description": "pair地址",
+                        "name": "pair",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stock info",
+                        "schema": {
+                            "$ref": "#/definitions/services.TokenInfo"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/internal/dex/pair/token_price/{pair}/{token}/{timestamp}": {
+            "get": {
+                "description": "从Pair获取token最近一小时最高最低价格信息；．",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pair"
+                ],
+                "summary": "从Pair获取token最近一小时最高最低价格信息,内部单节点",
+                "operationId": "PairTokenPriceHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67",
+                        "description": "pair地址",
+                        "name": "pair",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b",
+                        "description": "token地址",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "最高最低价１最高　２最低价",
+                        "name": "data_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Price View",
+                        "schema": {
+                            "$ref": "#/definitions/services.HLPriceView"
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/internal/dex/token_chain_price/{token}/{timestamp}": {
             "get": {
                 "description": "获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．",
@@ -1051,7 +1340,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "0xc61624355667e4d5ca9cee25ad339c990a90eaea",
+                        "default": "0x66a0f676479cee1d7373f3dc2e2952778bff5bd6",
                         "description": "token地址",
                         "name": "token",
                         "in": "path",
@@ -1865,35 +2154,6 @@
                 }
             }
         },
-        "services.OneDayStat": {
-            "type": "object",
-            "properties": {
-                "VolumeUsd": {
-                    "type": "number"
-                },
-                "liquidityChange": {
-                    "description": "变化百分比",
-                    "type": "number"
-                },
-                "liquidityUsd": {
-                    "type": "number"
-                },
-                "priceChange": {
-                    "type": "number"
-                },
-                "txCount": {
-                    "type": "number"
-                },
-                "txCountChange": {
-                    "description": "变化百分比",
-                    "type": "number"
-                },
-                "volumeChange": {
-                    "description": "变化百分比",
-                    "type": "number"
-                }
-            }
-        },
         "services.PriceView": {
             "type": "object",
             "properties": {
@@ -2076,10 +2336,6 @@
                 },
                 "name": {
                     "type": "string"
-                },
-                "oneDayStat": {
-                    "description": "最近24小时统计",
-                    "$ref": "#/definitions/services.OneDayStat"
                 },
                 "priceUsd": {
                     "type": "number"
