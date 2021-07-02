@@ -146,7 +146,7 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
 		cb.Timestamp = coin.ID
 		cb.Rebalance = LastBullAJ[coinType].Rebalance
-		cb.ID = uint(coin.ID)
+		//cb.ID = uint(coin.ID)
 		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
 		ajChange := RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
 		if math.Abs(ajChange) > 10 {
