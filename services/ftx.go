@@ -39,6 +39,10 @@ func setLastBullAJ(coinType string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if lastAj.Rebalance == 0 {
+		lastAj.Rebalance = lastAj.Bull
+	}
 	log.Println("lastaj %v", lastAj)
 	LastBullAJ[coinType] = lastAj
 	//return lastAj
@@ -72,7 +76,8 @@ func initCoinBull(coinType string) {
 			rawPrice = firstCoin.Eth
 		}
 		cb.RawPrice = getCoinUSdPriceFromStr(rawPrice, firstCoin.Usd)
-		cb.Bull = 10000
+		cb.Rebalance = 10000
+		cb.Bull = cb.Rebalance
 		cb.RawChange = 0
 		cb.BullChange = 0
 		cb.IsAjustPoint = true
@@ -136,26 +141,24 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 		}
 
 		cb.RawPrice = getCoinUSdPriceFromStr(rawPrice, coin.Usd)
-		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Bull, LastBullAJ[coinType].RawPrice, cb.RawPrice)
+		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice)
 		cb.RawChange = RoundPercentageChange(FirstBull[coinType].RawPrice, cb.RawPrice, 1)
 		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
 		cb.Timestamp = coin.ID
+		cb.Rebalance = LastBullAJ[coinType].Rebalance
 		cb.ID = uint(coin.ID)
 		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
 		ajChange := RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
 		if math.Abs(ajChange) > 10 {
 			cb.IsAjustPoint = true
-		}
-		err = utils.Orm.Create(cb).Error
-
-		if cb.IsAjustPoint {
 			if ajChange > 0 {
-				cb.Bull = LastBullAJ[coinType].Bull * 1.1
+				cb.Rebalance = LastBullAJ[coinType].Rebalance * 1.1
 			} else {
-				cb.Bull = LastBullAJ[coinType].Bull * 0.9
+				cb.Rebalance = LastBullAJ[coinType].Rebalance * 0.9
 			}
 			LastBullAJ[coinType] = cb
 		}
+		err = utils.Orm.Create(cb).Error
 		lastBullTime = cb.Timestamp
 	}
 	return lastBullTime, err
@@ -178,6 +181,8 @@ type CoinBull struct {
 	CoinType string
 	//bull价格
 	Bull float64
+	//调仓价格
+	Rebalance float64
 	//bull相对于原点变化
 	BullChange float64
 	//原币 usd价格
