@@ -139,11 +139,16 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Bull, LastBullAJ[coinType].RawPrice, cb.RawPrice)
 		cb.RawChange = RoundPercentageChange(FirstBull[coinType].RawPrice, cb.RawPrice, 1)
 		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
-		ajChange := RoundPercentageChange(LastBullAJ[coinType].Bull, cb.Bull, 1)
-		cb.Timestamp = int64(coin.ID)
+		cb.Timestamp = coin.ID
+		cb.ID = uint(coin.ID)
 		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
+		ajChange := RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
 		if math.Abs(ajChange) > 10 {
 			cb.IsAjustPoint = true
+		}
+		err = utils.Orm.Create(cb).Error
+
+		if cb.IsAjustPoint {
 			if ajChange > 0 {
 				cb.Bull = LastBullAJ[coinType].Bull * 1.1
 			} else {
@@ -151,8 +156,6 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 			}
 			LastBullAJ[coinType] = cb
 		}
-		//cb.ID=uint(coin.ID)
-		err = utils.Orm.Create(cb).Error
 		lastBullTime = cb.Timestamp
 	}
 	return lastBullTime, err
