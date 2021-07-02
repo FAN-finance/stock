@@ -142,9 +142,10 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 
 		cb.RawPrice = getCoinUSdPriceFromStr(rawPrice, coin.Usd)
 		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice)
-		cb.RawChange = RoundPercentageChange(FirstBull[coinType].RawPrice, cb.RawPrice, 1)
+		cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
 		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
 		cb.Timestamp = coin.ID
+		cb.CreatedAt = time.Now()
 		cb.Rebalance = LastBullAJ[coinType].Rebalance
 		//cb.ID = uint(coin.ID)
 		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
@@ -158,6 +159,18 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 			}
 			LastBullAJ[coinType] = cb
 		}
+
+		// 每天14点，检测是否在过去24小时之内触发过调仓
+		now := time.Now()
+		if now.Hour() == 14 && now.Minute() < 3 {
+			lastRebalanceTime := LastBullAJ[coinType].CreatedAt
+			if now.Sub(lastRebalanceTime).Hours() >= 24 {
+				cb.IsAjustPoint = true
+				cb.Rebalance = cb.Bull
+				LastBullAJ[coinType] = cb
+			}
+		}
+
 		err = utils.Orm.Create(cb).Error
 		lastBullTime = cb.Timestamp
 	}
