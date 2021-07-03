@@ -163,7 +163,8 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 		// 每天14点，检测是否在过去24小时之内触发过调仓
 		now := time.Now()
 		if now.Hour() == 14 && now.Minute() < 3 {
-			lastRebalanceTime := LastBullAJ[coinType].CreatedAt
+			ltime:=time.Unix(LastBullAJ[coinType].Timestamp,0)
+			lastRebalanceTime := ltime
 			if now.Sub(lastRebalanceTime).Hours() >= 24 {
 				cb.IsAjustPoint = true
 				cb.Rebalance = cb.Bull
