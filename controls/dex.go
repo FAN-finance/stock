@@ -417,7 +417,6 @@ func PairTokenPriceHandler(c *gin.Context) {
 			if item.Price == 0 {
 				continue
 			}
-			log.Println(item.Price)
 			vp.High = math.Max(vp.High, item.Price)
 			if vp.Low == 0 {
 				vp.Low = item.Price
