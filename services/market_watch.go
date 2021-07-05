@@ -41,7 +41,7 @@ func SaveMwmsg(msg []byte){
 					mprice:=new(MarketPrice)
 					mprice.ItemType= mwIdMap[idkey]
 					mprice.Price,_=strconv.ParseFloat(value,64)
-					mprice.TimeStamp,_=strconv.Atoi(z)
+					mprice.Timestamp,_=strconv.Atoi(z)
 					err=utils.Orm.Save(mprice).Error
 					if err != nil {
 						log.Println(err)
@@ -60,8 +60,11 @@ type MarketPrice struct{
 	//ftx类型　btc3x, eth3x, vix3x, ust20x, gold10x, eur20x,ndx10x,govt20x
 	ItemType string `gorm:"uniqueIndex:type_timestamp,priority:1"`
 	Price float64
-	TimeStamp int `gorm:"uniqueIndex:type_timestamp,priority:2"`
+	Timestamp int `gorm:"uniqueIndex:type_timestamp,priority:2"`
 	CreatedAt time.Time
+}
+func (MarketPrice) TableName() string {
+	return "market_prices1"
 }
 var mwChanneMap =map[string]string{
 	//VX00

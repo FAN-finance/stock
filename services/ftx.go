@@ -9,8 +9,9 @@ import (
 	"time"
 )
 
-func CacuBullPrice(lastAjustPriceBull, lastAjustPric, curPric float64) float64 {
-	return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric*3 + 1)
+func CacuBullPrice(lastAjustPriceBull, lastAjustPric, curPric float64,coin_type string) float64 {
+	//return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric*3 + 1)
+	return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric* float64(ftxMultipleMap[coin_type])+ 1)
 }
 func getMultipleFromCoinType(coinType string) int {
 	preg := regexp.MustCompile("(\\d+)x")
@@ -19,6 +20,18 @@ func getMultipleFromCoinType(coinType string) int {
 	return multi
 }
 
+var ftxMultipleMap =map[string]int{
+	"btc3x":3,
+	"eth3x":3,
+	"vix3x":3,
+	"ust20x": 20,
+	"gold10x": 10,
+	"eur20x": 20,
+	"ndx10x":10,
+	"govt20x":20,
+}
+
+/*ndx10x vix3x*/
 /**/
 
 var FirstBull, LastBullAJ = map[string]*CoinBull{}, map[string]*CoinBull{}
@@ -35,7 +48,7 @@ func setFirstBull(coinType string) {
 
 func setLastBullAJ(coinType string) {
 	lastAj := new(CoinBull)
-	err := utils.Orm.Order("id desc").First(lastAj, "coin_type=? and is_ajust_point=?", coinType, 1).Error
+	err := utils.Orm.Order("timestamp desc").First(lastAj, "coin_type=? and is_ajust_point=?", coinType, 1).Error
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,14 +60,24 @@ func setLastBullAJ(coinType string) {
 	LastBullAJ[coinType] = lastAj
 	//return lastAj
 }
+
 func LastBullTimeStamp(coinType string) int64 {
 	cb := new(CoinBull)
-	err := utils.Orm.Order("id desc").Where("coin_type=?", coinType).First(cb).Error
+	err := utils.Orm.Order("timestamp desc").Where("coin_type=?", coinType).First(cb).Error
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("lastbullTime %v", cb)
 	return cb.Timestamp
+}
+func LastBullPriceID() int {
+	cb := new(CoinBull)
+	err := utils.Orm.Order("id desc").First(cb).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("LastBullPriceID %v", cb)
+	return cb.PriceID
 }
 
 //从coinGecko数据coins表初始化　bull
@@ -98,7 +121,7 @@ func initCoinBullFromTw(coinType string) {
 	utils.Orm.Model(CoinBull{}).Where("coin_type=?", coinType).Count(&bullCount)
 	if bullCount == 0 {
 		firstPrice := new(MarketPrice)
-		err = utils.Orm.Model(MarketPrice{}).Order("timeStamp").First(firstPrice).Error
+		err = utils.Orm.Model(MarketPrice{}).Order("timestamp").Where("item_type=?",coinType).First(firstPrice).Error
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -135,7 +158,96 @@ func SetAllBulls(coinType string) {
 	utils.IntervalSync("SetAllBull"+coinType, 10, proc)
 }
 
-//only for coin from congecko
+//更新twelvedata数据源bull数据
+func SetAllBullsFromTw( ) {
+	for _, coinType := range twSymbolMap {
+		initCoinBullFromTw(coinType)
+		setFirstBull(coinType)
+		setLastBullAJ(coinType)
+	}
+	lastStat:=LastBullPriceID()
+	//lastStat,_=SetBullsForTw(lastStat)
+	//log.Println(lastStat)
+	//return
+	proc := func() error {
+		lastId, err := SetBullsForTw(lastStat)
+		if err == nil {
+			lastStat = lastId
+		}
+		return err
+	}
+	utils.IntervalSync("SetAllBullsFromTw", 60, proc)
+}
+func SetBullsForTw(lastStat int) (int, error) {
+	//initCoinBull(coinType)
+	//setFirstBull(coinType)
+	//setLastBullAJ(coinType)
+	var err error
+	rows, err := utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>?",lastStat).Rows() //	,[]string{"vix3x"}
+
+	//rows,err:=utils.Orm.Raw("SELECT cast(usd as decimal(10,2))as `usd`,id FROM `coins` order by `usd` asc;").Rows()
+	if err != nil {
+		log.Println(err)
+		return lastStat, err
+	}
+	defer rows.Close()
+	counter := 0
+	for rows.Next() {
+		counter++
+		if counter > 200 {
+			//return lastStat,nil
+		}
+		coin := new(MarketPrice)
+		err = utils.Orm.ScanRows(rows, coin)
+		if err != nil {
+			log.Println(err)
+			return lastStat, err
+		}
+		cb := new(CoinBull)
+		coinType:=coin.ItemType
+		cb.CoinType = coin.ItemType
+
+		cb.RawPrice = coin.Price
+		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice,coinType)
+		cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
+		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
+		cb.Timestamp = int64(coin.Timestamp)
+		cb.CreatedAt = time.Now()
+		cb.Rebalance = LastBullAJ[coinType].Rebalance
+		cb.PriceID=int(coin.ID)
+		//cb.ID = uint(coin.ID)
+		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
+		ajChange := cb.RawChange
+		if math.Abs(ajChange) > 10 {
+			cb.IsAjustPoint = true
+			if ajChange > 0 {
+				cb.Rebalance = LastBullAJ[coinType].Rebalance * 1.1
+			} else {
+				cb.Rebalance = LastBullAJ[coinType].Rebalance * 0.9
+			}
+			LastBullAJ[coinType] = cb
+		}
+
+		// 每天14点，检测是否在过去24小时之内触发过调仓
+		//now := time.Now()
+		now := time.Unix(cb.Timestamp,0)
+		if now.Hour() == 14 && now.Minute() < 20 {
+			ltime:=time.Unix(LastBullAJ[coinType].Timestamp,0)
+			lastRebalanceTime := ltime
+			if now.Sub(lastRebalanceTime).Hours() >= 24 {
+				cb.IsAjustPoint = true
+				cb.Rebalance = cb.Bull
+				LastBullAJ[coinType] = cb
+			}
+		}
+
+		err = utils.Orm.Create(cb).Error
+		lastStat = int(coin.ID)
+	}
+	return lastStat, err
+}
+
+//only for coin from coingecko
 func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 	//initCoinBull(coinType)
 	//setFirstBull(coinType)
@@ -171,7 +283,7 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 		}
 
 		cb.RawPrice = getCoinUSdPriceFromStr(rawPrice, coin.Usd)
-		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice)
+		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice,coinType)
 		cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
 		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
 		cb.Timestamp = coin.ID
@@ -237,8 +349,10 @@ type CoinBull struct {
 	//是否是调仓点
 	IsAjustPoint bool
 	CreatedAt    time.Time
+	//market_price表的id
+	PriceID int
 }
 
 func (CoinBull CoinBull) TableName() string {
-	return "coin_bull"
+	return "coin_bull1"
 }

@@ -55,20 +55,48 @@ func main() {
 	services.InitEConn(infura)
 	services.SwapGraphApi = swapGraphApi
 
+	//获取twelvedata最新数据
+	//services.GetTwData("2021-07-04","",1000)
+	//return
+	//utils.Orm.AutoMigrate(services.MarketPrice{})
+	////services.SubTwData()
+	////services.GetTwData("","",3)
+	//endTime:=time.Now().Truncate(time.Hour*24)
+	//stime:=time.Date(2021,6,1,0,0,0,0,time.UTC)
+	////i:=0
+	//for stime.Before(endTime){
+	//	nextDay:=stime.Add(1*time.Hour*24)
+	//	services.GetTwData(stime.Format("2006-01-02"),nextDay.Format("2006-01-02"),1500)
+	//	stime=nextDay
+	//	//i++
+	//	//if i>3{break}
+	//	time.Sleep(time.Second*63)
+	//}
+	//return
+	//services.SetAllBullsFromTw()
+	//return
+
 	if job {
 		//go services.GetStocks()
 		go services.SubEthPrice(0)
 		go services.SubCoinsPrice()
-		go services.SetAllBulls("btc3x")
-		go services.SetAllBulls("eth3x")
+		//coingecko bull
+		//go services.SetAllBulls("btc3x")
+		//go services.SetAllBulls("eth3x")
 		go func() {
 			//监听eth uniswap pair's token价格
 			tpc := services.TokenPairConf{PairAddre: "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67", TokenAddre: "0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b", TokenDecimals: 18, ChainName: "eth"}
 			services.SubPairlog(&tpc)
 		}()
-		go func(){
-			services.SubTwData()
-		}()
+
+		////subcribe twelvedata data
+		//go func(){
+		//	rand.Seed(time.Now().UnixNano())
+		//	time.Sleep(time.Minute* time.Duration(rand.Intn(5)))
+		//	services.SubTwData()
+		//}()
+		////更新twelvedata数据源bull数据
+		//go services.SetAllBullsFromTw()
 
 	}
 
