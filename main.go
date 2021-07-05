@@ -66,6 +66,9 @@ func main() {
 			tpc := services.TokenPairConf{PairAddre: "0x4612b8de9fb6281f6d5aa29635cf5700148d1b67", TokenAddre: "0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b", TokenDecimals: 18, ChainName: "eth"}
 			services.SubPairlog(&tpc)
 		}()
+		go func(){
+			services.SubTwData()
+		}()
 
 	}
 
