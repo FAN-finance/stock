@@ -130,7 +130,7 @@ var ftxAddres = map[string]string{
 	"gold10x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
 	"eur20x":  "0x2Be088a27150fc122233356dFBF3a0C01684329C",
 	"ndx10x":  "0x9578BF55c12C66E222344c3244Db6eA8b2498aca",
-	"usd":     "0x77b21697aaf1799a6d25835be6495e762417eee4",
+	"usd":     "0x76417e660df3e5c90c0361674c192da152a806e4",
 }
 
 // @Tags default
@@ -214,7 +214,7 @@ WHERE
 	}
 
 	//tPriceView.PriceUsd =  math.Trunc(tPriceView.PriceUsd*1000) / 1000
-	tPriceView.PriceUsd,_ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
+	tPriceView.PriceUsd, _ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
 	tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 	tPriceView.NodeAddress = services.WalletAddre
 	if tPriceView.PriceUsd > 0.001 {
@@ -247,7 +247,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 	count, _ := strconv.Atoi(count_str)
 
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s-%s",coin_type, interval_str, count_str)
+	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s-%s", coin_type, interval_str, count_str)
 	proc := func() (interface{}, error) {
 		items, err := services.GetFtxTimesPrice(coin_type, interval, count)
 		if err != nil {
