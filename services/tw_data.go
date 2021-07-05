@@ -35,7 +35,7 @@ func SubTwData(){
 }
 func GetTwData(start_date ,end_date string ,limit int){
 	dataUrl:= fmt.Sprintf( "https://api.twelvedata.com/time_series?symbol=xau/usd,vix,ndx,eur/usd,govt&interval=1min&start_date=%s&end_date=%s&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=%d",start_date ,end_date,limit)
-	//dataUrl="https://api.twelvedata.com/time_series?symbol=xau/usd,vix,ndx,eur/usd,govt&interval=1h&start_date=2021-06-24&end_date=2021-07-06&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=2"
+	//dataUrl="https://api.twelvedata.com/time_series?symbol=xau/usd,vix,ndx,eur/usd,govt&interval=1min&start_date=2021-06-24&end_date=2021-07-06&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=2"
 	bs, err := utils.ReqResBody(dataUrl, "", "GET", nil, nil)
 	if err == nil {
 		//log.Println(string(bs))
