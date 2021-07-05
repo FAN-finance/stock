@@ -56,6 +56,8 @@ func LastBullTimeStamp(coinType string) int64 {
 	log.Println("lastbullTime %v", cb)
 	return cb.Timestamp
 }
+
+//从coinGecko数据coins表初始化　bull
 func initCoinBull(coinType string) {
 	var err error
 	utils.Orm.AutoMigrate(CoinBull{})
@@ -69,7 +71,6 @@ func initCoinBull(coinType string) {
 		}
 		cb := new(CoinBull)
 		cb.CoinType = coinType
-
 		coin_name := coinType[:3]
 		rawPrice := "1"
 		if coin_name == "eth" {
@@ -88,6 +89,35 @@ func initCoinBull(coinType string) {
 		}
 	}
 }
+
+//从twelvedata数据market_pirces表初始化　bull
+func initCoinBullFromTw(coinType string) {
+	var err error
+	utils.Orm.AutoMigrate(CoinBull{})
+	bullCount := int64(0)
+	utils.Orm.Model(CoinBull{}).Where("coin_type=?", coinType).Count(&bullCount)
+	if bullCount == 0 {
+		firstPrice := new(MarketPrice)
+		err = utils.Orm.Model(MarketPrice{}).Order("timeStamp").First(firstPrice).Error
+		if err != nil {
+			log.Fatal(err)
+		}
+		cb := new(CoinBull)
+		cb.CoinType = coinType
+		cb.RawPrice = firstPrice.Price
+		cb.Rebalance = 10000
+		cb.Bull = cb.Rebalance
+		cb.RawChange = 0
+		cb.BullChange = 0
+		cb.IsAjustPoint = true
+		//cb.ID = 1
+		err = utils.Orm.Save(cb).Error
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
 func SetAllBulls(coinType string) {
 	initCoinBull(coinType)
 	setFirstBull(coinType)
@@ -192,7 +222,7 @@ type CoinBull struct {
 	ID uint `gorm:"primarykey"`
 	//原币价格抓取时对应的时间秒数
 	Timestamp int64
-	//杠杆币的类型：btc3x eth3x vix3x ust20x gold10x eur20x ndx10x
+	//杠杆币的类型：btc3x eth3x vix3x ust20x gold10x eur20x ndx10x　govt20x
 	CoinType string
 	//bull价格
 	Bull float64
