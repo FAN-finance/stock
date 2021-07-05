@@ -93,7 +93,7 @@ func main() {
 		//subcribe twelvedata data
 		go func(){
 			rand.Seed(time.Now().UnixNano())
-			time.Sleep(time.Minute* time.Duration(rand.Intn(5)))
+			time.Sleep(time.Minute* time.Duration(rand.Intn(8)))
 			services.SubTwData()
 		}()
 		//更新twelvedata数据源bull数据

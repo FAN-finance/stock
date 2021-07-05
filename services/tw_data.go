@@ -34,7 +34,7 @@ var twSymbolMap =map[string]string{
 //subcribe twelvedata data
 func SubTwData(){
 	proc:=func()error{
-		return GetTwData("","",11)
+		return GetTwData("","",20)
 	}
 	utils.IntervalSync("SubTwData", 60*10, proc)
 }
