@@ -64,7 +64,7 @@ type MarketPrice struct{
 	CreatedAt time.Time
 }
 func (MarketPrice) TableName() string {
-	return "market_prices1"
+	return "market_prices"
 }
 var mwChanneMap =map[string]string{
 	//VX00

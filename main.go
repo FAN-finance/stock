@@ -8,6 +8,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"log"
+	"math/rand"
 	"stock/controls"
 	_ "stock/docs"
 	"stock/services"
@@ -89,14 +90,14 @@ func main() {
 			services.SubPairlog(&tpc)
 		}()
 
-		////subcribe twelvedata data
-		//go func(){
-		//	rand.Seed(time.Now().UnixNano())
-		//	time.Sleep(time.Minute* time.Duration(rand.Intn(5)))
-		//	services.SubTwData()
-		//}()
-		////更新twelvedata数据源bull数据
-		//go services.SetAllBullsFromTw()
+		//subcribe twelvedata data
+		go func(){
+			rand.Seed(time.Now().UnixNano())
+			time.Sleep(time.Minute* time.Duration(rand.Intn(5)))
+			services.SubTwData()
+		}()
+		//更新twelvedata数据源bull数据
+		go services.SetAllBullsFromTw()
 
 	}
 

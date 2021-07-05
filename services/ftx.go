@@ -354,5 +354,5 @@ type CoinBull struct {
 }
 
 func (CoinBull CoinBull) TableName() string {
-	return "coin_bull1"
+	return "coin_bull"
 }
