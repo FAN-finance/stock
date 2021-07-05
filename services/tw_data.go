@@ -36,9 +36,7 @@ func SubTwData(){
 	proc:=func()error{
 		return GetTwData("","",11)
 	}
-	utils.IntervalSync("SetAllBullsFromTw", 60*10, proc)
-
-
+	utils.IntervalSync("SubTwData", 60*10, proc)
 }
 func GetTwData(start_date ,end_date string ,limit int)error{
 	//appkey="4e8a6b8b4afe47be815d9e3b4d8cf163"
