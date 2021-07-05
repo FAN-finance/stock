@@ -33,10 +33,14 @@ var twSymbolMap =map[string]string{
 
 //subcribe twelvedata data
 func SubTwData(){
-	GetTwData("","",11)
-	time.Sleep(10*time.Minute)
+	proc:=func()error{
+		return GetTwData("","",11)
+	}
+	utils.IntervalSync("SetAllBullsFromTw", 60*10, proc)
+
+
 }
-func GetTwData(start_date ,end_date string ,limit int){
+func GetTwData(start_date ,end_date string ,limit int)error{
 	//appkey="4e8a6b8b4afe47be815d9e3b4d8cf163"
 	//appkey="21cad25580b74ba3a0a2ba9be29057bb"
 	dataUrl:= fmt.Sprintf( "https://api.twelvedata.com/time_series?symbol=xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=%d",start_date ,end_date,limit)
