@@ -476,7 +476,7 @@ paths:
         - btc3x
         - eth3x
         - vix3x
-        - ust20x
+        - govt20x
         - gold10x
         - eur20x
         - ndx10x
@@ -491,12 +491,6 @@ paths:
         required: true
         type: integer
       - description: 数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；
-        enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 96
         in: path
         name: interval
         required: true
@@ -1115,10 +1109,10 @@ paths:
         - btc3x
         - eth3x
         - vix3x
-        - ust20x
         - gold10x
         - eur20x
         - ndx10x
+        - govt20x
         in: path
         name: coin_type
         required: true

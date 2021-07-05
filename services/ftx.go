@@ -150,7 +150,7 @@ func SetAllBulls(coinType string) {
 	//return
 	proc := func() error {
 		lastId, err := SetBullsFromID(lastBullTime, coinType)
-		if err == nil {
+		if lastId>0{
 			lastBullTime = lastId
 		}
 		return err
@@ -316,7 +316,9 @@ func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 		}
 
 		err = utils.Orm.Create(cb).Error
-		lastBullTime = cb.Timestamp
+		if err == nil {
+			lastBullTime = cb.Timestamp
+		}
 	}
 	return lastBullTime, err
 }
