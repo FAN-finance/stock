@@ -168,6 +168,11 @@ limit `+strconv.Itoa(count)+";"
 	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count,"coin_type":coin_type}).Scan(&datas).Error
 	if err == nil {
 		for idx, data := range datas {
+			if idx == 0 {
+				if data.Bull == 0 {
+
+				}
+			}
 			if idx > 0 {
 				if data.Bull == 0 {
 					data.Bull = datas[idx-1].Bull
