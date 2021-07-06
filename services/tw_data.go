@@ -75,4 +75,5 @@ func GetTwData(start_date ,end_date string ,limit int)error{
 	if err != nil {
 		log.Println(err)
 	}
+	return err
 }
