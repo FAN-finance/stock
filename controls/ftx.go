@@ -114,6 +114,16 @@ func FtxPriceSignHandler(c *gin.Context) {
 		goto END
 	}
 	resTokenView.AvgSigns = avgNodesPrice
+
+	resTokenView.IsMarketOpening=true
+	if coin_type=="ndx10x"||coin_type=="vix3x"||coin_type=="govt20x" {
+		status,ts:=services.IsWorkTime(0)
+		if !status {
+			resTokenView.IsMarketOpening=false
+		}else {
+			resTokenView.MarketOpenTime = ts
+		}
+	}
 	c.JSON(200, resTokenView)
 	return
 END:
@@ -223,12 +233,30 @@ WHERE
 	tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 	tPriceView.NodeAddress = services.WalletAddre
 	if tPriceView.PriceUsd > 0.001 {
-		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+		if isStockFtx(coin_type) { //股票签名
+			if services.IsSignTime(0){
+				tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+			}
+		}else{
+			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+		}
+
 	}
 	c.JSON(200, tPriceView)
 	return
 }
-
+//股票类ftx判断
+func isStockFtx(code string ) bool {
+	if code == "ndx10x" || code == "vix3x" || code == "govt20x" {
+		return true
+	}
+	for _, addre := range ftxAddres {
+		if addre== code {
+			return  true
+		}
+	}
+	return false
+}
 // @Tags default
 // @Summary　获取杠杆btc代币不同时间区间的价格图表信息
 // @Description 获取杠杆btc代币不同时间区间的价格图表信息

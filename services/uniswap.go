@@ -605,6 +605,12 @@ type HLDataPriceView struct {
 	Sign     []byte         `json:",omitempty"`
 	Signs    []*HLPriceView `json:",omitempty"`
 	AvgSigns []*HLPriceView `json:",omitempty"`
+
+	//股票杠杆币需要这个字段
+	IsMarketOpening bool
+	//股票杠杆币需要这个字段
+	MarketOpenTime  int64
+
 }
 
 var infoTokenGraph = `{"query":"{\n  token(id:\"%s\") {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n  }\n}","variables":null}`
