@@ -168,9 +168,26 @@ limit `+strconv.Itoa(count)+";"
 	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count,"coin_type":coin_type}).Scan(&datas).Error
 	if err == nil {
 		for idx, data := range datas {
+			//数据不连续时，取得的第一个时间点可能为０
 			if idx == 0 {
 				if data.Bull == 0 {
-
+					sql=`
+select cast(coin_bull.bull as decimal(9, 3))      bull,
+       cast(coin_bull.raw_price as decimal(9, 3)) btc
+from coin_bull
+where coin_bull.timestamp < ?
+  and coin_bull.coin_type = ?
+order by timestamp desc
+limit 1;
+`
+					cdata:=new(FtxChartDate)
+					err=utils.Orm.Raw(sql,data.Timestamp,coin_type).Scan(cdata).Error
+					if err != nil {
+						log.Println(err)
+					}else {
+						data.Bull = cdata.Bull
+						data.Btc = cdata.Btc
+					}
 				}
 			}
 			if idx > 0 {

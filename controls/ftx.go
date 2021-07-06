@@ -173,7 +173,12 @@ func FtxPriceHandler(c *gin.Context) {
 WHERE
  timestamp >unix_timestamp()-3600 and coin_type=?;`, coin_type).Scan(vp).Error
 			if err == nil {
-
+				if vp.High==0{
+					err = utils.Orm.Raw(
+						`SELECT bull high,bull low FROM coin_bull
+WHERE
+ coin_type=? order by  timestamp desc limit 1;`, coin_type).Scan(vp).Error
+				}
 			}
 			return vp, err
 		}
