@@ -185,10 +185,19 @@ func StockInfoHandler(c *gin.Context) {
 	if code == "USD" {
 		avgPrice = 1.0
 	} else {
-		avgPrice, err = services.GetMsStatData(code, dataType)
+		//avgPrice, err = services.GetMsStatData(code, dataType)
+		hl, err1 := getTwHLFromCache(code)
+		err=err1
+		if err == nil {
+			if dataType==1{
+				avgPrice=hl.High
+			}else{
+				avgPrice=hl.Low
+			}
+		}
+		log.Println("stockPrice",hl, avgPrice)
 	}
 	if err == nil {
-		log.Println("avgPrice", avgPrice)
 		//info.Price=avgPrice
 		snode := new(services.StockNode)
 		snode.StockCode = code
@@ -224,6 +233,23 @@ func StockInfoHandler(c *gin.Context) {
 		ErrJson(c, err.Error())
 		return
 	}
+}
+func getTwHLFromCache(code string)(*HLValuePair,error){
+	ttl:=services.GetUsdStockCacheTime()
+	//var addres []*services.PriceView
+	proc:= func()(interface{},error) {
+		hl:=HLValuePair{}
+		hight,low,err:=services.GetTwHL(code)
+		if err == nil {
+			hl.High=hight
+			hl.Low=low
+		}
+		return &hl,err
+	}
+	ckey:=fmt.Sprintf("getTwHLFromCache-%s-%d",code,time.Now().Unix()+ttl)
+	log.Println(ckey,ttl)
+	res,err:=utils.CacheFromLruWithFixKey(ckey,proc)
+	return res.(*HLValuePair),err
 }
 
 type resMarketStatus struct {

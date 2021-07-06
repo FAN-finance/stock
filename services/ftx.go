@@ -202,9 +202,9 @@ func SetAllBullsFromTw() {
 		setLastBullAJ(coinType)
 	}
 	lastStat := LastBullPriceID()
-	lastStat,_=SetBullsForTw(lastStat)
-	log.Println(lastStat)
-	return
+	//lastStat,_=SetBullsForTw(lastStat)
+	//log.Println(lastStat)
+	//return
 
 	proc := func() error {
 		lastId, err := SetBullsForTw(lastStat)

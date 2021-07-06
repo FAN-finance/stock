@@ -82,3 +82,30 @@ func GetTwData(start_date ,end_date string ,limit int)error{
 	}
 	return err
 }
+
+func GetTwHL(code string)(max ,min float64,err error){
+	min=0
+	dataUrl:=fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=%s&interval=1min&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=60",code)
+	bs, err1 := utils.ReqResBody(dataUrl, "", "GET", nil, nil)
+	err=err1
+	if err == nil {
+		twData:=new(resTw)
+		err=json.Unmarshal(bs,twData)
+		if err == nil {
+			for _, value := range twData.Values {
+				high,_:=strconv.ParseFloat(value.High,64)
+				low,_:=strconv.ParseFloat(value.Low,64)
+				if high>max{
+					max=high
+				}
+				if min==0{
+					min=low
+				}
+				if low<min{
+					min=low
+				}
+			}
+		}
+	}
+	return
+}
