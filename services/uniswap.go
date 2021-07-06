@@ -149,12 +149,12 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
      ) dates
          left join (select
                             truncate(coin_bull.timestamp / (15 * 60 * @interval), 0) * 15 * 60 * @interval as b_timestamp,
-                           cast(avg(coin_bull.bull) as decimal(9, 3))                          bull,
-                           cast(max(coin_bull.bull) as decimal(9, 3))                          hight,
-                           cast(avg(coin_bull.bull) as decimal(9, 3))                          low,
-                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     raw_price,
-                           cast(max(coin_bull.raw_price) as decimal(9, 3))                     raw_price_hight,
-                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     raw_price_low
+                           cast(avg(coin_bull.bull) as decimal(9, 3))                          bull
+#                           cast(max(coin_bull.bull) as decimal(9, 3))                          hight,
+#                           cast(avg(coin_bull.bull) as decimal(9, 3))                          low,
+#                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     raw_price,
+#                           cast(max(coin_bull.raw_price) as decimal(9, 3))                     raw_price_hight,
+#                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     raw_price_low
                     from coin_bull
                     where coin_bull.timestamp > unix_timestamp() - 15 * 60 * @interval * @count
                       and coin_bull.timestamp < unix_timestamp()
