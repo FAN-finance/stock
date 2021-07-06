@@ -417,7 +417,7 @@ func PairTokenPriceHandler(c *gin.Context) {
 			if item.Price == 0 {
 				continue
 			}
-			log.Println(item.Price)
+			log.Println(item.Price, item.CreatedAt, item.BlockTime)
 			vp.High = math.Max(vp.High, item.Price)
 			if vp.Low == 0 {
 				vp.Low = item.Price
@@ -541,12 +541,13 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
 		if sdata.PriceUsd > 0.001 {
-			if isStockFtx(code) { //股票签名
+			/*if isStockFtx(code) { //股票签名
 				if services.IsSignTime(0){
 				}
 			}else{
 				sdata.Sign = services.SignMsg(sdata.GetHash())
-			}
+			}*/
+			sdata.Sign = services.SignMsg(sdata.GetHash())
 		}
 		c.JSON(200, sdata)
 		return
