@@ -121,16 +121,16 @@ type FtxChartDate struct {
 	Timestamp uint
 	//杠杆币价格
 	Bull float64
-	//杠杆区间最高
-	Hight float64
-	//杠杆区间最低
-	Low float64
-	//Btc价格
-	Btc float64
-	//Btc区间最高
-	Btc_hight float64
-	//Btc区间最低
-	Btc_low float64
+	////杠杆区间最高
+	//Hight float64
+	////杠杆区间最低
+	//Low float64
+	////Btc价格
+	//RawPrice float64
+	////Btc区间最高
+	//RawPriceHight float64
+	////Btc区间最低
+	//RawPriceLow float64
 }
 
 func GetFtxTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
@@ -152,9 +152,9 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
                            cast(avg(coin_bull.bull) as decimal(9, 3))                          bull,
                            cast(max(coin_bull.bull) as decimal(9, 3))                          hight,
                            cast(avg(coin_bull.bull) as decimal(9, 3))                          low,
-                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     btc,
-                           cast(max(coin_bull.raw_price) as decimal(9, 3))                     btc_hight,
-                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     btc_low
+                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     raw_price,
+                           cast(max(coin_bull.raw_price) as decimal(9, 3))                     raw_price_hight,
+                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     raw_price_low
                     from coin_bull
                     where coin_bull.timestamp > unix_timestamp() - 15 * 60 * @interval * @count
                       and coin_bull.timestamp < unix_timestamp()
@@ -173,7 +173,7 @@ limit `+strconv.Itoa(count)+";"
 				if data.Bull == 0 {
 					sql=`
 select cast(coin_bull.bull as decimal(9, 3))      bull,
-       cast(coin_bull.raw_price as decimal(9, 3)) btc
+       cast(coin_bull.raw_price as decimal(9, 3)) raw_price
 from coin_bull
 where coin_bull.timestamp < ?
   and coin_bull.coin_type = ?
@@ -186,14 +186,14 @@ limit 1;
 						log.Println(err)
 					}else {
 						data.Bull = cdata.Bull
-						data.Btc = cdata.Btc
+						//data.RawPrice = cdata.RawPrice
 					}
 				}
 			}
 			if idx > 0 {
 				if data.Bull == 0 {
 					data.Bull = datas[idx-1].Bull
-					data.Btc = datas[idx-1].Btc
+					//data.RawPrice = datas[idx-1].RawPrice
 				}
 			}
 		}

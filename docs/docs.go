@@ -263,6 +263,13 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4,
+                            96
+                        ],
                         "type": "integer",
                         "description": "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；",
                         "name": "interval",

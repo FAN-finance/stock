@@ -60,7 +60,7 @@ func GetMsData(code string )(apiResponse *msResponse,err error) {
 	//
 	//var apiResponse Response
 	//json.NewDecoder(res.Body).Decode(&apiResponse)
-	urlstr:=fmt.Sprintf("https://api.marketstack.com/v1/intraday?access_key=a2223ab3c24359116ca94676453e5b1b&symbols=%s&interval=15min&limit=4",code)
+	urlstr:=fmt.Sprintf("http://api.marketstack.com/v1/intraday?access_key=a2223ab3c24359116ca94676453e5b1b&symbols=%s&interval=15min&limit=4",code)
 	bs,err:=utils.ReqResBody(urlstr,"nil","GET",nil,nil)
 	if err == nil {
 		err=json.Unmarshal(bs,apiResponse)
