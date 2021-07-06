@@ -250,10 +250,8 @@ func isStockFtx(code string ) bool {
 	if code == "ndx10x" || code == "vix3x" || code == "govt20x" {
 		return true
 	}
-	for _, addre := range ftxAddres {
-		if addre== code {
-			return  true
-		}
+	if code == ftxAddres["ndx10x"] || code == ftxAddres["vix3x"] || code == ftxAddres["govt20x"] {
+		return true
 	}
 	return false
 }

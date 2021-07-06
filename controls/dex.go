@@ -541,13 +541,13 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
 		if sdata.PriceUsd > 0.001 {
-			/*if isStockFtx(code) { //股票签名
-				if services.IsSignTime(0){
+			if isStockFtx(code) { //股票签名
+				if services.IsSignTime(0) {
+					sdata.Sign = services.SignMsg(sdata.GetHash())
 				}
-			}else{
+			} else {
 				sdata.Sign = services.SignMsg(sdata.GetHash())
-			}*/
-			sdata.Sign = services.SignMsg(sdata.GetHash())
+			}
 		}
 		c.JSON(200, sdata)
 		return
