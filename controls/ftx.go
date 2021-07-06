@@ -19,7 +19,7 @@ import (
 // @ID FtxPriceSignHandler
 // @Accept  json
 // @Produce  json
-// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(usd, btc3x, eth3x, vix3x, ust20x, gold10x, eur20x,ndx10x)
+// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(usd, btc3x, eth3x, vix3x, govt20x, gold10x, eur20x,ndx10x)
 // @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 //@Param     debug   query    int     false    "调试" default(0)
@@ -230,7 +230,7 @@ WHERE
 // @ID FtxChartPricesHandler
 // @Accept  json
 // @Produce  json
-// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(btc3x, eth3x, vix3x, govt20x, gold10x, eur20x,ndx10x)
+// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(btc3x, eth3x, vix3x, govt20x, gold10x, eur20x,ndx10x,govt20x)
 // @Param     count   path    int     true    "获取多少个数据点" default(10)
 // @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；" default(day) Enums(1,2,3,4,96)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)

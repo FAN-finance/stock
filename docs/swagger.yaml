@@ -480,6 +480,7 @@ paths:
         - gold10x
         - eur20x
         - ndx10x
+        - govt20x
         in: path
         name: coin_type
         required: true
@@ -534,7 +535,7 @@ paths:
         - btc3x
         - eth3x
         - vix3x
-        - ust20x
+        - govt20x
         - gold10x
         - eur20x
         - ndx10x

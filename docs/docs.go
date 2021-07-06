@@ -244,7 +244,8 @@ var doc = `{
                             "govt20x",
                             "gold10x",
                             "eur20x",
-                            "ndx10x"
+                            "ndx10x",
+                            "govt20x"
                         ],
                         "type": "string",
                         "default": "btc3x",
@@ -322,7 +323,7 @@ var doc = `{
                             "btc3x",
                             "eth3x",
                             "vix3x",
-                            "ust20x",
+                            "govt20x",
                             "gold10x",
                             "eur20x",
                             "ndx10x"

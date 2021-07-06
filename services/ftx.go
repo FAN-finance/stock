@@ -25,11 +25,29 @@ var ftxMultipleMap = map[string]int{
 	"btc3x":   3,
 	"eth3x":   3,
 	"vix3x":   3,
-	"ust20x":  20,
+	//"ust20x":  20,
 	"gold10x": 10,
 	"eur20x":  20,
 	"ndx10x":  10,
 	"govt20x": 20,
+}
+
+//btc 3x：110054.79
+//eth 3x：7900.56
+//vix 3x：53.7
+//govt 20x：5268
+//gold 10x：19022.8
+//eur 20x：244.66
+//ndx 10x：136488
+var ftxAJInitValueMap = map[string]float64{
+	"btc3x": 110054.79,
+	"eth3x": 7900.56,
+	"vix3x": 53.7,
+	//"ust20x":  20,
+	"gold10x": 19022.8,
+	"eur20x":  244.66,
+	"ndx10x":  136488,
+	"govt20x": 5268,
 }
 
 var ftxXMap = map[string]float64{
@@ -146,7 +164,7 @@ func initCoinBullFromTw(coinType string) {
 		cb := new(CoinBull)
 		cb.CoinType = coinType
 		cb.RawPrice = firstPrice.Price
-		cb.Rebalance = 10000
+		cb.Rebalance = ftxAJInitValueMap[coinType]
 		cb.Bull = cb.Rebalance
 		cb.RawChange = 0
 		cb.BullChange = 0
