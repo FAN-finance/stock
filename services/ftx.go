@@ -197,6 +197,10 @@ func SetAllBulls(coinType string) {
 //更新twelvedata数据源bull数据
 func SetAllBullsFromTw() {
 	for _, coinType := range twSymbolMap {
+		//
+		if coinType=="AAPL" ||coinType=="TSLA"{
+			continue
+		}
 		initCoinBullFromTw(coinType)
 		setFirstBull(coinType)
 		setLastBullAJ(coinType)
@@ -220,7 +224,7 @@ func SetBullsForTw(lastStat int) (int, error) {
 	//setFirstBull(coinType)
 	//setLastBullAJ(coinType)
 	var err error
-	rows, err := utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>?", lastStat).Rows() //	,[]string{"vix3x"}
+	rows, err := utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type not in(?)", lastStat,[]string{"AAPL","TSLA"}).Rows() //	,[]string{"vix3x"}
 
 	//rows,err:=utils.Orm.Raw("SELECT cast(usd as decimal(10,2))as `usd`,id FROM `coins` order by `usd` asc;").Rows()
 	if err != nil {

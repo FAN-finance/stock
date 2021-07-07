@@ -66,12 +66,12 @@ func main() {
 	//stime:=time.Date(2021,6,1,0,0,0,0,time.UTC)
 	////i:=0
 	//for stime.Before(endTime){
-	//	nextDay:=stime.Add(1*time.Hour*24)
+	//	nextDay:=stime.Add(5*time.Hour*24)
 	//	services.GetTwData(stime.Format("2006-01-02"),nextDay.Format("2006-01-02"),1500)
 	//	stime=nextDay
 	//	//i++
 	//	//if i>3{break}
-	//	time.Sleep(time.Second*63)
+	//	//time.Sleep(time.Second*63)
 	//}
 	//return
 	//services.SetAllBullsFromTw()
@@ -91,10 +91,10 @@ func main() {
 		}()
 
 		//subcribe twelvedata data
-		go services.SubTwData()
+		//go services.SubTwData()
 
 		//更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw()
+		//go services.SetAllBullsFromTw()
 
 	}
 

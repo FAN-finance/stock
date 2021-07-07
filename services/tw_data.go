@@ -29,6 +29,8 @@ var twSymbolMap =map[string]string{
 	"govt":"govt20x",
 	"eth/usd":"eth3x",
 	"btc/usd":"btc3x",
+	"AAPL":"AAPL",
+	"TSLA":"TSLA",
 }
 
 //subcribe twelvedata data
@@ -41,7 +43,7 @@ func SubTwData(){
 func GetTwData(start_date ,end_date string ,limit int)error{
 	//appkey="4e8a6b8b4afe47be815d9e3b4d8cf163"
 	//appkey="21cad25580b74ba3a0a2ba9be29057bb"
-	dataUrl:= fmt.Sprintf( "https://api.twelvedata.com/time_series?symbol=xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d",start_date ,end_date,"21cad25580b74ba3a0a2ba9be29057bb",limit)
+	dataUrl:= fmt.Sprintf( "https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d",start_date ,end_date,"21cad25580b74ba3a0a2ba9be29057bb",limit)
 
 	//非开盘时间，不请求股市数据, 减605用来确保收盘后，再请求一次．
 	//if !IsMarketTime(time.Now().Unix()-65) {
