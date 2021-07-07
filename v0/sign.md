@@ -43,7 +43,7 @@ return returnAddre==whiteList[returnAddre]
 
 更多使用规则参考：　@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol"
 
-有签名的接口，一般为单字段价格数据接口：
+有签名的接口，一般为单字段数据接口如：
 - 美股价格股票接口
 - uniswap token价格接口
 - coin兑换价格接口
