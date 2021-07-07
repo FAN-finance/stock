@@ -67,7 +67,7 @@ func main() {
 	////i:=0
 	//for stime.Before(endTime){
 	//	nextDay:=stime.Add(5*time.Hour*24)
-	//	services.GetTwData(stime.Format("2006-01-02"),nextDay.Format("2006-01-02"),1500)
+	//	services.GetTwData(stime.Format("2006-01-02"),nextDay.Format("2006-01-02"),5000)
 	//	stime=nextDay
 	//	//i++
 	//	//if i>3{break}
