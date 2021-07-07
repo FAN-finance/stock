@@ -237,9 +237,11 @@ func InitCalendar() {
 	)
 	c.SetWorkHours(10*time.Hour+30*time.Minute, 16*time.Hour)
 	stockCalendar = c
+
 }
+
 func IsMarketTime(timestamp int64) (bool) {
-	tmpCa := stockCalendar
+	tmpCa := *stockCalendar
 	if IsSummerTime(timestamp) {
 		tmpCa.SetWorkHours(9*time.Hour+30*time.Minute, 17*time.Hour)
 	}else{
@@ -250,7 +252,7 @@ func IsMarketTime(timestamp int64) (bool) {
 	return tmpCa.IsWorkTime(tmpDate)
 }
 func IsWorkTime(timestamp int64) (bool, int64) {
-	tmpCa := stockCalendar
+	tmpCa := *stockCalendar
 	if !IsSummerTime(timestamp) {
 		tmpCa.SetWorkHours(11*time.Hour+30*time.Minute, 17*time.Hour)
 	}
@@ -262,7 +264,7 @@ func IsSignTime(timestamp int64) bool {
 	if timestamp ==0{
 		timestamp=time.Now().Unix()
 	}
-	tmpCa := stockCalendar
+	tmpCa := *stockCalendar
 	if !IsSummerTime(timestamp) {
 		tmpCa.SetWorkHours(11*time.Hour+30*time.Minute, 17*time.Hour)
 	}else{
