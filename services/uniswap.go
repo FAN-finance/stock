@@ -76,7 +76,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	case "1m":
 		span = time.Hour * 24 * 30
 	default:
-		log.Fatalln("err interval; valid interval: 15minite hour day 1w 1m ")
+		log.Println("err interval; valid interval: 15minite hour day 1w 1m ",interval)
 	}
 	timeItems := []int64{}
 	ttime := now.Truncate(span)
