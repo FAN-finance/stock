@@ -13,6 +13,10 @@ FAN Oracle将给智能合约链外部可信的数据源。
   - [使用数据绘制K线图表]      
   - [链下资产锚定合约的价格机]              
 - [安装部署，配置](startup.md)                    
--  [接口使用](apis.md)    
+-  [接口使用](apis.md)  
+   - [美股报价](./cat/stock.md)
+   - [uniswap交易所的token报价](./cat/dex.md)
+   - [ftx杠杆代币](./cat/ftx.md)
+   - [any-api 单字段查询](./cat/anyapi.md)    
 -  [维护]               
                       
