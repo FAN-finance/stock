@@ -120,6 +120,15 @@ func FtxPriceSignHandler(c *gin.Context) {
 		status,ts:=services.IsWorkTime(0)
 		if !status {
 			resTokenView.IsMarketOpening=false
+			//收盘没有签名时，选择第一个价格，方便应用显示价格
+			if resTokenView.AvgSigns[0].Sign==nil{
+				snode:=resTokenView.AvgSigns[0]
+				resTokenView.PriceUsd = snode.PriceUsd
+				resTokenView.BigPrice = snode.BigPrice
+				resTokenView.Timestamp = snode.Timestamp
+				resTokenView.Code = snode.Code
+				resTokenView.DataType = dataType
+			}
 		}else {
 			resTokenView.MarketOpenTime = ts
 		}
@@ -136,7 +145,7 @@ var ftxAddres = map[string]string{
 	"btc3x":   "0x0ce776b748e4935a67ef345aee09cf80a74f96c9",
 	"eth3x":   "0x91dF141c33e43Fc97B0b6746A95f7bfc639D76bD",
 	"vix3x":   "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
-	"ust20x":  "0x36DeBA1578B11912F6a39f0E2060C5b15cF21c3c",
+	"govt20x":  "0x36DeBA1578B11912F6a39f0E2060C5b15cF21c3c",
 	"gold10x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
 	"eur20x":  "0x2Be088a27150fc122233356dFBF3a0C01684329C",
 	"ndx10x":  "0x9578BF55c12C66E222344c3244Db6eA8b2498aca",

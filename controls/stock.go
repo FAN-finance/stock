@@ -391,6 +391,17 @@ func StockAggreHandler(c *gin.Context) {
 
 	sdata.Signs = nodesPirce
 	sdata.AvgSigns = avgNodesPrice
+	//收盘没有签名时，选择第一个价格，方便应用显示价格
+	if sdata.AvgSigns[0].Sign==nil{
+		snode:=sdata.AvgSigns[0]
+		sdata.Price = snode.Price
+		sdata.BigPrice = snode.BigPrice
+		sdata.Timestamp = snode.Timestamp
+		sdata.StockCode = snode.StockCode
+		sdata.Code = snode.Code
+		sdata.DataType = dataType
+	}
+
 	//if len(sdata.Signs)==0{
 	//	err=errors.New("数据不可用")
 	//	goto END

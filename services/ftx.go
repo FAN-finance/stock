@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"regexp"
@@ -401,4 +402,182 @@ type CoinBull struct {
 
 func (CoinBull CoinBull) TableName() string {
 	return "coin_bull"
+}
+
+
+type FtxChartDate struct {
+	Timestamp uint
+	//杠杆币价格
+	Bull float64
+	////杠杆区间最高
+	//Hight float64
+	////杠杆区间最低
+	//Low float64
+	////Btc价格
+	//RawPrice float64
+	////Btc区间最高
+	//RawPriceHight float64
+	////Btc区间最低
+	//RawPriceLow float64
+}
+
+func GetFtxTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
+	datas := []*FtxChartDate{}
+
+	sql := `
+select bulls.*,dates.secon1 as timestamp
+from (select truncate((dates.id - 1) / @interval, 0) as id1,
+             min(dates.date)                     datestr,
+             min(dates.secon1)                   secon1,
+             max(dates.secon2)                   secon2
+      from stock.dates dates
+      where dates.secon1 >= truncate((unix_timestamp() - 15 * 60 * @interval * @count) / (15 * 60 * @interval), 0) * 15 * 60 * @interval
+        and dates.secon1 < unix_timestamp()
+      group by id1
+     ) dates
+         left join (select
+                            truncate(coin_bull.timestamp / (15 * 60 * @interval), 0) * 15 * 60 * @interval as b_timestamp,
+                           cast(avg(coin_bull.bull) as decimal(9, 3))                          bull
+#                           cast(max(coin_bull.bull) as decimal(9, 3))                          hight,
+#                           cast(avg(coin_bull.bull) as decimal(9, 3))                          low,
+#                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     raw_price,
+#                           cast(max(coin_bull.raw_price) as decimal(9, 3))                     raw_price_hight,
+#                           cast(avg(coin_bull.raw_price) as decimal(9, 3))                     raw_price_low
+                    from coin_bull
+                    where coin_bull.timestamp > unix_timestamp() - 15 * 60 * @interval * @count
+                      and coin_bull.timestamp < unix_timestamp()
+                      and coin_bull.coin_type = @coin_type
+                    group by truncate(coin_bull.timestamp / (15 * 60 * @interval), 0) * 15 * 60 * @interval
+) bulls
+                   on dates.secon1 <= bulls.b_timestamp and dates.secon2 > bulls.b_timestamp
+order by dates.id1
+limit `+strconv.Itoa(count)+";"
+
+	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count,"coin_type":coin_type}).Scan(&datas).Error
+	if err == nil {
+		for idx, data := range datas {
+			//数据不连续时，取得的第一个时间点可能为０
+			if idx == 0 {
+				if data.Bull == 0 {
+					sql=`
+select cast(coin_bull.bull as decimal(9, 3))      bull,
+       cast(coin_bull.raw_price as decimal(9, 3)) raw_price
+from coin_bull
+where coin_bull.timestamp < ?
+  and coin_bull.coin_type = ?
+order by timestamp desc
+limit 1;
+`
+					cdata:=new(FtxChartDate)
+					err=utils.Orm.Raw(sql,data.Timestamp,coin_type).Scan(cdata).Error
+					if err != nil {
+						log.Println(err)
+					}else {
+						data.Bull = cdata.Bull
+						//data.RawPrice = cdata.RawPrice
+					}
+				}
+			}
+			if idx > 0 {
+				if data.Bull == 0 {
+					data.Bull = datas[idx-1].Bull
+					//data.RawPrice = datas[idx-1].RawPrice
+				}
+			}
+		}
+	}
+	return datas, err
+}
+
+func SetStat() {
+	utils.Orm.AutoMigrate(IntervalStat{})
+	//istat1:=new(IntervalStat)
+	//istat1.Cat="AAPL"
+	//istat1.Interval=15*60
+	//istat2:=new(IntervalStat)
+	//istat2.Cat="TSLA"
+	//istat2.Interval=15*60
+	mstat := initMapInterval()
+	lastId := IntervalStat{}.GetLastID()
+	rows, err := utils.Orm.Model(MarketPrice{}).Where(" id>? and item_type in(?)", lastId, []string{"AAPL"}).Rows()
+	if err == nil {
+		idx:=0
+		for rows.Next() {
+			idx++
+			if idx>100{log.Println("break",idx); break;}
+			mprice := new(MarketPrice)
+			err = utils.Orm.ScanRows(rows, mprice)
+			if err != nil {
+				break
+			}
+			mstat.SetItem(mprice)
+		}
+		if idx>0 {
+			mstat.Save()
+		}
+	}
+
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+type IntervalStat struct {
+	Cat string `gorm:"primaryKey"`
+	Interval int `gorm:"primaryKey"`
+	Timestamp int `gorm:"primaryKey"`
+	LastID int
+	LastState float64
+	CreatedAt time.Time
+}
+func (istat IntervalStat)GetLastID()int{
+	err:=utils.Orm.Order("timestamp desc").Find(&istat).Error
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return istat.LastID
+}
+func (istat *IntervalStat)SetTimestamp(ts int){
+	if istat.Timestamp!=ts && istat.Timestamp!=0{
+		utils.Orm.Create(istat)
+	}
+	istat.Timestamp=ts
+}
+
+type mapInterval map[string]*IntervalStat
+var gIntervals mapInterval
+var intervals =[]int{15*60,60*60}
+func  initMapInterval() mapInterval{
+	mstat:=mapInterval{}
+	for _, cat := range []string{"AAPL"} {
+		for _, interval := range intervals {
+			key:=fmt.Sprintf("%s-%d",cat,interval)
+			istat1:=new(IntervalStat)
+			istat1.Cat=cat
+			istat1.Interval=interval
+			mstat[key]=istat1
+		}
+	}
+	return mstat
+}
+func (mstat mapInterval)SetItem(price *MarketPrice){
+	for _, interval := range intervals {
+		key:=fmt.Sprintf("%s-%d",price.ItemType,interval)
+		istat:=mstat[key]
+
+		tt := (price.Timestamp / istat.Interval) * istat.Interval
+		if istat.Timestamp!=tt && istat.Timestamp!=0{
+			utils.Orm.Create(istat)
+		}
+		istat.Timestamp=tt
+		istat.LastState = price.Price
+		istat.LastID = int(price.ID)
+	}
+}
+func (mstat mapInterval)Save(){
+	for _, stat := range mstat {
+		if stat.Timestamp>0{
+			utils.Orm.Save(stat)
+		}
+	}
 }
