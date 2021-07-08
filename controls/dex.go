@@ -130,7 +130,7 @@ func PairTokenPriceSignHandler(c *gin.Context) {
 				resTokenView.Timestamp = snode.Timestamp
 				resTokenView.Code = snode.Code
 				resTokenView.DataType = dataType
-				resTokenView.Sign = nil
+				resTokenView.Sign = snode.Sign
 			}
 			sc.Lock()
 			avgNodesPrice = append(avgNodesPrice, snode)
@@ -151,7 +151,9 @@ func PairTokenPriceSignHandler(c *gin.Context) {
 		goto END
 	}
 	resTokenView.AvgSigns = avgNodesPrice
+	resTokenView.IsMarketOpening = resTokenView.Sign != nil
 	resTokenView.Signs = nil
+	resTokenView.Sign = nil
 	c.JSON(200, resTokenView)
 	return
 
@@ -247,7 +249,7 @@ func tokenPriceSignProces(c *gin.Context, providerUrl string) {
 		goto END
 	}
 	resTokenView.AvgSigns = avgNodesPrice
-	resTokenView.IsMarketOpening=true
+	resTokenView.IsMarketOpening = true
 	c.JSON(200, resTokenView)
 	return
 END:
