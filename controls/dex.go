@@ -247,6 +247,7 @@ func tokenPriceSignProces(c *gin.Context, providerUrl string) {
 		goto END
 	}
 	resTokenView.AvgSigns = avgNodesPrice
+	resTokenView.IsMarketOpening=true
 	c.JSON(200, resTokenView)
 	return
 END:
