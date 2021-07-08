@@ -269,7 +269,15 @@ func IsSignTime(timestamp int64) bool {
 	if timestamp == 0 {
 		timestamp = time.Now().Unix()
 	}
-	return IsMarketTime(timestamp)
+	tmpCa := *stockCalendar
+	if IsSummerTime(timestamp) {
+		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 16*time.Hour)
+	} else {
+		tmpCa.SetWorkHours(11*time.Hour+30*time.Minute, 17*time.Hour)
+	}
+	tmpDate := time.Unix(timestamp, 0)
+	tmpDate = tmpDate.In(locUsaStock)
+	return tmpCa.IsWorkTime(tmpDate)
 }
 
 var locUsaStock = time.FixedZone("usa-stock", -4*60*60)
