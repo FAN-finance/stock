@@ -240,20 +240,25 @@ func InitCalendar() {
 
 }
 
-func IsMarketTime(timestamp int64) (bool) {
+func IsMarketTime(timestamp int64) bool {
 	tmpCa := *stockCalendar
 	if IsSummerTime(timestamp) {
 		tmpCa.SetWorkHours(9*time.Hour+30*time.Minute, 16*time.Hour)
-	}else{
-		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 16*time.Hour)
+	} else {
+		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 17*time.Hour)
 	}
 	tmpDate := time.Unix(timestamp, 0)
 	tmpDate = tmpDate.In(locUsaStock)
 	return tmpCa.IsWorkTime(tmpDate)
 }
 func IsWorkTime(timestamp int64) (bool, int64) {
+	if timestamp == 0 {
+		timestamp = time.Now().Unix()
+	}
 	tmpCa := *stockCalendar
-	if !IsSummerTime(timestamp) {
+	if IsSummerTime(timestamp) {
+		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 16*time.Hour)
+	} else {
 		tmpCa.SetWorkHours(11*time.Hour+30*time.Minute, 17*time.Hour)
 	}
 	tmpDate := time.Unix(timestamp, 0)
@@ -261,18 +266,10 @@ func IsWorkTime(timestamp int64) (bool, int64) {
 	return tmpCa.IsWorkTime(tmpDate), tmpCa.WorkdayStart(tmpDate).Unix()
 }
 func IsSignTime(timestamp int64) bool {
-	if timestamp ==0{
-		timestamp=time.Now().Unix()
+	if timestamp == 0 {
+		timestamp = time.Now().Unix()
 	}
-	tmpCa := *stockCalendar
-	if !IsSummerTime(timestamp) {
-		tmpCa.SetWorkHours(11*time.Hour+30*time.Minute, 17*time.Hour)
-	}else{
-		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 17*time.Hour)
-	}
-	tmpDate := time.Unix(timestamp, 0)
-	tmpDate = tmpDate.In(locUsaStock)
-	return tmpCa.IsWorkTime(tmpDate)
+	return IsMarketTime(timestamp)
 }
 
 var locUsaStock = time.FixedZone("usa-stock", -4*60*60)
