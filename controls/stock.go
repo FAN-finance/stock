@@ -157,20 +157,21 @@ END:
 // @ID StockInfoHandler
 // @Accept  json
 // @Produce  json
-// @Param     code   query    string     true        "美股代码" default(AAPL) Enums(AAPL,TSLA,USD)
-// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
-// @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
+// @Param     code   path    string     true        "美股代码" default(AAPL) Enums(AAPL,TSLA,USD)
+// @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockNode	"stock info"
-//@Header 200 {string} sign "签名信息"
+// @Header 200 {string} sign "签名信息"
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
-// @Router /pub/stock/info [get]
+// @Router /pub/stock/info/{code}/{data_type}/{timestamp}  [get]
 func StockInfoHandler(c *gin.Context) {
 	//info := &services.ViewStock{}
-	code := c.Query("code")
-	timestampstr := c.Query("timestamp")
+	code := c.Param("code")
+	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
-	dataTypeStr := c.Query("data_type")
+	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
+
 	////err := utils.Orm.Where("code= ? and timestamp>= ? ", code,timestamp).Order("timestamp").First(info).Error
 	//err := utils.Orm.Where("code= ? and timestamp<= ? ", code,timestamp).Order("timestamp desc").First(info).Error
 	//if err == nil {
@@ -187,15 +188,15 @@ func StockInfoHandler(c *gin.Context) {
 	} else {
 		//avgPrice, err = services.GetMsStatData(code, dataType)
 		hl, err1 := getTwHLFromCache(code)
-		err=err1
+		err = err1
 		if err == nil {
-			if dataType==1{
-				avgPrice=hl.High
-			}else{
-				avgPrice=hl.Low
+			if dataType == 1 {
+				avgPrice = hl.High
+			} else {
+				avgPrice = hl.Low
 			}
 		}
-		log.Println("stockPrice",hl, avgPrice)
+		log.Println("stockPrice", hl, avgPrice)
 	}
 	if err == nil {
 		//info.Price=avgPrice
@@ -234,22 +235,22 @@ func StockInfoHandler(c *gin.Context) {
 		return
 	}
 }
-func getTwHLFromCache(code string)(*HLValuePair,error){
-	ttl:=services.GetUsdStockCacheTime()
+func getTwHLFromCache(code string) (*HLValuePair, error) {
+	ttl := services.GetUsdStockCacheTime()
 	//var addres []*services.PriceView
-	proc:= func()(interface{},error) {
-		hl:=HLValuePair{}
-		hight,low,err:=services.GetTwHL(code)
+	proc := func() (interface{}, error) {
+		hl := HLValuePair{}
+		hight, low, err := services.GetTwHL(code)
 		if err == nil {
-			hl.High=hight
-			hl.Low=low
+			hl.High = hight
+			hl.Low = low
 		}
-		return &hl,err
+		return &hl, err
 	}
-	ckey:=fmt.Sprintf("getTwHLFromCache-%s-%d",code,time.Now().Unix()+ttl)
-	log.Println(ckey,ttl)
-	res,err:=utils.CacheFromLruWithFixKey(ckey,proc)
-	return res.(*HLValuePair),err
+	ckey := fmt.Sprintf("getTwHLFromCache-%s-%d", code, time.Now().Unix()+ttl)
+	log.Println(ckey, ttl)
+	res, err := utils.CacheFromLruWithFixKey(ckey, proc)
+	return res.(*HLValuePair), err
 }
 
 type resMarketStatus struct {
@@ -321,7 +322,7 @@ func StockAggreHandler(c *gin.Context) {
 	wg := new(sync.WaitGroup)
 	var porcNode = func(nodeUrl string) {
 		defer wg.Done()
-		reqUrl := fmt.Sprintf(nodeUrl+"/pub/stock/info?timestamp=%d&code=%s&data_type=%d", timestamp, code, dataType)
+		reqUrl := fmt.Sprintf(nodeUrl+"/pub/stock/info/%s/%d/%d", code, dataType, timestamp)
 		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
 			snode := new(services.StockNode)
@@ -486,7 +487,7 @@ func StockAvgPriceHandler(c *gin.Context) {
 			return
 		}
 		sdata := new(services.StockNode)
-		sdata.Price,_ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))),18).Float64()
+		sdata.Price, _ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))), 18).Float64()
 		//sdata.Price = (math.Trunc(float64(sdata.Price)*1000) / 1000)
 		sdata.BigPrice = services.GetUnDecimalPrice(sdata.Price).String()
 		sdata.Timestamp = int64(timestamp)
