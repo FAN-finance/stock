@@ -252,9 +252,6 @@ func IsMarketTime(timestamp int64) bool {
 	return tmpCa.IsWorkTime(tmpDate)
 }
 func IsWorkTime(timestamp int64) (bool, int64) {
-	if timestamp == 0 {
-		timestamp = time.Now().Unix()
-	}
 	tmpCa := *stockCalendar
 	if IsSummerTime(timestamp) {
 		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 16*time.Hour)
