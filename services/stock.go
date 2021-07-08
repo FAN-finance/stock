@@ -243,9 +243,9 @@ func InitCalendar() {
 func IsMarketTime(timestamp int64) (bool) {
 	tmpCa := *stockCalendar
 	if IsSummerTime(timestamp) {
-		tmpCa.SetWorkHours(9*time.Hour+30*time.Minute, 17*time.Hour)
+		tmpCa.SetWorkHours(9*time.Hour+30*time.Minute, 16*time.Hour)
 	}else{
-		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 17*time.Hour)
+		tmpCa.SetWorkHours(10*time.Hour+30*time.Minute, 16*time.Hour)
 	}
 	tmpDate := time.Unix(timestamp, 0)
 	tmpDate = tmpDate.In(locUsaStock)
