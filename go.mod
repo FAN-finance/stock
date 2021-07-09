@@ -8,17 +8,15 @@ require (
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-openapi/spec v0.20.3 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
-	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/itsjamie/gin-cors v0.0.0-20160420130702-97b4a9da7933
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/rickar/cal/v2 v2.0.0
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/shopspring/decimal v1.2.0
 	github.com/spf13/pflag v1.0.5
-	github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4
-	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.7.0
 	github.com/tidwall/gjson v1.7.5

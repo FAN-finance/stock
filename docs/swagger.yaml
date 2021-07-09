@@ -1,0 +1,1779 @@
+basePath: /
+definitions:
+  controls.AnyApiRes:
+    properties:
+      data:
+        description: 节点取回的数据：取回数据的类型可能为　bool／字符串／数字等；但为了统一签名处理，将取回的数据转换为string，
+        type: string
+      node:
+        description: 节点名
+        type: string
+      req:
+        description: 数据源
+        type: string
+      sign:
+        description: 签名：　hash= keccak256(abi.encodePacked(Req, Data).toEthSignedMessageHash()
+        items:
+          type: integer
+        type: array
+    type: object
+  controls.ApiErr:
+    properties:
+      Error:
+        type: string
+    type: object
+  controls.resMarketStatus:
+    properties:
+      isOpening:
+        type: boolean
+      openTime:
+        type: integer
+    type: object
+  main.NodeStat:
+    properties:
+      blockPricesUpdateAt:
+        description: eth价格信息最后更新时间
+        type: string
+      cionPricesUpdateAt:
+        description: 币价换算信息最后更新时间
+        type: string
+      node:
+        description: 节点名
+        type: string
+      stockRows:
+        description: 股票信息数据库记录数
+        type: integer
+      stockUpdateAt:
+        description: 股票信息最后更新时间
+        type: string
+      uptime:
+        type: string
+      walletAddre:
+        description: 钱包地址
+        type: string
+    type: object
+  services.BlockPrice:
+    properties:
+      blockTime:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+    type: object
+  services.CoinPriceView:
+    properties:
+      bigPrice:
+        type: string
+      coin:
+        description: 目标币价
+        type: string
+      node:
+        type: string
+      price:
+        type: number
+      sign:
+        description: Sign_Hash值由 Timestamp+Coin+VsCoin+BigPrice计算
+        items:
+          type: integer
+        type: array
+      timestamp:
+        type: integer
+      vsCoin:
+        description: vs币价
+        type: string
+    type: object
+  services.HLDataPriceView:
+    properties:
+      avgSigns:
+        items:
+          $ref: '#/definitions/services.HLPriceView'
+        type: array
+      bigPrice:
+        type: string
+      code:
+        description: 合约代码
+        type: string
+      dataType:
+        description: 最高最低价１最高　２最低价
+        type: integer
+      isMarketOpening:
+        description: 股票杠杆币需要这个字段
+        type: boolean
+      marketOpenTime:
+        description: 股票杠杆币需要这个字段
+        type: integer
+      priceUsd:
+        type: number
+      sign:
+        description: Sign_Hash值由 Timestamp，DataType,Code,BigPrice
+        items:
+          type: integer
+        type: array
+      signs:
+        items:
+          $ref: '#/definitions/services.HLPriceView'
+        type: array
+      timestamp:
+        description: Node string
+        type: integer
+    type: object
+  services.HLPriceView:
+    properties:
+      bigPrice:
+        type: string
+      code:
+        description: 合约代码
+        type: string
+      dataType:
+        description: 最高最低价１最高　２最低价
+        type: integer
+      node:
+        type: string
+      nodeAddress:
+        type: string
+      priceUsd:
+        type: number
+      sign:
+        description: Sign_Hash值由 Timestamp，DataType,Code,BigPrice
+        items:
+          type: integer
+        type: array
+      timestamp:
+        type: integer
+    type: object
+  services.PriceView:
+    properties:
+      bigPrice:
+        type: string
+      code:
+        description: 合约代码
+        type: string
+      node:
+        type: string
+      nodeAddress:
+        type: string
+      priceUsd:
+        type: number
+      sign:
+        description: Sign_Hash值由 Timestamp,Code,BigPrice
+        items:
+          type: integer
+        type: array
+      timestamp:
+        type: integer
+    type: object
+  services.StockData:
+    properties:
+      Price:
+        description: 平均价
+        type: number
+      Timestamp:
+        description: unix 秒数
+        type: integer
+      avgSigns:
+        description: 所有节点平均价格签名列表
+        items:
+          $ref: '#/definitions/services.StockNode'
+        type: array
+      bigPrice:
+        description: Multiply the Price by 1000000000000000000 to remove decimals
+        type: string
+      code:
+        description: 合约代码
+        type: string
+      dataType:
+        description: 最高最低价１最高　２最低价
+        type: integer
+      isMarketOpening:
+        type: boolean
+      marketOpenTime:
+        type: integer
+      sign:
+        description: 计算平均价格的节点的签名　Sign_Hash值由 Timestamp　DataType BigPrice Code计算
+        items:
+          type: integer
+        type: array
+      signs:
+        description: 所有节点签名列表
+        items:
+          $ref: '#/definitions/services.StockNode'
+        type: array
+      stockCode:
+        description: 股票代码
+        type: string
+    type: object
+  services.StockNode:
+    properties:
+      Timestamp:
+        description: unix 秒数
+        type: integer
+      bigPrice:
+        description: Multiply the Price by 1000000000000000000 to remove decimals
+        type: string
+      code:
+        description: 合约代码
+        type: string
+      dataType:
+        description: 最高最低价１最高　２最低价
+        type: integer
+      node:
+        description: 节点名字
+        type: string
+      nodeAddress:
+        description: 节点地址
+        type: string
+      price:
+        description: 新价
+        type: number
+      sign:
+        description: Sign_Hash值由 Timestamp　DataType BigPrice Code计算
+        items:
+          type: integer
+        type: array
+      stockCode:
+        description: 股票代码
+        type: string
+    type: object
+  services.TokenDayData:
+    properties:
+      __typename:
+        type: string
+      dailyVolumeETH:
+        type: string
+      dailyVolumeToken:
+        type: string
+      dailyVolumeUSD:
+        description: 每天成交量
+        type: string
+      date:
+        type: integer
+      id:
+        type: string
+      priceUSD:
+        description: 每天最后一次价格
+        type: string
+      totalLiquidityETH:
+        type: string
+      totalLiquidityToken:
+        type: string
+      totalLiquidityUSD:
+        type: string
+    type: object
+  services.TokenInfo:
+    properties:
+      blockTime:
+        type: integer
+      decimals:
+        type: string
+      derivedETH:
+        type: string
+      name:
+        type: string
+      priceUsd:
+        type: number
+      symbol:
+        type: string
+      totalLiquidity:
+        type: string
+      totalSupply:
+        type: string
+      tradeVolume:
+        type: string
+      tradeVolumeUSD:
+        type: string
+      txCount:
+        type: string
+      untrackedVolumeUSD:
+        type: string
+    type: object
+info:
+  contact:
+    email: wuxiaofei@rechaintech.com
+    name: 伍晓飞
+  description: stock-info-api接口文档.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://rrl360.com/index.html
+  title: stock-info-api
+  version: "1.0"
+paths:
+  /pub/coin_price/{coin}/{vs_coin}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取币价换算，多节点签名版
+      operationId: CoinPriceSignHandler
+      parameters:
+      - default: eth
+        description: 目标币价
+        enum:
+        - btc
+        - aed
+        - ars
+        - aud
+        - bch
+        - bdt
+        - bhd
+        - bits
+        - bmd
+        - bnb
+        - brl
+        - byn
+        - cad
+        - chf
+        - clp
+        - cny
+        - czk
+        - dkk
+        - dot
+        - eos
+        - eth
+        - eur
+        - gbp
+        - hkd
+        - huf
+        - idr
+        - ils
+        - inr
+        - jpy
+        - krw
+        - kwd
+        - link
+        - lkr
+        - ltc
+        - mmk
+        - mxn
+        - myr
+        - ngn
+        - nok
+        - nzd
+        - php
+        - pkr
+        - pln
+        - rub
+        - sar
+        - sats
+        - sek
+        - sgd
+        - thb
+        - try
+        - twd
+        - uah
+        - usd
+        - vef
+        - vnd
+        - xag
+        - xau
+        - xdr
+        - xlm
+        - xrp
+        - yfi
+        - zar
+        in: path
+        name: coin
+        required: true
+        type: string
+      - default: usd
+        description: vs币价
+        enum:
+        - btc
+        - aed
+        - ars
+        - aud
+        - bch
+        - bdt
+        - bhd
+        - bits
+        - bmd
+        - bnb
+        - brl
+        - byn
+        - cad
+        - chf
+        - clp
+        - cny
+        - czk
+        - dkk
+        - dot
+        - eos
+        - eth
+        - eur
+        - gbp
+        - hkd
+        - huf
+        - idr
+        - ils
+        - inr
+        - jpy
+        - krw
+        - kwd
+        - link
+        - lkr
+        - ltc
+        - mmk
+        - mxn
+        - myr
+        - ngn
+        - nok
+        - nzd
+        - php
+        - pkr
+        - pln
+        - rub
+        - sar
+        - sats
+        - sek
+        - sgd
+        - thb
+        - try
+        - twd
+        - uah
+        - usd
+        - vef
+        - vnd
+        - xag
+        - xau
+        - xdr
+        - xlm
+        - xrp
+        - yfi
+        - zar
+        in: path
+        name: vs_coin
+        required: true
+        type: string
+      - default: 1620383144
+        description: unix 秒数
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: CoinPriceView
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.CoinPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取币价换算，多节点签名版
+      tags:
+      - default
+  /pub/dex/ftx_chart_prices/{coin_type}/{count}/{interval}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取杠杆btc代币不同时间区间的价格图表信息
+      operationId: FtxChartPricesHandler
+      parameters:
+      - default: btc3x
+        description: ftx类型
+        enum:
+        - btc3x
+        - eth3x
+        - vix3x
+        - gold10x
+        - eur20x
+        - ndx10x
+        - govt20x
+        in: path
+        name: coin_type
+        required: true
+        type: string
+      - default: 10
+        description: 获取多少个数据点
+        in: path
+        name: count
+        required: true
+        type: integer
+      - default: 1
+        description: 数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；
+        enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 96
+        in: path
+        name: interval
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            items:
+              $ref: '#/definitions/services.BlockPrice'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取杠杆btc代币不同时间区间的价格图表信息
+      tags:
+      - default
+  /pub/dex/ftx_price/{coin_type}/{data_type}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取ftx token价格信息
+      operationId: FtxPriceSignHandler
+      parameters:
+      - default: btc3x
+        description: ftx类型
+        enum:
+        - usd
+        - btc3x
+        - eth3x
+        - vix3x
+        - govt20x
+        - gold10x
+        - eur20x
+        - ndx10x
+        in: path
+        name: coin_type
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: path
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      - default: 0
+        description: 调试
+        in: query
+        name: debug
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token price info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLDataPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取ftx token价格信息
+      tags:
+      - default
+  /pub/dex/lp_price/{pair}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取lp价格信息
+      operationId: PairLpPriceSignHandler
+      parameters:
+      - default: 0x21b8065d10f73ee2e260e5b47d3344d3ced7596e
+        description: token地址
+        in: path
+        name: pair
+        required: true
+        type: string
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: pair price view list
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            items:
+              $ref: '#/definitions/services.PriceView'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取lp价格信息
+      tags:
+      - default
+  /pub/dex/pair/token_chart_prices/{pair}/{token}/{count}/{interval}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 从Pair获取token不同时间区间的价格图表信息
+      operationId: PairTokenDayPricesHandler
+      parameters:
+      - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
+        description: pair地址
+        in: path
+        name: pair
+        required: true
+        type: string
+      - default: 0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 10
+        description: 获取多少个数据点
+        in: path
+        name: count
+        required: true
+        type: integer
+      - default: day
+        description: '数据间隔 15minite hour day 1w(1周) 1m (1月) '
+        enum:
+        - 15minite
+        - hour
+        - day
+        - 1w
+        - 1m
+        in: path
+        name: interval
+        required: true
+        type: string
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          schema:
+            items:
+              $ref: '#/definitions/services.BlockPrice'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 从Pair获取token不同时间区间的价格图表信息
+      tags:
+      - Pair
+  /pub/dex/pair/token_price/{pair}/{token}/{data_type}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 从Pair获取token价格信息
+      operationId: PairTokenPriceSignHandler
+      parameters:
+      - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
+        description: pair地址
+        in: path
+        name: pair
+        required: true
+        type: string
+      - default: 0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: path
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      - default: 0
+        description: 调试
+        in: query
+        name: debug
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token price info
+          schema:
+            $ref: '#/definitions/services.HLDataPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 从Pair获取token价格信息
+      tags:
+      - Pair
+  /pub/dex/stock_chart_prices/{coin_type}/{count}/{interval}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取股票不同时间区间的价格图表信息
+      operationId: StockChartPricesHandler
+      parameters:
+      - default: AAPL
+        description: ftx类型
+        enum:
+        - AAPL
+        - TSLA
+        in: path
+        name: coin_type
+        required: true
+        type: string
+      - default: 100
+        description: 获取多少个数据点
+        in: path
+        name: count
+        required: true
+        type: integer
+      - default: 4
+        description: 数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 ４表示60分钟间隔 ,96表示1天间隔 ；
+        enum:
+        - 1
+        - 4
+        - 96
+        in: path
+        name: interval
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            items:
+              $ref: '#/definitions/services.BlockPrice'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取股票不同时间区间的价格图表信息
+      tags:
+      - default
+  /pub/dex/token_chain_price/{token}/{data_type}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取token链上价格信息，使用节点从eth或bsc合约事件监听到的价格变化数据；token信息要提前在节点配制才能被监听
+      operationId: TokenChainPriceSignHandler
+      parameters:
+      - default: 0xc61624355667e4d5ca9cee25ad339c990a90eaea
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: path
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      - default: 0
+        description: 调试
+        in: query
+        name: debug
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token price info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLDataPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取token链上价格信息
+      tags:
+      - default
+  /pub/dex/token_chart_prices/{token}/{count}/{interval}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取token不同时间区间的价格图表信息
+      operationId: TokenDayPricesHandler
+      parameters:
+      - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 10
+        description: 获取多少个数据点
+        in: path
+        name: count
+        required: true
+        type: integer
+      - default: day
+        description: '数据间隔 15minite hour day 1w(1周) 1m (1月) '
+        enum:
+        - 15minite
+        - hour
+        - day
+        - 1w
+        - 1m
+        in: path
+        name: interval
+        required: true
+        type: string
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            items:
+              $ref: '#/definitions/services.BlockPrice'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取token不同时间区间的价格图表信息
+      tags:
+      - default
+  /pub/dex/token_day_datas/{token}/{days}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取token相应天数的统计图表信息
+      operationId: TokenDayDatasHandler
+      parameters:
+      - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 14
+        description: 获取最近多少天的数据
+        in: path
+        name: days
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            items:
+              $ref: '#/definitions/services.TokenDayData'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取token相应天数的统计图表信息
+      tags:
+      - default
+  /pub/dex/token_price/{token}/{data_type}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取token价格信息
+      operationId: TokenPriceSignHandler
+      parameters:
+      - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: path
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      - default: 0
+        description: 调试
+        in: query
+        name: debug
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token price info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLDataPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取token价格信息
+      tags:
+      - default
+  /pub/internal/coin_price/{coin}/{vs_coin}:
+    get:
+      consumes:
+      - application/json
+      description: 获取币价换算，内部单节点
+      operationId: CoinPriceHandler
+      parameters:
+      - default: eth
+        description: 目标币价
+        enum:
+        - btc
+        - aed
+        - ars
+        - aud
+        - bch
+        - bdt
+        - bhd
+        - bits
+        - bmd
+        - bnb
+        - brl
+        - byn
+        - cad
+        - chf
+        - clp
+        - cny
+        - czk
+        - dkk
+        - dot
+        - eos
+        - eth
+        - eur
+        - gbp
+        - hkd
+        - huf
+        - idr
+        - ils
+        - inr
+        - jpy
+        - krw
+        - kwd
+        - link
+        - lkr
+        - ltc
+        - mmk
+        - mxn
+        - myr
+        - ngn
+        - nok
+        - nzd
+        - php
+        - pkr
+        - pln
+        - rub
+        - sar
+        - sats
+        - sek
+        - sgd
+        - thb
+        - try
+        - twd
+        - uah
+        - usd
+        - vef
+        - vnd
+        - xag
+        - xau
+        - xdr
+        - xlm
+        - xrp
+        - yfi
+        - zar
+        in: path
+        name: coin
+        required: true
+        type: string
+      - default: usd
+        description: vs币价
+        enum:
+        - btc
+        - aed
+        - ars
+        - aud
+        - bch
+        - bdt
+        - bhd
+        - bits
+        - bmd
+        - bnb
+        - brl
+        - byn
+        - cad
+        - chf
+        - clp
+        - cny
+        - czk
+        - dkk
+        - dot
+        - eos
+        - eth
+        - eur
+        - gbp
+        - hkd
+        - huf
+        - idr
+        - ils
+        - inr
+        - jpy
+        - krw
+        - kwd
+        - link
+        - lkr
+        - ltc
+        - mmk
+        - mxn
+        - myr
+        - ngn
+        - nok
+        - nzd
+        - php
+        - pkr
+        - pln
+        - rub
+        - sar
+        - sats
+        - sek
+        - sgd
+        - thb
+        - try
+        - twd
+        - uah
+        - usd
+        - vef
+        - vnd
+        - xag
+        - xau
+        - xdr
+        - xlm
+        - xrp
+        - yfi
+        - zar
+        in: path
+        name: vs_coin
+        required: true
+        type: string
+      - default: 1620383144
+        description: unix 秒数
+        in: query
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Coin Price
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.CoinPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取币价换算，内部单节点
+      tags:
+      - default
+  /pub/internal/dex/ftx_price/{coin_type}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取ftx coin最近一小时最高最低价格信息
+      operationId: FtxPriceHandler
+      parameters:
+      - default: btc3x
+        description: ftx类型
+        enum:
+        - usd
+        - btc3x
+        - eth3x
+        - vix3x
+        - gold10x
+        - eur20x
+        - ndx10x
+        - govt20x
+        in: path
+        name: coin_type
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: query
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Price View
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取ftx coin最近一小时最高最低价格信息,内部单节点
+      tags:
+      - default
+  /pub/internal/dex/lp_price/{pair}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 内部单节点获取lp价格信息
+      operationId: PairLpPriceHandler
+      parameters:
+      - default: 0x21b8065d10f73ee2e260e5b47d3344d3ced7596e
+        description: pair地址
+        in: path
+        name: pair
+        required: true
+        type: string
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: price vew
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.PriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取lp价格信息,内部单节点:'
+      tags:
+      - default
+  /pub/internal/dex/pair/token_info/{pair}/{token}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 内部单节点从pair获取token信息
+      operationId: PairTokenInfoHandler
+      parameters:
+      - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
+        description: pair地址
+        in: path
+        name: pair
+        required: true
+        type: string
+      - default: 0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.TokenInfo'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 从pair获取token信息,内部单节点
+      tags:
+      - Pair
+  /pub/internal/dex/pair/token_price/{pair}/{token}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 从Pair获取token最近一小时最高最低价格信息；．
+      operationId: PairTokenPriceHandler
+      parameters:
+      - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
+        description: pair地址
+        in: path
+        name: pair
+        required: true
+        type: string
+      - default: 0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: query
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Price View
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 从Pair获取token最近一小时最高最低价格信息,内部单节点
+      tags:
+      - Pair
+  /pub/internal/dex/token_chain_price/{token}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．
+      operationId: TokenChainPriceHandler
+      parameters:
+      - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: query
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Price View
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取token最近一小时最高最低价格信息,内部单节点模式
+      tags:
+      - default
+  /pub/internal/dex/token_info/{token}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 内部单节点获取token信息
+      operationId: TokenInfoHandler
+      parameters:
+      - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.TokenInfo'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取token信息,内部单节点
+      tags:
+      - default
+  /pub/internal/dex/token_price/{token}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取token最近一小时最高最低价格信息；．
+      operationId: TokenPriceHandler
+      parameters:
+      - default: 0x66a0f676479cee1d7373f3dc2e2952778bff5bd6
+        description: token地址
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: query
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Price View
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取token最近一小时最高最低价格信息,内部单节点
+      tags:
+      - default
+  /pub/internal/stock_avgprice:
+    post:
+      consumes:
+      - application/json
+      description: 获取股票平均价格共识 苹果代码  AAPL  ,苹果代码 TSLA
+      operationId: StockAvgPriceHandler
+      parameters:
+      - description: 节点价格列表
+        in: body
+        name: nodePrices
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/services.StockNode'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.StockNode'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取股票平均价格共识:'
+      tags:
+      - default
+  /pub/internal/token_avgprice:
+    post:
+      consumes:
+      - application/json
+      description: 获取token平均价格共识
+      operationId: TokenAvgHlPriceHandler
+      parameters:
+      - description: 节点价格列表
+        in: body
+        name: nodePrices
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/services.HLPriceView'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.HLPriceView'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取token平均价格共识:'
+      tags:
+      - default
+  /pub/stock/aggre_info/{code}/{data_type}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA
+      operationId: StockAggreHandler
+      parameters:
+      - default: AAPL
+        description: 美股代码
+        enum:
+        - USD
+        - AAPL
+        - TSLA
+        in: path
+        name: code
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: path
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: unix 秒数
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info list
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.StockData'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取共识美股价格:'
+      tags:
+      - default
+  /pub/stock/any_api:
+    get:
+      consumes:
+      - application/json
+      description: 当前节any-api
+      operationId: NodeAnyApiHandler
+      parameters:
+      - default: https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD
+        description: 数据url
+        in: query
+        name: req
+        required: true
+        type: string
+      - default: RAW.ETH.USD.VOLUME24HOUR
+        description: 指向数据字段的json path
+        in: query
+        name: path
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: data
+          schema:
+            $ref: '#/definitions/controls.AnyApiRes'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 当前节点any-api
+      tags:
+      - default
+  /pub/stock/any_apis:
+    get:
+      consumes:
+      - application/json
+      description: 所有节点any-api
+      operationId: NodeAnyApisHandler
+      parameters:
+      - default: https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD
+        description: 数据url
+        in: query
+        name: req
+        required: true
+        type: string
+      - default: RAW.ETH.USD.VOLUME24HOUR
+        description: 指向数据字段的json path
+        in: query
+        name: path
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: any api data
+          schema:
+            items:
+              $ref: '#/definitions/controls.AnyApiRes'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 所有节点any-api
+      tags:
+      - default
+  /pub/stock/info/{code}/{data_type}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取美股价格 苹果代码  AAPL  ,苹果代码 TSLA
+      operationId: StockInfoHandler
+      parameters:
+      - default: AAPL
+        description: 美股代码
+        enum:
+        - AAPL
+        - TSLA
+        - USD
+        in: path
+        name: code
+        required: true
+        type: string
+      - default: 1
+        description: 最高最低价１最高　２最低价
+        enum:
+        - 1
+        - 2
+        in: path
+        name: data_type
+        required: true
+        type: integer
+      - default: 1620383144
+        description: unix 秒数
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stock info
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/services.StockNode'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取美股价格:'
+      tags:
+      - default
+  /pub/stock/market_status/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: 获取美股市场开盘状态,支持节假日,夏令时
+      operationId: UsaMarketStatusHandler
+      parameters:
+      - default: 0
+        description: unix 秒数； 0表示当前时间
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            $ref: '#/definitions/controls.resMarketStatus'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: '获取美股市场开盘状态:'
+      tags:
+      - default
+  /pub/stock/stat:
+    get:
+      consumes:
+      - application/json
+      description: 当前节点状态:记录数,钱包地址
+      operationId: NodeStatHandler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: node stat
+          headers:
+            sign:
+              description: 签名信息
+              type: string
+          schema:
+            $ref: '#/definitions/main.NodeStat'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 当前节点状态:记录数,钱包地址
+      tags:
+      - default
+  /pub/stock/stats:
+    get:
+      consumes:
+      - application/json
+      description: 所有节点状态:记录数,钱包地址
+      operationId: NodeStatsHandler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Node Stat list
+          schema:
+            items:
+              $ref: '#/definitions/main.NodeStat'
+            type: array
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 所有节点状态:记录数,钱包地址
+      tags:
+      - default
+swagger: "2.0"

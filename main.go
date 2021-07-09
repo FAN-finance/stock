@@ -97,7 +97,10 @@ func main() {
 		go services.SetAllBullsFromTw()
 
 		//股票时间间隔价格统计
-		go 	services.SetStockStat()
+		go services.SetStockStat()
+
+		// token totalSupply daily data
+		go services.TokenTotalSupplyDailyData()
 	}
 
 	services.InitNodeKey()
@@ -160,6 +163,8 @@ func main() {
 
 	api.GET("/dex/token_chart_prices/:token/:count/:interval/:timestamp", controls.TokenDayPricesHandler)
 	api.GET("/dex/pair/token_chart_prices/:pair/:token/:count/:interval/:timestamp", controls.PairTokenDayPricesHandler)
+
+	api.GET("/dex/token/token_chart_supply/:token/:amount/:timestamp", controls.TokenChartSupplyHandler)
 
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 

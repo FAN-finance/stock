@@ -23,9 +23,9 @@ func getMultipleFromCoinType(coinType string) int {
 }
 
 var ftxMultipleMap = map[string]int{
-	"btc3x":   3,
-	"eth3x":   3,
-	"vix3x":   3,
+	"btc3x": 3,
+	"eth3x": 3,
+	"vix3x": 3,
 	//"ust20x":  20,
 	"gold10x": 10,
 	"eur20x":  20,
@@ -199,7 +199,7 @@ func SetAllBulls(coinType string) {
 func SetAllBullsFromTw() {
 	for _, coinType := range twSymbolMap {
 		//
-		if coinType=="AAPL" ||coinType=="TSLA"{
+		if coinType == "AAPL" || coinType == "TSLA" {
 			continue
 		}
 		initCoinBullFromTw(coinType)
@@ -225,7 +225,7 @@ func SetBullsForTw(lastStat int) (int, error) {
 	//setFirstBull(coinType)
 	//setLastBullAJ(coinType)
 	var err error
-	rows, err := utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type not in(?)", lastStat,[]string{"AAPL","TSLA"}).Rows() //	,[]string{"vix3x"}
+	rows, err := utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type not in(?)", lastStat, []string{"AAPL", "TSLA"}).Rows() //	,[]string{"vix3x"}
 
 	//rows,err:=utils.Orm.Raw("SELECT cast(usd as decimal(10,2))as `usd`,id FROM `coins` order by `usd` asc;").Rows()
 	if err != nil {
@@ -404,7 +404,6 @@ func (CoinBull CoinBull) TableName() string {
 	return "coin_bull"
 }
 
-
 type FtxChartDate struct {
 	Timestamp uint
 	//杠杆币价格
@@ -451,15 +450,15 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
 ) bulls
                    on dates.secon1 <= bulls.b_timestamp and dates.secon2 > bulls.b_timestamp
 order by dates.id1
-limit `+strconv.Itoa(count)+";"
+limit ` + strconv.Itoa(count) + ";"
 
-	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count,"coin_type":coin_type}).Scan(&datas).Error
+	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count, "coin_type": coin_type}).Scan(&datas).Error
 	if err == nil {
 		for idx, data := range datas {
 			//数据不连续时，取得的第一个时间点可能为０
 			if idx == 0 {
 				if data.Bull == 0 {
-					sql=`
+					sql = `
 select cast(coin_bull.bull as decimal(9, 3))      bull,
        cast(coin_bull.raw_price as decimal(9, 3)) raw_price
 from coin_bull
@@ -468,11 +467,11 @@ where coin_bull.timestamp < ?
 order by timestamp desc
 limit 1;
 `
-					cdata:=new(FtxChartDate)
-					err=utils.Orm.Raw(sql,data.Timestamp,coin_type).Scan(cdata).Error
+					cdata := new(FtxChartDate)
+					err = utils.Orm.Raw(sql, data.Timestamp, coin_type).Scan(cdata).Error
 					if err != nil {
 						log.Println(err)
-					}else {
+					} else {
 						data.Bull = cdata.Bull
 						//data.RawPrice = cdata.RawPrice
 					}
@@ -507,19 +506,19 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
                     from interval_stats as coin_bull
                     where coin_bull.timestamp > unix_timestamp() - 15 * 60 * @interval * @count
                       and coin_bull.timestamp < unix_timestamp()
-                      and coin_bull.cat = @coin_type and coin_bull.`+"`interval`"+`=15 * 60 * @interval
+                      and coin_bull.cat = @coin_type and coin_bull.` + "`interval`" + `=15 * 60 * @interval
 ) bulls
                    on dates.secon1 = bulls.b_timestamp #and dates.secon2 > bulls.b_timestamp
 order by dates.id1
-limit `+strconv.Itoa(count)+";"
+limit ` + strconv.Itoa(count) + ";"
 
-	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count,"coin_type":coin_type}).Scan(&datas).Error
+	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count, "coin_type": coin_type}).Scan(&datas).Error
 	if err == nil {
 		for idx, data := range datas {
 			//数据不连续时，取得的第一个时间点可能为０
 			if idx == 0 {
 				if data.Bull == 0 {
-					sql=`
+					sql = `
 select cast(coin_bull.last_state as decimal(9, 3))      bull
 from interval_stats coin_bull
 where coin_bull.timestamp < ?
@@ -527,11 +526,11 @@ where coin_bull.timestamp < ?
 order by timestamp desc
 limit 1;
 `
-					cdata:=new(FtxChartDate)
-					err=utils.Orm.Raw(sql,data.Timestamp,coin_type).Scan(cdata).Error
+					cdata := new(FtxChartDate)
+					err = utils.Orm.Raw(sql, data.Timestamp, coin_type).Scan(cdata).Error
 					if err != nil {
 						log.Println(err)
-					}else {
+					} else {
 						data.Bull = cdata.Bull
 						//data.RawPrice = cdata.RawPrice
 					}
@@ -557,16 +556,17 @@ func SetStockStat() {
 	lastId := IntervalStat{}.GetLastID()
 	//SetStockStatFromlastId(lastId)
 
-	proc:=func()error{
-		lastId= SetStockStatFromlastId(lastId)
+	proc := func() error {
+		lastId = SetStockStatFromlastId(lastId)
 		return nil
 	}
-	utils.IntervalSync("SetStockStat",60,proc)
+	utils.IntervalSync("SetStockStat", 60, proc)
 }
-func SetStockStatFromlastId(lastId int) int{
+
+func SetStockStatFromlastId(lastId int) int {
 	rows, err := utils.Orm.Model(MarketPrice{}).Where(" id>? and item_type in(?)", lastId, stocks).Rows()
 	if err == nil {
-		idx:=0
+		idx := 0
 		for rows.Next() {
 			idx++
 			//if idx>100{log.Println("break",idx); break;}
@@ -576,9 +576,9 @@ func SetStockStatFromlastId(lastId int) int{
 				break
 			}
 			gIntervals.SetItem(mprice)
-			lastId=int(mprice.ID)
+			lastId = int(mprice.ID)
 		}
-		if idx>0 {
+		if idx > 0 {
 			gIntervals.Save()
 		}
 	}
@@ -587,6 +587,7 @@ func SetStockStatFromlastId(lastId int) int{
 	}
 	return lastId
 }
+
 type IntervalStat struct {
 	ID        int    `gorm:"primaryKey"`
 	Cat       string `gorm:"type:varchar(20);uniqueIndex:idx_cat_interval_time,priority:1"`
@@ -598,65 +599,68 @@ type IntervalStat struct {
 	//UpdatedAt time.Time
 	Saved bool `gorm:"-"`
 }
-func (istat IntervalStat)GetLastID()int{
-	err:=utils.Orm.Order("timestamp desc").Limit(1).Find(&istat).Error
+
+func (istat IntervalStat) GetLastID() int {
+	err := utils.Orm.Order("timestamp desc").Limit(1).Find(&istat).Error
 	if err != nil {
 		log.Fatalln(err)
 	}
 	return istat.LastID
 }
-func (istat *IntervalStat)SetTimestamp(ts int){
-	if istat.Timestamp!=ts && istat.Timestamp!=0{
+func (istat *IntervalStat) SetTimestamp(ts int) {
+	if istat.Timestamp != ts && istat.Timestamp != 0 {
 		utils.Orm.Create(istat)
 	}
-	istat.Timestamp=ts
+	istat.Timestamp = ts
 }
 
 type mapInterval map[string]*IntervalStat
+
 var gIntervals mapInterval
-var intervals =[]int{15*60,60*60,24*3600}
-var stocks=[]string{"AAPL","TSLA"}
-func  initMapInterval(){
-	mstat:=mapInterval{}
+var intervals = []int{15 * 60, 60 * 60, 24 * 3600}
+var stocks = []string{"AAPL", "TSLA"}
+
+func initMapInterval() {
+	mstat := mapInterval{}
 	for _, cat := range stocks {
 		for _, interval := range intervals {
-			key:=fmt.Sprintf("%s-%d",cat,interval)
-			istat1:=new(IntervalStat)
-			istat1.Cat=cat
-			istat1.Interval=interval
-			mstat[key]=istat1
+			key := fmt.Sprintf("%s-%d", cat, interval)
+			istat1 := new(IntervalStat)
+			istat1.Cat = cat
+			istat1.Interval = interval
+			mstat[key] = istat1
 		}
 	}
-	gIntervals=mstat
+	gIntervals = mstat
 	//return mstat
 }
-func (mstat mapInterval)SetItem(price *MarketPrice){
+func (mstat mapInterval) SetItem(price *MarketPrice) {
 	for _, interval := range intervals {
-		key:=fmt.Sprintf("%s-%d",price.ItemType,interval)
-		istat:=mstat[key]
-		if istat==nil{
+		key := fmt.Sprintf("%s-%d", price.ItemType, interval)
+		istat := mstat[key]
+		if istat == nil {
 
 		}
 		tt := (price.Timestamp / istat.Interval) * istat.Interval
-		if istat.Timestamp!=tt && istat.Timestamp!=0{
-			if istat.Saved{
+		if istat.Timestamp != tt && istat.Timestamp != 0 {
+			if istat.Saved {
 				utils.Orm.Create(istat)
-			}else{//没有被保存过时使用FirstOrCreate方法，可以同数据库中的记录合并．
-				utils.Orm.Assign(IntervalStat{LastState:istat.LastState,LastID:istat.LastID}).FirstOrCreate(istat,IntervalStat{Cat:price.ItemType,Interval:istat.Interval,Timestamp:istat.Timestamp})
+			} else { //没有被保存过时使用FirstOrCreate方法，可以同数据库中的记录合并．
+				utils.Orm.Assign(IntervalStat{LastState: istat.LastState, LastID: istat.LastID}).FirstOrCreate(istat, IntervalStat{Cat: price.ItemType, Interval: istat.Interval, Timestamp: istat.Timestamp})
 				//utils.Orm.Save(istat)
 			}
-			istat.Saved=true
-			istat.ID=0
-			istat.CreatedAt=time.Time{}
+			istat.Saved = true
+			istat.ID = 0
+			istat.CreatedAt = time.Time{}
 		}
-		istat.Timestamp=tt
+		istat.Timestamp = tt
 		istat.LastState = price.Price
 		istat.LastID = int(price.ID)
 	}
 }
-func (mstat mapInterval)Save(){
+func (mstat mapInterval) Save() {
 	for _, stat := range mstat {
-		if stat.Timestamp>0{
+		if stat.Timestamp > 0 {
 			utils.Orm.Save(stat)
 		}
 	}
