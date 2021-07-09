@@ -682,6 +682,61 @@ var doc = `{
                 }
             }
         },
+        "/pub/dex/token/token_chart_supply/{token}/{amount}/{timestamp}": {
+            "get": {
+                "description": "token totalSupply daily data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Token"
+                ],
+                "summary": "获取某个token的totalSupply的变化量",
+                "operationId": "TokenChartSupplyHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x011864d37035439e078d64630777ec518138af05",
+                        "description": "token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "请求数量",
+                        "name": "amount",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "totalSupply",
+                        "schema": {
+                            "$ref": "#/definitions/services.TokenTotalSupply"
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
         "/pub/dex/token_chain_price/{token}/{data_type}/{timestamp}": {
             "get": {
                 "description": "获取token链上价格信息，使用节点从eth或bsc合约事件监听到的价格变化数据；token信息要提前在节点配制才能被监听",
@@ -2464,6 +2519,26 @@ var doc = `{
                     "type": "string"
                 },
                 "untrackedVolumeUSD": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.TokenTotalSupply": {
+            "type": "object",
+            "properties": {
+                "createAt": {
+                    "type": "string"
+                },
+                "dailyAmount": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "totalSupply": {
                     "type": "string"
                 }
             }

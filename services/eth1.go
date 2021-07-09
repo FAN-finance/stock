@@ -172,8 +172,26 @@ var TokenAddressArr = []string{
 var cronObj = cron.New()
 
 func TokenTotalSupplyDailyData() {
-
 	utils.Orm.AutoMigrate(TokenTotalSupply{})
+
+	for _, address := range TokenAddressArr {
+		contract, err := contracts.NewRei(common.HexToAddress(address), EthConn)
+		if err == nil {
+			lastInfo := &TokenTotalSupply{}
+			err = utils.Orm.Model(TokenTotalSupply{}).Where("token=?", address).Order("create_at DESC").Limit(1).First(lastInfo).Error
+			if err != nil || lastInfo.ID == 0 {
+				res, err := contract.TotalSupply(nil)
+				if err == nil {
+					info := &TokenTotalSupply{}
+					info.Token = address
+					info.DailyAmount = "0"
+					info.TotalSupply = res.String()
+					info.CreateAt = time.Now()
+					utils.Orm.Save(info)
+				}
+			}
+		}
+	}
 
 	cronObj.AddFunc("1 0 * * *", func() {
 		for _, address := range TokenAddressArr {

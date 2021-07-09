@@ -917,7 +917,6 @@ func PairLpPriceHandler(c *gin.Context) {
 // @Success 200 {object} services.TokenTotalSupply	"totalSupply"
 // @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token/token_chart_supply/{token}/{amount}/{timestamp} [get]
-
 func TokenChartSupplyHandler(c *gin.Context) {
 	token := c.Param("token")
 	if token == "" {

@@ -289,6 +289,19 @@ definitions:
       untrackedVolumeUSD:
         type: string
     type: object
+  services.TokenTotalSupply:
+    properties:
+      createAt:
+        type: string
+      dailyAmount:
+        type: string
+      id:
+        type: integer
+      token:
+        type: string
+      totalSupply:
+        type: string
+    type: object
 info:
   contact:
     email: wuxiaofei@rechaintech.com
@@ -797,6 +810,44 @@ paths:
       summary: 获取股票不同时间区间的价格图表信息
       tags:
       - default
+  /pub/dex/token/token_chart_supply/{token}/{amount}/{timestamp}:
+    get:
+      consumes:
+      - application/json
+      description: token totalSupply daily data
+      operationId: TokenChartSupplyHandler
+      parameters:
+      - default: 0x011864d37035439e078d64630777ec518138af05
+        description: token
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 10
+        description: 请求数量
+        in: path
+        name: amount
+        required: true
+        type: integer
+      - default: 1620383144
+        description: 当前时间的unix秒数,该字段未使用，仅在云存储上用于标识
+        in: path
+        name: timestamp
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: totalSupply
+          schema:
+            $ref: '#/definitions/services.TokenTotalSupply'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 获取某个token的totalSupply的变化量
+      tags:
+      - Token
   /pub/dex/token_chain_price/{token}/{data_type}/{timestamp}:
     get:
       consumes:
