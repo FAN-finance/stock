@@ -115,21 +115,21 @@ func FtxPriceSignHandler(c *gin.Context) {
 	}
 	resTokenView.AvgSigns = avgNodesPrice
 
-	resTokenView.IsMarketOpening=true
-	if coin_type=="ndx10x"||coin_type=="vix3x"||coin_type=="govt20x" {
-		status,ts:=services.IsWorkTime(0)
+	resTokenView.IsMarketOpening = true
+	if coin_type == "ndx10x" || coin_type == "vix3x" || coin_type == "govt20x" {
+		status, ts := services.IsWorkTime(0)
 		if !status {
-			resTokenView.IsMarketOpening=false
+			resTokenView.IsMarketOpening = false
 			//收盘没有签名时，选择第一个价格，方便应用显示价格
-			if resTokenView.AvgSigns[0].Sign==nil{
-				snode:=resTokenView.AvgSigns[0]
+			if resTokenView.AvgSigns[0].Sign == nil {
+				snode := resTokenView.AvgSigns[0]
 				resTokenView.PriceUsd = snode.PriceUsd
 				resTokenView.BigPrice = snode.BigPrice
 				resTokenView.Timestamp = snode.Timestamp
 				resTokenView.Code = snode.Code
 				resTokenView.DataType = dataType
 			}
-		}else {
+		} else {
 			resTokenView.MarketOpenTime = ts
 		}
 	}
@@ -145,7 +145,7 @@ var ftxAddres = map[string]string{
 	"btc3x":   "0x0ce776b748e4935a67ef345aee09cf80a74f96c9",
 	"eth3x":   "0x91dF141c33e43Fc97B0b6746A95f7bfc639D76bD",
 	"vix3x":   "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
-	"govt20x":  "0x36DeBA1578B11912F6a39f0E2060C5b15cF21c3c",
+	"govt20x": "0xab9016557b3fe80335415d60d33cf2be4b9ba461",
 	"gold10x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
 	"eur20x":  "0x2Be088a27150fc122233356dFBF3a0C01684329C",
 	"ndx10x":  "0x9578BF55c12C66E222344c3244Db6eA8b2498aca",
@@ -192,7 +192,7 @@ func FtxPriceHandler(c *gin.Context) {
 WHERE
  timestamp >unix_timestamp()-3600 and coin_type=?;`, coin_type).Scan(vp).Error
 			if err == nil {
-				if vp.High==0{
+				if vp.High == 0 {
 					err = utils.Orm.Raw(
 						`SELECT bull high,bull low FROM coin_bull
 WHERE
@@ -243,10 +243,10 @@ WHERE
 	tPriceView.NodeAddress = services.WalletAddre
 	if tPriceView.PriceUsd > 0.001 {
 		if isStockFtx(coin_type) { //股票签名
-			if services.IsSignTime(0){
+			if services.IsSignTime(0) {
 				tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 			}
-		}else{
+		} else {
 			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 		}
 
@@ -254,8 +254,9 @@ WHERE
 	c.JSON(200, tPriceView)
 	return
 }
+
 //股票类ftx判断
-func isStockFtx(code string ) bool {
+func isStockFtx(code string) bool {
 	if code == "ndx10x" || code == "vix3x" || code == "govt20x" {
 		return true
 	}
@@ -264,6 +265,7 @@ func isStockFtx(code string ) bool {
 	}
 	return false
 }
+
 // @Tags default
 // @Summary　获取杠杆btc代币不同时间区间的价格图表信息
 // @Description 获取杠杆btc代币不同时间区间的价格图表信息
@@ -309,6 +311,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 	//	return
 	//}
 }
+
 // @Tags default
 // @Summary　获取股票不同时间区间的价格图表信息
 // @Description 获取股票不同时间区间的价格图表信息
