@@ -23,6 +23,7 @@ func getMultipleFromCoinType(coinType string) int {
 }
 
 var ftxMultipleMap = map[string]int{
+	"mvi2x": 2,
 	"btc3x": 3,
 	"eth3x": 3,
 	"vix3x": 3,
@@ -41,6 +42,7 @@ var ftxMultipleMap = map[string]int{
 //eur 20x：244.66
 //ndx 10x：136488
 var ftxAJInitValueMap = map[string]float64{
+	"mvi2x": 99,
 	"btc3x": 110054.79,
 	"eth3x": 7900.56,
 	"vix3x": 53.7,
@@ -52,6 +54,7 @@ var ftxAJInitValueMap = map[string]float64{
 }
 
 var ftxXMap = map[string]float64{
+	"2x":  15,
 	"3x":  10,
 	"10x": 3,
 	"20x": 1.5,
