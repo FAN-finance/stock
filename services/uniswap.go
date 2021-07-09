@@ -706,7 +706,7 @@ func GetTokenPriceLastBlock(tokenAddre, ChainName string) (startBlock int64) {
 	}
 	if startBlock == 0 {
 		err = utils.Orm.Raw(`select t.id from block_prices t
-where t.block_time>unix_timestamp()-3600*24*5 order by t.id limit 1`).Scan(&startBlock).Error
+where t.block_time>unix_timestamp('2021-06-01') order by t.id limit 1`).Scan(&startBlock).Error
 		if startBlock == 0 {
 			log.Fatal(err)
 		}
