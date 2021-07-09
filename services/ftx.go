@@ -62,7 +62,7 @@ var ftxXMap = map[string]float64{
 
 func getFtxXRate(coinType string) float64 {
 	coinType = strings.ToLower(coinType)
-	xArr := []string{"3x", "10x", "20x"}
+	xArr := []string{"2x", "3x", "10x", "20x"}
 	for _, item := range xArr {
 		if strings.Contains(coinType, item) {
 			return ftxXMap[item]
