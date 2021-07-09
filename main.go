@@ -96,6 +96,8 @@ func main() {
 		//更新twelvedata数据源bull数据
 		go services.SetAllBullsFromTw()
 
+		//股票时间间隔价格统计
+		go 	services.SetStockStat()
 	}
 
 	services.InitNodeKey()
@@ -154,6 +156,7 @@ func main() {
 	api.GET("/dex/ftx_price/:coin_type/:data_type/:timestamp", controls.FtxPriceSignHandler)
 	api.GET("/dex/token_day_datas/:token/:days/:timestamp", controls.TokenDayDatasHandler)
 	api.GET("/dex/ftx_chart_prices/:coin_type/:count/:interval/:timestamp", controls.FtxChartPricesHandler)
+	api.GET("/dex/stock_chart_prices/:coin_type/:count/:interval/:timestamp", controls.StockChartPricesHandler)
 
 	api.GET("/dex/token_chart_prices/:token/:count/:interval/:timestamp", controls.TokenDayPricesHandler)
 	api.GET("/dex/pair/token_chart_prices/:pair/:token/:count/:interval/:timestamp", controls.PairTokenDayPricesHandler)

@@ -272,7 +272,7 @@ func isStockFtx(code string ) bool {
 // @Produce  json
 // @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(btc3x, eth3x, vix3x, gold10x, eur20x,ndx10x,govt20x)
 // @Param     count   path    int     true    "获取多少个数据点" default(10)
-// @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；" default(day) Enums(1,2,3,4,96)
+// @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；" default(1) Enums(1,2,3,4,96)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {array} services.BlockPrice	"stock info"
 //@Header 200 {string} sign "签名信息"
@@ -290,6 +290,51 @@ func FtxChartPricesHandler(c *gin.Context) {
 	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s-%s", coin_type, interval_str, count_str)
 	proc := func() (interface{}, error) {
 		items, err := services.GetFtxTimesPrice(coin_type, interval, count)
+		if err != nil {
+			return nil, err
+		}
+		return items, err
+	}
+	SetCacheResExpire(c, ckey, false, 600, proc, c.Query("debug") == "1")
+	//
+	////timestampstr:=c.Param("timestamp")
+	////timestamp,_:=strconv.Atoi(timestampstr)
+	//bs,err:=services.GetFtxTimesPrice(interval,count)
+	//if err == nil {
+	//	c.JSON(200,bs)
+	//	return
+	//}
+	//if err != nil {
+	//	ErrJson(c,err.Error())
+	//	return
+	//}
+}
+// @Tags default
+// @Summary　获取股票不同时间区间的价格图表信息
+// @Description 获取股票不同时间区间的价格图表信息
+// @ID StockChartPricesHandler
+// @Accept  json
+// @Produce  json
+// @Param     coin_type   path    string     true        "ftx类型" default(AAPL)  Enums(AAPL,TSLA)
+// @Param     count   path    int     true    "获取多少个数据点" default(100)
+// @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 ４表示60分钟间隔 ,96表示1天间隔 ；" default(4) Enums(1,4,96)
+// @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
+// @Success 200 {array} services.BlockPrice	"stock info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/dex/stock_chart_prices/{coin_type}/{count}/{interval}/{timestamp} [get]
+func StockChartPricesHandler(c *gin.Context) {
+	coin_type := c.Param("coin_type")
+	//code:="btc"
+	interval_str := c.Param("interval")
+	interval, _ := strconv.Atoi(interval_str)
+	count_str := c.Param("count")
+	count, _ := strconv.Atoi(count_str)
+
+	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s-%s", coin_type, interval_str, count_str)
+	proc := func() (interface{}, error) {
+		items, err := services.GetStockTimesPrice(coin_type, interval, count)
 		if err != nil {
 			return nil, err
 		}
