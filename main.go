@@ -86,8 +86,8 @@ func main() {
 		//go services.SetAllBulls("eth3x")
 		go func() {
 			//监听eth uniswap pair's token价格
-			tpc := services.TokenPairConf{PairAddre: "0x4d3c5db2c68f6859e0cd05d080979f597dd64bff", TokenAddre: "0x72e364f2abdc788b7e918bc238b21f109cd634d7", TokenDecimals: 18, ChainName: "eth"}
-			services.SubPairlog(&tpc)
+			//tpc := services.TokenPairConf{PairAddre: "0x4d3c5db2c68f6859e0cd05d080979f597dd64bff", TokenAddre: "0x72e364f2abdc788b7e918bc238b21f109cd634d7", TokenDecimals: 18, ChainName: "eth"}
+			//services.SubPairlog(&tpc)
 		}()
 
 		//subcribe twelvedata data
