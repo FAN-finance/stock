@@ -142,8 +142,8 @@ END:
 }
 
 var ftxAddres = map[string]string{
-	"btc3x":   "0x0ce776b748e4935a67ef345aee09cf80a74f96c9",
-	"eth3x":   "0x91dF141c33e43Fc97B0b6746A95f7bfc639D76bD",
+	"btc3x":   "0x5190144c70f024bbccf9b41690e4ce3ccac31a68",
+	"eth3x":   "0x247913d11957f3561d4a14166ec478c3c70a9297",
 	"vix3x":   "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
 	"govt20x": "0xab9016557b3fe80335415d60d33cf2be4b9ba461",
 	"gold10x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
