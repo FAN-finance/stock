@@ -193,7 +193,7 @@ func TokenTotalSupplyDailyData() {
 		}
 	}
 
-	cronObj.AddFunc("1 0 * * *", func() {
+	cronObj.AddFunc("0 8 * * *", func() {
 		for _, address := range TokenAddressArr {
 			contract, err := contracts.NewRei(common.HexToAddress(address), EthConn)
 			if err == nil {
