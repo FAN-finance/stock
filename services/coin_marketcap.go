@@ -57,6 +57,8 @@ func SaveCmmsg(msg []byte) {
 			if err != nil {
 				log.Println(err)
 			}
+		}else{
+			log.Println("skip price",cmPrePrice)
 		}
 		log.Println("process mm", cmIdMap[idkey], mprice.Price,mprice)
 	}
