@@ -492,6 +492,7 @@ paths:
       - default: btc3x
         description: ftx类型
         enum:
+        - mvi2x
         - btc3x
         - eth3x
         - vix3x
@@ -556,6 +557,7 @@ paths:
       - default: btc3x
         description: ftx类型
         enum:
+        - mvi2x
         - usd
         - btc3x
         - eth3x
@@ -1226,6 +1228,7 @@ paths:
       - default: btc3x
         description: ftx类型
         enum:
+        - mvi2x
         - usd
         - btc3x
         - eth3x

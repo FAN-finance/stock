@@ -222,6 +222,7 @@
                 "parameters": [
                     {
                         "enum": [
+                            "mvi2x",
                             "btc3x",
                             "eth3x",
                             "vix3x",
@@ -310,6 +311,7 @@
                 "parameters": [
                     {
                         "enum": [
+                            "mvi2x",
                             "usd",
                             "btc3x",
                             "eth3x",
@@ -1215,6 +1217,7 @@
                 "parameters": [
                     {
                         "enum": [
+                            "mvi2x",
                             "usd",
                             "btc3x",
                             "eth3x",
