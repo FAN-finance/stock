@@ -168,6 +168,7 @@ func initCoinBullFromTw(coinType string) {
 		cb := new(CoinBull)
 		cb.CoinType = coinType
 		cb.RawPrice = firstPrice.Price
+		cb.PriceID=int(firstPrice.ID)
 		cb.Rebalance = ftxAJInitValueMap[coinType]
 		cb.Bull = cb.Rebalance
 		cb.RawChange = 0
