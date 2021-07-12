@@ -57,7 +57,7 @@ func SaveMwmsg(msg []byte){
 }
 type MarketPrice struct{
 	ID uint
-	//ftx类型　btc3x, eth3x, vix3x, ust20x, gold10x, eur20x,ndx10x,govt20x
+	//ftx类型　btc3x, eth3x, vix3x, ust20x, gold10x, eur20x,ndx10x,govt20x　其它如AAPL TSLA为不生成ftx的股票价格
 	ItemType string `gorm:"uniqueIndex:type_timestamp,priority:1"`
 	Price float64
 	Timestamp int `gorm:"uniqueIndex:type_timestamp,priority:2"`

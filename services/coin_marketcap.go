@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/tidwall/gjson"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"sort"
+	"stock/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -47,10 +50,10 @@ func SaveCmmsg(msg []byte) {
 		mprice.ItemType =cmIdMap[idkey]
 		mprice.Price= res.D.Cr.P
 		mprice.Timestamp =int(res.D.T/1000)
-		//err=utils.Orm.Save(mprice).Error
-		//if err != nil {
-		//	log.Println(err)
-		//}
+		err=utils.Orm.Save(mprice).Error
+		if err != nil {
+			log.Println(err)
+		}
 		log.Println("process mm", cmIdMap[idkey], mprice.Price,mprice)
 	}
 	if err != nil {
@@ -171,4 +174,37 @@ BEGIN:
 		}
 	}
 
+}
+
+func MarketCapCharData(){
+	stime:=int(time.Date(2021,6,1,0,0,0,0,time.UTC).Unix())
+	bs, err := utils.ReqResBody("https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=9207&range=3M", "https://coinmarketcap.com/", "GET", nil, nil)
+	if err == nil {
+		data:=map[string]struct{V []float64}{}
+		err=json.Unmarshal([]byte(gjson.GetBytes(bs,"data.points").Raw),&data)
+		if err == nil {
+			keys:=[]string{}
+			for tsStr := range data {
+				keys=append(keys,tsStr)
+			}
+			sort.Strings(keys)
+			for _, key := range keys {
+				ts,_:=strconv.Atoi(key)
+				if ts>stime{
+					log.Println( ts,time.Unix(int64(ts),0),data[key].V[0])
+					mprice := new(MarketPrice)
+					mprice.ItemType =cmIdMap["9207"]
+					mprice.Price= data[key].V[0]
+					mprice.Timestamp =ts
+					err=utils.Orm.Save(mprice).Error
+					if err != nil {
+						log.Println(err)
+					}
+
+				}
+
+			}
+		}
+
+	}
 }

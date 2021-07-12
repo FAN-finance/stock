@@ -21,7 +21,7 @@ func getMultipleFromCoinType(coinType string) int {
 	multi, _ := strconv.Atoi(items[1])
 	return multi
 }
-
+var ftxList=[]string{"mvi2x" , "btc3x" , "eth3x" , "vix3x" , "gold10x", "eur20x", "ndx10x", "govt20x"}
 var ftxMultipleMap = map[string]int{
 	"mvi2x": 2,
 	"btc3x": 3,
@@ -200,11 +200,7 @@ func SetAllBulls(coinType string) {
 
 //更新twelvedata数据源bull数据
 func SetAllBullsFromTw() {
-	for _, coinType := range twSymbolMap {
-		//
-		if coinType == "AAPL" || coinType == "TSLA" {
-			continue
-		}
+	for _, coinType := range ftxList {
 		initCoinBullFromTw(coinType)
 		setFirstBull(coinType)
 		setLastBullAJ(coinType)
@@ -223,12 +219,13 @@ func SetAllBullsFromTw() {
 	}
 	utils.IntervalSync("SetAllBullsFromTw", 60, proc)
 }
+//生成杠杆币数据　twelvedata
 func SetBullsForTw(lastStat int) (int, error) {
 	//initCoinBull(coinType)
 	//setFirstBull(coinType)
 	//setLastBullAJ(coinType)
 	var err error
-	rows, err := utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type not in(?)", lastStat, []string{"AAPL", "TSLA"}).Rows() //	,[]string{"vix3x"}
+	rows, err := utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type in(?)", lastStat, ftxList).Rows() //	,[]string{"vix3x"}
 
 	//rows,err:=utils.Orm.Raw("SELECT cast(usd as decimal(10,2))as `usd`,id FROM `coins` order by `usd` asc;").Rows()
 	if err != nil {
@@ -294,7 +291,7 @@ func SetBullsForTw(lastStat int) (int, error) {
 	return lastStat, err
 }
 
-//only for coin from coingecko
+//生成杠杆币数据　only for coin from coingecko
 func SetBullsFromID(lastBullTime int64, coinType string) (int64, error) {
 	//initCoinBull(coinType)
 	//setFirstBull(coinType)
@@ -379,7 +376,7 @@ func getCoinUSdPriceFromStr(coin, usd string) float64 {
 	//log.Println(coinPrice,usdPrice)
 	return usdPrice / coinPrice
 }
-
+//杠杆币对象
 type CoinBull struct {
 	ID uint `gorm:"primarykey"`
 	//原币价格抓取时对应的时间秒数
@@ -422,7 +419,7 @@ type FtxChartDate struct {
 	////Btc区间最低
 	//RawPriceLow float64
 }
-
+//杠杆图表
 func GetFtxTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
 
@@ -490,6 +487,7 @@ limit 1;
 	}
 	return datas, err
 }
+//股票图表
 func GetStockTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
 
@@ -550,6 +548,7 @@ limit 1;
 	return datas, err
 }
 
+//生成股票图表数据
 func SetStockStat() {
 	utils.Orm.AutoMigrate(IntervalStat{})
 	//istat1:=new(IntervalStat)
