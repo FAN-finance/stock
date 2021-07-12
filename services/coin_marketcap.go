@@ -40,6 +40,7 @@ type cmRes struct {
 	ID string `json:"id" example:"price"`
 	S  string `json:"s" example:"0"`
 }
+var cmPrePrice=0.0
 func SaveCmmsg(msg []byte) {
 	//msg=[]byte(` {"C":"d-9C6E9159-B,0|LD_o,7|LD_p,1","M":[{"H":"MainHub","M":"newMessage","A":["{\"h\":{\"t\":\"/zigman2/quotes/210219788/delayed\",\"a\":\"broadcast\",\"s\":\"EC2-600fd49a\",\"n\":27160305909},\"b\":{\"z\":\"\\/Date(1625192869662)\\/\",\"t\":\"210219788\",\"l\":14526.75,\"v\":8879,\"c\":-21.75,\"y\":\"normal\",\"e\":-5,\"b\":null,\"a\":null,\"em\":0}}"]},{"H":"MainHub","M":"newMessage","A":["{\"h\":{\"t\":\"/zigman2/quotes/210369575/delayed\",\"a\":\"broadcast\",\"s\":\"EC2-600fd49a\",\"n\":27160310300},\"b\":{\"z\":\"\\/Date(1625192871107)\\/\",\"t\":\"210369575\",\"l\":132.328125,\"v\":25860,\"c\":0.0625,\"y\":\"normal\",\"e\":-5,\"b\":null,\"a\":null,\"em\":0}}"]}]}`)
 	res := new(cmRes)
@@ -50,9 +51,12 @@ func SaveCmmsg(msg []byte) {
 		mprice.ItemType =cmIdMap[idkey]
 		mprice.Price= res.D.Cr.P
 		mprice.Timestamp =int(res.D.T/1000)
-		err=utils.Orm.Save(mprice).Error
-		if err != nil {
-			log.Println(err)
+		if  mprice.Price!=cmPrePrice {//价格有变时才新增
+			cmPrePrice=mprice.Price
+			err = utils.Orm.Save(mprice).Error
+			if err != nil {
+				log.Println(err)
+			}
 		}
 		log.Println("process mm", cmIdMap[idkey], mprice.Price,mprice)
 	}
