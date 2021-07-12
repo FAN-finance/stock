@@ -93,17 +93,17 @@ func main() {
 		//subcribe twelvedata data
 		go services.SubTwData()
 
-		//更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw()
-
-		//股票时间间隔价格统计
-		go services.SetStockStat()
+		////更新twelvedata数据源bull数据
+		//go services.SetAllBullsFromTw()
+		//
+		////股票时间间隔价格统计
+		//go services.SetStockStat()
+		//
+		////订阅coinmarketcap数据 Metaverse Index
+		//go services.SubCM()
 
 		// token totalSupply daily data
 		go services.TokenTotalSupplyDailyData()
-
-		//订阅coinmarketcap数据 Metaverse Index
-		go services.SubCM()
 	}
 
 	services.InitNodeKey()
