@@ -88,7 +88,9 @@ BEGIN:
 	if err != nil {
 		log.Println("dial:", err)
 		time.Sleep(5*time.Second)
-		c.Close()
+		if c != nil {
+			c.Close()
+		}
 		goto BEGIN
 		//log.Fatal("dial:", err)
 	}
