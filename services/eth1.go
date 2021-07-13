@@ -108,9 +108,9 @@ type BlockPrice struct {
 	CreatedAt time.Time
 	Delay int
 }
-func (BlockPrice) TableName() string {
-	return "tmp_BlockPrice"
-}
+//func (BlockPrice) TableName() string {
+//	return "tmp_BlockPrice"
+//}
 
 func (bp BlockPrice) GetPrice() float64 {
 	err := utils.Orm.Order("id desc").First(&bp).Error
