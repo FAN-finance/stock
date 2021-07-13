@@ -48,6 +48,7 @@ return returnAddre==whiteList[returnAddre]
 - uniswap token价格接口
 - coin兑换价格接口
 - any-api数据接口
+- ftx价格接口
 
 其它见swag文档
 
@@ -58,15 +59,26 @@ return returnAddre==whiteList[returnAddre]
 目前我们使用简单共识，当返回价格数据时，会包含所有节点数据的签名signs
 大致结构为：
 ```js
-{"price":123,"signs":[
-{node:"node1",price:123,sign:node1_sign},
-{node:"node1",price:123,sign:node2_sign}
-]}
-#signs为各节点的签名数据列表，最外层的price为＂签名列表signs＂里价格的平均值．
+{"price":123,
+ "Signs":[
+    {node:"node1",price:123,sign:node1_sign},
+    {node:"node1",price:123,sign:node2_sign}
+    ],
+ "AvgSigns":[
+    {node:"node1",price:123,sign:node1_sign},
+    {node:"node1",price:123,sign:node2_sign}
+    ]
+}
 ```
+字段说：
+- Signs ＂可用＂于在第三方应用或是合约内部求平均价／取中位数等操作，在合约内部完成价格共识
+- Price json最外层的price字段，为当前api调用节点的价格，主要用于方便页面app应用展现价格时，不用去取signs数据内容;可以忽略它，建议直接使用signs价格.
+- AvgSigns 字段为各节点使＂Signs＂字段里的签名数据，由各节点各自计算的平均值列表．主要用于简化或是方便在合约开发．
+
+note:
+
 当返回数据时signs字段列表的长度小于集群节点数量的　　(n/2)+1 时，返回失败．
 
-signs字段内容第三方应用来验证和使用．
 
 ### 节点钱包列表
 http://62.234.169.68:8001/pub/stock/stats
