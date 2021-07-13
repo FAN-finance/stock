@@ -26,3 +26,14 @@ Graph 是一种用于查询**以太坊**和 IPFS 等网络的索引协议。任�
 
 这个数据源用于 
 - 加密货币间的兑换价格查询
+
+###  coinmarketcap
+官方站点　https://www.coingecko.com/
+
+知名加密货币报价行情站点．
+我们对接了它的websocket时实报价接口，可以订阅的它的所有token实时报价．
+
+这个数据源用于
+- ftx杠杆币模拟报价中的token＂Metaverse Index＂数据.
+
+　
