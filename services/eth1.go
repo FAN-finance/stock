@@ -49,34 +49,45 @@ func SubEthPrice(lastBlock int64) {
 				if header.Number.Int64() > lastBlock {
 					log.Println(header.Number.Int64(), time.Unix(int64(header.Time), 0))
 					//time.Sleep(5*time.Second)
-					targetBlock := header.Number.Int64() - 2
-					payload := fmt.Sprintf(payloadFmt, targetBlock)
-					log.Println(string(payload))
-				RETRY:
-					bs, err1 := utils.ReqResBody("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", "https://opensea.io/rankings?sortBy=seven_day_volume&category=art", "POST", nil, json.RawMessage(payload))
-					if err1 != nil {
-						log.Println("get price err:", err1, string(bs))
-						continue
-					}
-					epayload := new(ethPricePayload)
-					err = json.Unmarshal(bs, epayload)
-					if err != nil {
-						log.Println("get price json err:", err1, string(bs))
-						continue
-					}
-					if len(epayload.Data.Bundles) == 0 {
-						log.Println(string(bs))
-						time.Sleep(10 * time.Second)
-						log.Println("empty data goto retry")
-						goto RETRY
-					}
-					price, _ := strconv.ParseFloat(epayload.Data.Bundles[0].EthPrice, 64)
-					blockPrice := BlockPrice{ID: int(targetBlock), Price: price, BlockTime: header.Time}
-					err = utils.Orm.Create(&blockPrice).Error
-					if err != nil {
-						log.Println(err)
-					}
-					//utils.JsonOutput(blockPrice)
+					go func(){
+						stime:=time.Now()
+						time.Sleep(6*time.Second)
+						targetBlock := header.Number.Int64()
+						payload := fmt.Sprintf(payloadFmt, targetBlock)
+						log.Println(string(payload))
+					RETRY:
+						bs, err1 := utils.ReqResBody("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", "https://opensea.io/rankings?sortBy=seven_day_volume&category=art", "POST", nil, json.RawMessage(payload))
+						if err1 != nil {
+							log.Println("get price http err:", err1, string(bs))
+							time.Sleep(10 * time.Second)
+							log.Println("get price http err goto retry")
+							goto RETRY
+						}
+						epayload := new(ethPricePayload)
+						err = json.Unmarshal(bs, epayload)
+						if err != nil {
+							log.Println("get price json err:", err1, string(bs))
+							time.Sleep(10 * time.Second)
+							log.Println("get price json err goto retry")
+							goto RETRY
+						}
+						if len(epayload.Data.Bundles) == 0 {
+							log.Println(string(bs))
+							time.Sleep(10 * time.Second)
+							log.Println("empty data goto retry")
+							goto RETRY
+						}
+						price, _ := strconv.ParseFloat(epayload.Data.Bundles[0].EthPrice, 64)
+						blockPrice := BlockPrice{ID: int(targetBlock), Price: price, BlockTime: header.Time}
+						delay:=int(time.Now().Sub(stime).Seconds())
+						blockPrice.Delay=delay
+						err = utils.Orm.Create(&blockPrice).Error
+						if err != nil {
+							log.Println(err)
+						}
+						//utils.JsonOutput(blockPrice)
+					}()
+
 				} else {
 					log.Println("skip old", header.Number.Int64(), time.Unix(int64(header.Time), 0))
 				}
@@ -95,6 +106,10 @@ type BlockPrice struct {
 	Price     float64
 	BlockTime uint64 `gorm:"index:,sort:desc"`
 	CreatedAt time.Time
+	Delay int
+}
+func (BlockPrice) TableName() string {
+	return "tmp_BlockPrice"
 }
 
 func (bp BlockPrice) GetPrice() float64 {
