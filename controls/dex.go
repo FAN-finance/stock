@@ -135,6 +135,8 @@ func PairTokenPriceSignHandler(c *gin.Context) {
 			sc.Lock()
 			avgNodesPrice = append(avgNodesPrice, snode)
 			sc.Unlock()
+		} else {
+			log.Println(err)
 		}
 	}
 	for _, nurl := range utils.Nodes {
