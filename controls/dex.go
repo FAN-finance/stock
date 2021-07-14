@@ -549,11 +549,11 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 			ErrJson(c, "wrong price info")
 			return
 		}
-		rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
-		if math.Abs(rate) > 0.001 {
+		/*rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
+		if math.Abs(rate) > 0.01 {
 			ErrJson(c, "wrong price")
 			return
-		}
+		}*/
 		sdata.BigPrice = services.GetUnDecimalPrice(sdata.PriceUsd).String()
 		sdata.Timestamp = int64(timestamp)
 		sdata.Code = code
