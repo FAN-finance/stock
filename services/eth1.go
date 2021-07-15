@@ -37,6 +37,9 @@ func SubEthPrice(lastBlock int64) {
 	chanLog := make(chan *types.Header, 1000)
 	RETRYSUB:
 	subcribe, err := EthConn.SubscribeNewHead(context.Background(), chanLog)
+	if err != nil {
+		goto RETRYSUB
+	}
 	defer subcribe.Unsubscribe()
 	if err == nil {
 		//utils.EthConn.HeaderByNumber(context.Background(),100000)
