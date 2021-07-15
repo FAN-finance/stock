@@ -134,30 +134,36 @@ var EthAuth *bind.TransactOpts
 
 func InitEConn(infura string) {
 	log.Println("init InitEConn")
-	conn1, err := ethclient.Dial(fmt.Sprintf("wss://mainnet.infura.io/ws/v3/%s", infura))
-	if err != nil {
-		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
-		if err == nil {
-
+	ethUrl:=fmt.Sprintf("wss://mainnet.infura.io/ws/v3/%s", infura)
+	for {
+		conn1, err := ethclient.Dial(ethUrl)
+		if err != nil {
+			log.Printf("Failed to connect to the bsc Ethereum client: %v", err)
+			time.Sleep(1 * time.Second)
+		} else {
+			EthConn = conn1
+			break
 		}
 	}
-	EthConn = conn1
 	//conn.SendTransaction()
-
-	log.Println("init finish InitEConn")
+	log.Println("init finish InitEConn",ethUrl)
 }
 
 func InitBConn() {
 	log.Println("init InitBscConn")
-	conn1, err := ethclient.Dial("wss://bsc-ws-node.nariox.org:443")
-	if err != nil {
-		log.Fatalf("Failed to connect to the bsc Ethereum client: %v", err)
-		if err == nil {
+	ethUrl:="wss://bsc-ws-node.nariox.org:443"
+	for {
+		conn1, err := ethclient.Dial(ethUrl)
+		if err != nil {
+			log.Printf("Failed to connect to the bsc Ethereum client: %v", err)
+			time.Sleep(1 * time.Second)
+		} else {
+			EthConn = conn1
+			break
 		}
 	}
-	EthConn = conn1
 	//conn.SendTransaction()
-	log.Println("init finish InitBscConn")
+	log.Println("init finish InitBscConn",ethUrl)
 }
 
 func InitEConnLocal() {
