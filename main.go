@@ -45,7 +45,7 @@ func main() {
 	pflag.StringVar(&infura, "infura", "27f0b03a4654478db14295fd1021e1b8", "infura的项目id,需要自行去https://infura.io申请")
 	//https://api.thegraph.com/subgraphs/name/wxf4150/fanswap2 https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2
 	pflag.StringVar(&swapGraphApi, "swapGraphApi", "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2", "swap theGraphApi")
-	pflag.BoolVarP(&job, "job", "j", true, "是否抓取数据")
+	pflag.BoolVarP(&job, "job", "j", false, "是否抓取数据")
 
 	//pflag.BoolVarP(&job, "job", "j", false, "是否抓取数据")
 	//nodes =  strings.Split("http://localhost:8001,http://localhost:8001,http://localhost:8001",",")
