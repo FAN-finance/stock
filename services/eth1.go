@@ -35,6 +35,7 @@ func SubEthPrice(lastBlock int64) {
 	payloadFmt := `{"query":"{\n  bundles(block:{number: %d}) {\n    id\n    ethPrice\n  }\n}\n","variables":null}`
 
 	chanLog := make(chan *types.Header, 1000)
+	RETRYSUB:
 	subcribe, err := EthConn.SubscribeNewHead(context.Background(), chanLog)
 	defer subcribe.Unsubscribe()
 	if err == nil {
@@ -44,7 +45,10 @@ func SubEthPrice(lastBlock int64) {
 			case err := <-subcribe.Err():
 				time.Sleep(2 * time.Second)
 				log.Println(err)
-				goto END
+				if subcribe!=nil{
+					subcribe.Unsubscribe()
+				}
+				goto RETRYSUB
 			case header := <-chanLog:
 				if header.Number.Int64() > lastBlock {
 					log.Println(header.Number.Int64(), time.Unix(int64(header.Time), 0))
@@ -94,7 +98,7 @@ func SubEthPrice(lastBlock int64) {
 			}
 		}
 	}
-END:
+//END:
 	subcribe.Unsubscribe()
 	if err != nil {
 		log.Println("subNewEthPrice err:", err)
