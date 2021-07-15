@@ -544,21 +544,24 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata := new(services.HLPriceView)
 		sdata.PriceUsd, _ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))), 18).Float64()
 
-		//TODO 需要检测平均价格和当前自己的价格是否超出了千分之一的误差
 		if currNode == nil || currNode.PriceUsd == 0 {
 			ErrJson(c, "wrong price info")
 			return
 		}
-		/*rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
-		if math.Abs(rate) > 0.01 {
-			ErrJson(c, "wrong price")
-			return
-		}*/
+
 		sdata.BigPrice = services.GetUnDecimalPrice(sdata.PriceUsd).String()
 		sdata.Timestamp = int64(timestamp)
 		sdata.Code = code
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
+
+		rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
+		if math.Abs(rate) > 0.001 {
+			log.Println("average is wrong ", rate, sdata.PriceUsd, currNode.PriceUsd)
+			c.JSON(200, sdata)
+			return
+		}
+
 		if sdata.PriceUsd > 0.001 {
 			if isStockFtx(code) { //股票签名
 				if services.IsSignTime(0) {
