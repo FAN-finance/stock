@@ -210,6 +210,7 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 		gql += `\n}\n"}`
 
 		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
+		log.Println("GetTokenTimesPriceFromPair",gql)
 		err = err1
 		if err == nil {
 			//使其直接返回字符串
