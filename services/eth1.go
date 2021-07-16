@@ -38,6 +38,8 @@ func SubEthPrice(lastBlock int64) {
 	RETRYSUB:
 	subcribe, err := EthConn.SubscribeNewHead(context.Background(), chanLog)
 	if err != nil {
+		log.Println("EthConn subcribe err",err)
+		time.Sleep(2 * time.Second)
 		goto RETRYSUB
 	}
 	defer subcribe.Unsubscribe()
@@ -46,8 +48,8 @@ func SubEthPrice(lastBlock int64) {
 		for {
 			select {
 			case err := <-subcribe.Err():
-				time.Sleep(2 * time.Second)
 				log.Println(err)
+				time.Sleep(2 * time.Second)
 				if subcribe!=nil{
 					subcribe.Unsubscribe()
 				}
