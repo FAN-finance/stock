@@ -24,11 +24,28 @@
 - node1: 62.234.169.68
 - node2: 62.234.188.160 
 - node0: 49.232.234.250
+
+国外节点
+gnode 34.94.44.103 
+mnode 52.250.67.202 
+vnode 45.76.76.192 
+anode 18.191.204.14 
+
 为方便识别结点, 自己hosts文件里加上 node0 node1这样的ip 解析.
 ### oss list
-- https://snode0.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
-- https://snode1.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
-- https://snode2.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145 
+- https://snode0.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+- https://snode1.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+- https://snode2.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+
+国外节点
+- https://gnode.oss-us-west-1.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+- https://mnode.oss-us-west-1.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+- https://vnode1.oss-us-west-1.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+- https://anode1.oss-us-west-1.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+
+
+
+
 
 ### startup 
 启动参数详见min.go 中的"pflag.Parse()"代码段
