@@ -447,7 +447,7 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
                     where coin_bull.timestamp > unix_timestamp() - 15 * 60 * @interval * @count
                       and coin_bull.timestamp < unix_timestamp()
                       and coin_bull.coin_type = @coin_type
-                    group by truncate(coin_bull.timestamp / (15 * 60 * @interval), 0) * 15 * 60 * @interval
+                    group by b_timestamp
 ) bulls
                    on dates.secon1 <= bulls.b_timestamp and dates.secon2 > bulls.b_timestamp
 order by dates.id1
