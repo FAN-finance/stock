@@ -26,10 +26,10 @@
 - node0: 49.232.234.250
 
 国外节点
-gnode 34.94.44.103 
-mnode 52.250.67.202 
-vnode 45.76.76.192 
-anode 18.191.204.14 
+gnode 34.94.44.103   #google
+mnode 52.250.67.202  #micrsoft
+vnode 45.76.76.192  # vultr
+anode 18.191.204.14  #aws
 
 为方便识别结点, 自己hosts文件里加上 node0 node1这样的ip 解析.
 ### oss list
