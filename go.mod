@@ -27,4 +27,6 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/gorm v1.21.6
+    github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21
+    github.com/emersion/go-smtp v0.15.0
 )

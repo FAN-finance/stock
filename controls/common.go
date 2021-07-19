@@ -2,10 +2,13 @@ package controls
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	"stock/services"
 	"strings"
 	"stock/utils"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -56,4 +59,65 @@ func SetCacheResExpire(c *gin.Context, ckey string,setHeaderCache bool,expire in
 }
 func SetExireHeader(c *gin.Context,seconds int64){
 	c.Header("Cache-Control", "max-age="+strconv.Itoa(int(seconds)))
+}
+
+var ReqStatMap=new(sync.Map)
+func  Stat() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//key:=c.Request.URL.Path
+		key:=c.FullPath()
+		counter,_:=ReqStatMap.LoadOrStore(key,0)
+		ReqStatMap.Store(key,counter.(int)+1)
+		log.Println("req ",key,counter)
+	}
+}
+type ReqStat struct {
+	ID uint
+	Urlstr string
+	Counter int
+	Timestamp int64 `gorm:"index:idx_ti,priority:1"`
+	CreatedAt time.Time
+	IsInternal bool `gorm:"index:idx_ti,priority:2"`
+	NodeAddr string
+}
+func isUrlInternal(key string) bool{
+	if strings.HasPrefix(key,"/pub/internal/dex/token_info"){
+		return false
+	}else if strings.HasPrefix(key,"/pub/internal/"){
+		return true
+	}else if strings.HasPrefix(key,"/pub/stock/info/"){
+		return true
+	}
+	return false
+}
+func (rs *ReqStat) BeforeCreate(tx *gorm.DB) (err error) {
+	rs.IsInternal=isUrlInternal(rs.Urlstr)
+	return nil
+}
+func SaveStat(){
+	utils.Orm.AutoMigrate(ReqStat{})
+	proc:=func()(error) {
+		rss:=[]*ReqStat{}
+		f := func(k, v interface{}) bool {
+			key:=k.(string)
+			value:=v.(int)
+			//log.Println(key,value)
+			rs:=new(ReqStat)
+			rs.Urlstr=key
+			rs.Counter=value
+			rs.Timestamp=time.Now().Unix()
+			rs.NodeAddr=services.WalletAddre
+			rss=append(rss,rs)
+			ReqStatMap.Delete(key)
+			//log.Println("rs ",key,value)
+			return true
+		}
+		ReqStatMap.Range(f)
+		if len(rss)>0 {
+			err := utils.Orm.CreateInBatches(rss, 100).Error
+			return err
+		}
+		return nil
+	}
+	utils.IntervalSync("saveStat",10,proc)
 }
