@@ -1,5 +1,7 @@
 package services
 
+import "stock/utils"
+
 var StatPathMap = map[string]string{
 	"/pub/coin_price/:coin/:vs_coin/:timestamp":                                 "获取币价换算，多节点签名版",
 	"/pub/dex/ftx_chart_prices/:coin_type/:count/:interval/:timestamp":          "获取杠杆btc代币不同时间区间的价格图表信息",
@@ -71,3 +73,126 @@ func init(){
 		StatID2ResMap[value]=StatPathMap[key]
 	}
 }
+
+func ApiStat()(map[string]interface{},error) {
+	res := map[string]interface{}{}
+	allStat := map[string]interface{}{}
+	err := utils.Orm.Raw(
+		`select substr(from_unixtime(min(timestamp)),1,10) begin_date,
+       sum(stats.counter)                                                   counter
+from api_stats stats
+where stats.is_internal = 0`).First(&allStat).Error
+	res["allStat"] = allStat
+
+	type apiRankStat struct{
+		PathId int
+		Counter int
+		PathName string
+	}
+	apiRankStats := []*apiRankStat{}
+	err = utils.Orm.Raw(
+		`select stats.path_id,
+       sum(stats.counter) counter
+from api_stats stats
+ where stats.is_internal=0 and stats.timestamp>truncate(unix_timestamp() / (3600 * 24), 0) * 3600 * 24- (3600 * 24)*30
+group by stats.path_id  order by counter desc;`).
+		Find(&apiRankStats).Error
+	if err == nil {
+		for _, item := range apiRankStats {
+			item.PathName=StatID2ResMap[item.PathId]
+		}
+		res["apiRankStats"] = apiRankStats
+	}
+
+	day30Stat := []map[string]interface{}{}
+	err = utils.Orm.Raw(
+		`select substr(from_unixtime(aa.timespan),1,10) daystr,
+       sum((case when is_internal = 1 then 0  else aa.counter end)) as oss,
+       sum((case when is_internal = 1 then aa.counter else 0 end)) as internal
+from (
+         select stats.is_internal,
+                (truncate(timestamp / (3600 * 24), 0) * 3600 * 24) as timespan,
+                sum(stats.counter)                                                 counter
+         from api_stats stats
+#          where stats.is_internal = 0
+         where stats.timestamp>truncate(unix_timestamp() / (3600 * 24), 0) * 3600 * 24- (3600 * 24)*30
+         group by stats.is_internal, timespan
+     ) aa
+group by daystr`).
+		Find(&day30Stat).Error
+	if err == nil {
+		res["day30Stat"] = day30Stat
+	}
+
+	day30HourRankStat := []map[string]interface{}{}
+	err = utils.Orm.Raw(
+		`select concat( hour(from_unixtime(truncate(timestamp / (3600), 0) * 3600)),'点') as hour_name,
+#                 stats.is_internal,
+#                 hour(date_add(
+#                         FROM_UNIXTIME(0), interval
+#                         (truncate(timestamp / (3600), 0) * 3600) +
+#                         TIMESTAMPDIFF(SECOND, NOW(), UTC_TIMESTAMP()) SECOND
+#                     ))             timespan,
+       sum(stats.counter)                                             counter
+from api_stats stats
+where stats.is_internal = 0
+  and stats.timestamp > truncate(unix_timestamp() / (3600 * 24), 0) * 3600 * 24 - (3600 * 24) * 30
+group by hour_name
+order by counter desc`).
+		Find(&day30HourRankStat).Error
+	if err == nil {
+		res["day30HourRankStat"] = day30HourRankStat
+	}
+	return res, err
+}
+
+/*
+
+-- 总访问次数
+select substr(from_unixtime(min(timestamp)),1,10) begin_date,
+       sum(stats.counter)                                                   counter
+from api_stats stats
+where stats.is_internal = 0;
+
+
+-- 最近30天访问最多的api
+select stats.path_id,
+       sum(stats.counter) counter
+from api_stats stats
+ where stats.is_internal=0 and stats.timestamp>truncate(unix_timestamp() / (3600 * 24), 0) * 3600 * 24- (3600 * 24)*30
+group by stats.path_id  order by counter desc;
+
+
+
+-- 最近30天每天访问次数统计
+select substr(from_unixtime(aa.timespan),1,10) daystr,
+       sum((case when is_internal = 1 then 0  else aa.counter end)) as oss,
+       sum((case when is_internal = 1 then aa.counter else 0 end)) as internal
+from (
+         select stats.is_internal,
+                (truncate(timestamp / (3600 * 24), 0) * 3600 * 24) as timespan,
+                sum(stats.counter)                                                 counter
+         from api_stats stats
+#          where stats.is_internal = 0
+         where stats.timestamp>truncate(unix_timestamp() / (3600 * 24), 0) * 3600 * 24- (3600 * 24)*30
+         group by stats.is_internal, timespan
+     ) aa
+group by daystr;
+
+
+-- 最近30天小时次数排名.
+select concat( hour(from_unixtime(truncate(timestamp / (3600), 0) * 3600)),'点') as hour_name,
+#                 stats.is_internal,
+#                 hour(date_add(
+#                         FROM_UNIXTIME(0), interval
+#                         (truncate(timestamp / (3600), 0) * 3600) +
+#                         TIMESTAMPDIFF(SECOND, NOW(), UTC_TIMESTAMP()) SECOND
+#                     ))             timespan,
+       sum(stats.counter)                                             counter
+from api_stats stats
+where stats.is_internal = 0
+  and stats.timestamp > truncate(unix_timestamp() / (3600 * 24), 0) * 3600 * 24 - (3600 * 24) * 30
+group by hour_name
+order by counter desc
+
+*/
