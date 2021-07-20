@@ -431,7 +431,7 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
              min(dates.secon1)                   secon1,
              max(dates.secon2)                   secon2
       from stock.dates dates
-      where dates.secon1 >= truncate(unix_timestamp() / (15 * 60 * @interval), 0) * 15 * 60 * @interval  - 15 * 60 * @interval * @count
+      where dates.secon1 > truncate(unix_timestamp() / (15 * 60 * @interval), 0) * 15 * 60 * @interval  - 15 * 60 * @interval * @count
         and dates.secon1 < unix_timestamp()
       group by id1
      ) dates
