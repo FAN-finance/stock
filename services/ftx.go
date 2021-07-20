@@ -454,9 +454,6 @@ order by dates.id1 `
 
 	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count, "coin_type": coin_type}).Scan(&datas).Error
 	if err == nil {
-		if len(datas)>count{
-			datas=datas[len(datas)-10:]
-		}
 		for idx, data := range datas {
 			//数据不连续时，取得的第一个时间点可能为０
 			if idx == 0 {
