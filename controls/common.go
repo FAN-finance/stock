@@ -73,12 +73,12 @@ func  Stat() gin.HandlerFunc {
 }
 type ReqStat struct {
 	ID uint
-	Urlstr string
+	Urlstr string `gorm:"type:varchar(256);"`
 	Counter int
-	Timestamp int64 `gorm:"index:idx_ti,priority:1"`
+	Timestamp int64 `gorm:"index:idx_ti,priority:1;uniqueIndex:idx_node_t,priority:2"`
 	CreatedAt time.Time
 	IsInternal bool `gorm:"index:idx_ti,priority:2"`
-	NodeAddr string
+	NodeAddr string `gorm:"type:varchar(256);uniqueIndex:idx_node_t,priority:1"`
 }
 func isUrlInternal(key string) bool{
 	if strings.HasPrefix(key,"/pub/internal/dex/token_info"){
@@ -119,5 +119,5 @@ func SaveStat(){
 		}
 		return nil
 	}
-	utils.IntervalSync("saveStat",10,proc)
+	utils.IntervalSync("saveStat",600,proc)
 }

@@ -431,7 +431,7 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
              min(dates.secon1)                   secon1,
              max(dates.secon2)                   secon2
       from stock.dates dates
-      where dates.secon1 >= truncate((unix_timestamp() - 15 * 60 * @interval * @count) / (15 * 60 * @interval), 0) * 15 * 60 * @interval
+      where dates.secon1 >= truncate(unix_timestamp() / (15 * 60 * @interval), 0) * 15 * 60 * @interval  - 15 * 60 * @interval * @count
         and dates.secon1 < unix_timestamp()
       group by id1
      ) dates
@@ -450,11 +450,13 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
                     group by truncate(coin_bull.timestamp / (15 * 60 * @interval), 0) * 15 * 60 * @interval
 ) bulls
                    on dates.secon1 <= bulls.b_timestamp and dates.secon2 > bulls.b_timestamp
-order by dates.id1
-limit ` + strconv.Itoa(count) + ";"
+order by dates.id1 `
 
 	err := utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count, "coin_type": coin_type}).Scan(&datas).Error
 	if err == nil {
+		if len(datas)>count{
+			datas=datas[len(datas)-10:]
+		}
 		for idx, data := range datas {
 			//数据不连续时，取得的第一个时间点可能为０
 			if idx == 0 {
@@ -499,7 +501,7 @@ from (select truncate((dates.id - 1) / @interval, 0) as id1,
              min(dates.secon1)                  secon1,
              max(dates.secon2)                  secon2
       from stock.dates dates
-      where dates.secon1 >= truncate((unix_timestamp() - 15 * 60 * @interval * ( @count)) / (15 * 60 * @interval), 0) * 15 * 60 * @interval
+      where dates.secon1 > truncate(unix_timestamp()  / (15 * 60 * @interval), 0) * 15 * 60 * @interval - 15 * 60 * @interval * ( @count)
         and dates.secon1 < unix_timestamp()
       group by id1
      ) dates
