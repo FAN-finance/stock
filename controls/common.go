@@ -71,14 +71,15 @@ func  Stat() gin.HandlerFunc {
 		log.Println("req ",key,counter)
 	}
 }
-type ReqStat struct {
-	ID uint
-	Urlstr string `gorm:"type:varchar(256);"`
-	Counter int
-	Timestamp int64 `gorm:"index:idx_ti,priority:1;uniqueIndex:idx_node_t,priority:2"`
-	CreatedAt time.Time
-	IsInternal bool `gorm:"index:idx_ti,priority:2"`
-	NodeAddr string `gorm:"type:varchar(50);uniqueIndex:idx_node_t,priority:1"`
+type ApiStat struct {
+	ID         uint
+	Timestamp  int64  `gorm:"index:idx_ti,priority:1;uniqueIndex:idx_node_t,priority:2"`
+	IsInternal bool   `gorm:"index:idx_ti,priority:2"`
+	PathID     int    `gorm:"type:tinyint;uniqueIndex:idx_node_t,priority:3"`
+	Pathstr    string `gorm:"type:varchar(256);`
+	Counter    int
+	CreatedAt  time.Time
+	NodeAddr   string `gorm:"type:varchar(50);uniqueIndex:idx_node_t,priority:1"`
 }
 func isUrlInternal(key string) bool{
 	if strings.HasPrefix(key,"/pub/internal/dex/token_info"){
@@ -90,20 +91,21 @@ func isUrlInternal(key string) bool{
 	}
 	return false
 }
-func (rs *ReqStat) BeforeCreate(tx *gorm.DB) (err error) {
-	rs.IsInternal=isUrlInternal(rs.Urlstr)
+func (rs *ApiStat) BeforeCreate(tx *gorm.DB) (err error) {
+	rs.IsInternal=isUrlInternal(rs.Pathstr)
+	rs.PathID=services.StatPath2IDMap[rs.Pathstr]
 	return nil
 }
 func SaveStat(){
-	utils.Orm.AutoMigrate(ReqStat{})
+	utils.Orm.AutoMigrate(ApiStat{})
 	proc:=func()(error) {
-		rss:=[]*ReqStat{}
+		rss:=[]*ApiStat{}
 		f := func(k, v interface{}) bool {
 			key:=k.(string)
 			value:=v.(int)
 			//log.Println(key,value)
-			rs:=new(ReqStat)
-			rs.Urlstr=key
+			rs:=new(ApiStat)
+			rs.Pathstr =key
 			rs.Counter=value
 			rs.Timestamp=time.Now().Unix()
 			rs.NodeAddr=services.WalletAddre
