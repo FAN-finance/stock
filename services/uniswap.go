@@ -76,7 +76,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	case "1m":
 		span = time.Hour * 24 * 30
 	default:
-		log.Println("err interval; valid interval: 15minite hour day 1w 1m ",interval)
+		log.Println("err interval; valid interval: 15minite hour day 1w 1m ", interval)
 	}
 	timeItems := []int64{}
 	ttime := now.Truncate(span)
@@ -116,6 +116,7 @@ func getBlockPrices(timeItems []int64, maxBlockHeight int64) ([]*BlockPrice, err
 	//}
 	return bps, err
 }
+
 const getBlockHeight = `{"query":"{\n  _meta \n  \t{block\n      {number}\n  \t}\n}\n","variables":null}`
 
 func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*BlockPrice, error) {
@@ -306,15 +307,16 @@ type TokenInfo struct {
 	Decimals           string `json:"decimals"`
 	DerivedETH         string `json:"derivedETH"`
 	PriceUsd           float64
-	Name               string `json:"name"`
-	Symbol             string `json:"symbol"`
-	TotalLiquidity     string `json:"totalLiquidity"`
-	TotalSupply        string `json:"totalSupply"`
-	TradeVolume        string `json:"tradeVolume"`
-	TradeVolumeUSD     string `json:"tradeVolumeUSD"`
-	TxCount            string `json:"txCount"`
-	UntrackedVolumeUSD string `json:"untrackedVolumeUSD"`
-	BlockTime          uint64 `json:",omitempty"`
+	Name               string  `json:"name"`
+	Symbol             string  `json:"symbol"`
+	ReserveUSD         float64 `json:"reserveUSD"`
+	TotalLiquidity     string  `json:"totalLiquidity"`
+	TotalSupply        string  `json:"totalSupply"`
+	TradeVolume        string  `json:"tradeVolume"`
+	TradeVolumeUSD     string  `json:"tradeVolumeUSD"`
+	TxCount            string  `json:"txCount"`
+	UntrackedVolumeUSD string  `json:"untrackedVolumeUSD"`
+	BlockTime          uint64  `json:",omitempty"`
 }
 type OneDayStat struct {
 	VolumeUsd float64 `json:"VolumeUsd"`
@@ -525,8 +527,7 @@ type HLDataPriceView struct {
 	//股票杠杆币需要这个字段
 	IsMarketOpening bool
 	//股票杠杆币需要这个字段
-	MarketOpenTime  int64
-
+	MarketOpenTime int64
 }
 
 var infoTokenGraph = `{"query":"{\n  token(id:\"%s\") {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n  }\n}","variables":null}`
@@ -547,7 +548,7 @@ func GetTokenInfo(pairAddre string) (token *TokenInfo, err error) {
 	return nil, err
 }
 
-const pairInfoGraph = `{"query":"{\n  pair(id:\"%s\") {\n    id,\n    token0Price,\n    token1Price,\n    token0{id,symbol,name,decimals,totalSupply,tradeVolume,tradeVolumeUSD,untrackedVolumeUSD,txCount,totalLiquidity,derivedETH},\n    token1{id,symbol,name,decimals,totalSupply,tradeVolume,tradeVolumeUSD,untrackedVolumeUSD,txCount,totalLiquidity,derivedETH}\n  \n  }\n}\n","variables":null}`
+const pairInfoGraph = `{"query":"{\n  pair(id:\"%s\") {\n    id,\n reserveUSD, \n    token0Price,\n    token1Price,\n    token0{id,symbol,name,decimals,totalSupply,tradeVolume,tradeVolumeUSD,untrackedVolumeUSD,txCount,totalLiquidity,derivedETH},\n    token1{id,symbol,name,decimals,totalSupply,tradeVolume,tradeVolumeUSD,untrackedVolumeUSD,txCount,totalLiquidity,derivedETH}\n  \n  }\n}\n","variables":null}`
 
 func GetTokenInfoFromPair(pairAddr, tokenAddr string) (token *TokenInfo, err error) {
 	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(pairInfoGraph, pairAddr)))
@@ -565,6 +566,7 @@ func GetTokenInfoFromPair(pairAddr, tokenAddr string) (token *TokenInfo, err err
 				tokenJson = pairInfo.Get("token0")
 			}
 			err = json.Unmarshal([]byte(tokenJson.String()), &token)
+			token.ReserveUSD = pairInfo.Get("reserveUSD").Float()
 
 			if err == nil {
 				return token, err

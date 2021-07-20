@@ -35,10 +35,10 @@ func SubEthPrice(lastBlock int64) {
 	payloadFmt := `{"query":"{\n  bundles(block:{number: %d}) {\n    id\n    ethPrice\n  }\n}\n","variables":null}`
 
 	chanLog := make(chan *types.Header, 1000)
-	RETRYSUB:
+RETRYSUB:
 	subcribe, err := EthConn.SubscribeNewHead(context.Background(), chanLog)
 	if err != nil {
-		log.Println("EthConn subcribe err",err)
+		log.Println("EthConn subcribe err", err)
 		time.Sleep(2 * time.Second)
 		goto RETRYSUB
 	}
@@ -50,7 +50,7 @@ func SubEthPrice(lastBlock int64) {
 			case err := <-subcribe.Err():
 				log.Println(err)
 				time.Sleep(2 * time.Second)
-				if subcribe!=nil{
+				if subcribe != nil {
 					subcribe.Unsubscribe()
 				}
 				goto RETRYSUB
@@ -58,9 +58,9 @@ func SubEthPrice(lastBlock int64) {
 				if header.Number.Int64() > lastBlock {
 					log.Println(header.Number.Int64(), time.Unix(int64(header.Time), 0))
 					//time.Sleep(5*time.Second)
-					go func(){
-						stime:=time.Now()
-						time.Sleep(6*time.Second)
+					go func() {
+						stime := time.Now()
+						time.Sleep(6 * time.Second)
 						targetBlock := header.Number.Int64()
 						payload := fmt.Sprintf(payloadFmt, targetBlock)
 						log.Println(string(payload))
@@ -88,8 +88,8 @@ func SubEthPrice(lastBlock int64) {
 						}
 						price, _ := strconv.ParseFloat(epayload.Data.Bundles[0].EthPrice, 64)
 						blockPrice := BlockPrice{ID: int(targetBlock), Price: price, BlockTime: header.Time}
-						delay:=int(time.Now().Sub(stime).Seconds())
-						blockPrice.Delay=delay
+						delay := int(time.Now().Sub(stime).Seconds())
+						blockPrice.Delay = delay
 						err = utils.Orm.Create(&blockPrice).Error
 						if err != nil {
 							log.Println(err)
@@ -103,7 +103,7 @@ func SubEthPrice(lastBlock int64) {
 			}
 		}
 	}
-//END:
+	//END:
 	subcribe.Unsubscribe()
 	if err != nil {
 		log.Println("subNewEthPrice err:", err)
@@ -115,8 +115,9 @@ type BlockPrice struct {
 	Price     float64
 	BlockTime uint64 `gorm:"index:,sort:desc"`
 	CreatedAt time.Time
-	Delay int
+	Delay     int
 }
+
 //func (BlockPrice) TableName() string {
 //	return "tmp_BlockPrice"
 //}
@@ -143,7 +144,7 @@ var EthAuth *bind.TransactOpts
 
 func InitEConn(infura string) {
 	log.Println("init InitEConn")
-	ethUrl:=fmt.Sprintf("wss://mainnet.infura.io/ws/v3/%s", infura)
+	ethUrl := fmt.Sprintf("wss://mainnet.infura.io/ws/v3/%s", infura)
 	for {
 		conn1, err := ethclient.Dial(ethUrl)
 		if err != nil {
@@ -155,12 +156,12 @@ func InitEConn(infura string) {
 		}
 	}
 	//conn.SendTransaction()
-	log.Println("init finish InitEConn",ethUrl)
+	log.Println("init finish InitEConn", ethUrl)
 }
 
 func InitBConn() {
 	log.Println("init InitBscConn")
-	ethUrl:="wss://bsc-ws-node.nariox.org:443"
+	ethUrl := "wss://bsc-ws-node.nariox.org:443"
 	for {
 		conn1, err := ethclient.Dial(ethUrl)
 		if err != nil {
@@ -172,7 +173,7 @@ func InitBConn() {
 		}
 	}
 	//conn.SendTransaction()
-	log.Println("init finish InitBscConn",ethUrl)
+	log.Println("init finish InitBscConn", ethUrl)
 }
 
 func InitEConnLocal() {
@@ -199,7 +200,7 @@ var TokenAddressArr = []string{
 	"0x011864d37035439e078d64630777ec518138af05",
 }
 
-var cronObj = cron.New()
+var cronObj *cron.Cron = nil
 
 func TokenTotalSupplyDailyData() {
 	utils.Orm.AutoMigrate(TokenTotalSupply{})
@@ -223,7 +224,12 @@ func TokenTotalSupplyDailyData() {
 		}
 	}
 
-	cronObj.AddFunc("0 8 * * *", func() {
+	if cronObj == nil {
+		location, _ := time.LoadLocation("UTC")
+		cronObj = cron.New(cron.WithLocation(location))
+	}
+
+	cronObj.AddFunc("0 0 * * *", func() {
 		for _, address := range TokenAddressArr {
 			contract, err := contracts.NewRei(common.HexToAddress(address), EthConn)
 			if err == nil {
