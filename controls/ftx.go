@@ -319,7 +319,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 // @ID StockChartPricesHandler
 // @Accept  json
 // @Produce  json
-// @Param     coin_type   path    string     true        "ftx类型" default(AAPL)  Enums(AAPL,TSLA)
+// @Param     coin_type   path    string     true        "股票类型" default(AAPL)  Enums(AAPL,TSLA)
 // @Param     count   path    int     true    "获取多少个数据点" default(100)
 // @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 ４表示60分钟间隔 ,96表示1天间隔 ；" default(4) Enums(1,4,96)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
