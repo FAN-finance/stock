@@ -298,7 +298,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 		}
 		return items, err
 	}
-	SetCacheResExpire(c, ckey, false, 600, proc, c.Query("debug") == "1")
+	SetCacheResExpire(c, ckey, false, 200, proc, c.Query("debug") == "1")
 	//
 	////timestampstr:=c.Param("timestamp")
 	////timestamp,_:=strconv.Atoi(timestampstr)
@@ -344,7 +344,7 @@ func StockChartPricesHandler(c *gin.Context) {
 		}
 		return items, err
 	}
-	SetCacheResExpire(c, ckey, false, 600, proc, c.Query("debug") == "1")
+	SetCacheResExpire(c, ckey, false, 200, proc, c.Query("debug") == "1")
 	//
 	////timestampstr:=c.Param("timestamp")
 	////timestamp,_:=strconv.Atoi(timestampstr)
