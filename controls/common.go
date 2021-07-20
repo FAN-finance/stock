@@ -78,7 +78,7 @@ type ReqStat struct {
 	Timestamp int64 `gorm:"index:idx_ti,priority:1;uniqueIndex:idx_node_t,priority:2"`
 	CreatedAt time.Time
 	IsInternal bool `gorm:"index:idx_ti,priority:2"`
-	NodeAddr string `gorm:"type:varchar(256);uniqueIndex:idx_node_t,priority:1"`
+	NodeAddr string `gorm:"type:varchar(50);uniqueIndex:idx_node_t,priority:1"`
 }
 func isUrlInternal(key string) bool{
 	if strings.HasPrefix(key,"/pub/internal/dex/token_info"){
