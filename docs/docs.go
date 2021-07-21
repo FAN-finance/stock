@@ -245,7 +245,15 @@ var doc = `{
                             "gold10x",
                             "eur20x",
                             "ndx10x",
-                            "govt20x"
+                            "govt20x",
+                            "mvi2s",
+                            "btc3s",
+                            "eth3s",
+                            "vix3s",
+                            "gold10s",
+                            "eur20s",
+                            "ndx10s",
+                            "govt20s"
                         ],
                         "type": "string",
                         "default": "btc3x",
@@ -335,7 +343,15 @@ var doc = `{
                             "govt20x",
                             "gold10x",
                             "eur20x",
-                            "ndx10x"
+                            "ndx10x",
+                            "mvi2s",
+                            "btc3s",
+                            "eth3s",
+                            "vix3s",
+                            "gold10s",
+                            "eur20s",
+                            "ndx10s",
+                            "govt20s"
                         ],
                         "type": "string",
                         "default": "btc3x",
@@ -626,7 +642,7 @@ var doc = `{
                         ],
                         "type": "string",
                         "default": "AAPL",
-                        "description": "ftx类型",
+                        "description": "股票类型",
                         "name": "coin_type",
                         "in": "path",
                         "required": true
@@ -1241,7 +1257,15 @@ var doc = `{
                             "gold10x",
                             "eur20x",
                             "ndx10x",
-                            "govt20x"
+                            "govt20x",
+                            "mvi2s",
+                            "btc3s",
+                            "eth3s",
+                            "vix3s",
+                            "gold10s",
+                            "eur20s",
+                            "ndx10s",
+                            "govt20s"
                         ],
                         "type": "string",
                         "default": "btc3x",
@@ -2193,6 +2217,9 @@ var doc = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "delay": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -2502,6 +2529,9 @@ var doc = `{
                     "type": "string"
                 },
                 "priceUsd": {
+                    "type": "number"
+                },
+                "reserveUSD": {
                     "type": "number"
                 },
                 "symbol": {
