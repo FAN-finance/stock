@@ -562,15 +562,15 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		//	return
 		//}
 
-		//if sdata.PriceUsd > 0.001 {
-		//	if isStockFtx(code) { //股票签名
-		//		if services.IsSignTime(0) {
-		//			sdata.Sign = services.SignMsg(sdata.GetHash())
-		//		}
-		//	} else {
-		//		sdata.Sign = services.SignMsg(sdata.GetHash())
-		//	}
-		//}
+		if sdata.PriceUsd > 0.001 {
+			if isStockFtx(code) { //股票签名
+				if services.IsSignTime(0) {
+					sdata.Sign = services.SignMsg(sdata.GetHash())
+				}
+			} else {
+				sdata.Sign = services.SignMsg(sdata.GetHash())
+			}
+		}
 		c.JSON(200, sdata)
 		return
 	}
