@@ -180,7 +180,8 @@ func initCoinBullFromTw(itemType string,bullOrBear string) {
 	var err error
 	utils.Orm.AutoMigrate(CoinBull{})
 	bullCount := int64(0)
-	utils.Orm.Model(CoinBull{}).Where("coin_type=?", itemType).Count(&bullCount)
+	coinType:=getCoinType(itemType,bullOrBear )
+	utils.Orm.Model(CoinBull{}).Where("coin_type=?", coinType).Count(&bullCount)
 	if bullCount == 0 {
 		firstPrice := new(MarketPrice)
 		err = utils.Orm.Model(MarketPrice{}).Order("timestamp").Where("item_type=?", itemType).First(firstPrice).Error
@@ -188,7 +189,7 @@ func initCoinBullFromTw(itemType string,bullOrBear string) {
 			log.Fatal(err)
 		}
 		cb := new(CoinBull)
-		cb.CoinType = getCoinType(itemType,bullOrBear )
+		cb.CoinType = coinType
 		cb.RawPrice = firstPrice.Price
 		cb.PriceID=int(firstPrice.ID)
 		cb.Rebalance = ftxAJInitValueMap[itemType]
