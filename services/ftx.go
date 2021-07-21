@@ -237,8 +237,8 @@ func SetAllBullsFromTw() {
 	}
 
 
-	//lastStat := LastBullPriceID()
-	lastStat,_:=SetBullsForTw(0)
+	lastStat := LastBullPriceID()
+	lastStat,_=SetBullsForTw(lastStat)
 	log.Println(lastStat)
 	return
 	proc := func() error {

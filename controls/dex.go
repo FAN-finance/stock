@@ -555,22 +555,22 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
 
-		rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
-		if math.Abs(rate) > 0.001 {
-			log.Println("average is wrong ", rate, sdata.PriceUsd, currNode.PriceUsd)
-			c.JSON(200, sdata)
-			return
-		}
-
-		//if sdata.PriceUsd > 0.001 {
-		//	if isStockFtx(code) { //股票签名
-		//		if services.IsSignTime(0) {
-		//			sdata.Sign = services.SignMsg(sdata.GetHash())
-		//		}
-		//	} else {
-		//		sdata.Sign = services.SignMsg(sdata.GetHash())
-		//	}
+		//rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
+		//if math.Abs(rate) > 0.001 {
+		//	log.Println("average is wrong ", rate, sdata.PriceUsd, currNode.PriceUsd)
+		//	c.JSON(200, sdata)
+		//	return
 		//}
+
+		if sdata.PriceUsd > 0.001 {
+			if isStockFtx(code) { //股票签名
+				if services.IsSignTime(0) {
+					sdata.Sign = services.SignMsg(sdata.GetHash())
+				}
+			} else {
+				sdata.Sign = services.SignMsg(sdata.GetHash())
+			}
+		}
 		c.JSON(200, sdata)
 		return
 	}
