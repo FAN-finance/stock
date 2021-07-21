@@ -21,14 +21,14 @@ type resTw struct {
 	} `json:"values"`
 }
 var twSymbolMap =map[string]string{
-	"vix":"vix3x",
+	"vix":"vix",
 	//"ust": "ust20x",
-	"ndx": "ndx10x",
-	"xau/usd":"gold10x",
-	"eur/usd":"eur20x",
-	"govt":"govt20x",
-	"eth/usd":"eth3x",
-	"btc/usd":"btc3x",
+	"ndx": "ndx",
+	"xau/usd":"gold",
+	"eur/usd":"eur",
+	"govt":"govt",
+	"eth/usd":"eth",
+	"btc/usd":"btc",
 	"AAPL":"AAPL",
 	"TSLA":"TSLA",
 }

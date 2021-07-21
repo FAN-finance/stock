@@ -143,6 +143,32 @@ order by counter desc`).
 	if err == nil {
 		res["day30HourRankStat"] = day30HourRankStat
 	}
+
+	last48HourStat:= []map[string]interface{}{}
+	err = utils.Orm.Raw(
+		`select from_unixtime(truncate(timestamp / (3600), 0) * 3600) as datestr,
+sum(stats.counter)                                             counter
+from api_stats stats
+where stats.is_internal = 0
+and stats.timestamp > truncate(unix_timestamp() / (3600), 0) * 3600 - 3600 * 48
+group by datestr;`).
+		Find(&last48HourStat).Error
+	if err == nil {
+		res["last48HourStat"] = last48HourStat
+	}
+
+	last48Hour10MinStat:= []map[string]interface{}{}
+	err = utils.Orm.Raw(
+		`select from_unixtime(truncate(timestamp / (600), 0) * 600) as datestr,
+sum(stats.counter)                                             counter
+from api_stats stats
+where stats.is_internal = 0
+and stats.timestamp > truncate(unix_timestamp() / (600), 0) * 600 - 3600 * 48
+group by datestr`).
+		Find(&last48Hour10MinStat).Error
+	if err == nil {
+		res["last48Hour10MinStat"] = last48Hour10MinStat
+	}
 	return res, err
 }
 
@@ -195,4 +221,24 @@ where stats.is_internal = 0
 group by hour_name
 order by counter desc
 
+
+-- 最近48小时每小时访问量
+select from_unixtime(truncate(timestamp / (3600), 0) * 3600) as datestr,
+sum(stats.counter)                                             counter
+from api_stats stats
+where stats.is_internal = 0
+and stats.timestamp > truncate(unix_timestamp() / (3600), 0) * 3600 - 3600 * 48
+group by datestr;
+# order by counter desc;
+
+
+-- 最近48小时每10分钟访问量
+select from_unixtime(truncate(timestamp / (600), 0) * 600) as datestr,
+sum(stats.counter)                                             counter
+from api_stats stats
+where stats.is_internal = 0
+and stats.timestamp > truncate(unix_timestamp() / (600), 0) * 600 - 3600 * 48
+group by datestr
 */
+
+

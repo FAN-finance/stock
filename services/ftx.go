@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"stock/utils"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -15,23 +14,28 @@ func CacuBullPrice(lastAjustPriceBull, lastAjustPric, curPric float64, coin_type
 	//return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric*3 + 1)
 	return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric*float64(ftxMultipleMap[coin_type]) + 1)
 }
+func CacuBearPrice(lastAjustPriceBear, lastAjustPric, curPric float64, coin_type string) float64 {
+	//return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric*3 + 1)
+	return lastAjustPriceBear * (1- (curPric-lastAjustPric)/lastAjustPric*float64(ftxMultipleMap[coin_type]))
+}
 func getMultipleFromCoinType(coinType string) int {
 	preg := regexp.MustCompile("(\\d+)x")
 	items := preg.FindStringSubmatch(coinType)
 	multi, _ := strconv.Atoi(items[1])
 	return multi
 }
-var ftxList=[]string{"mvi2x" , "btc3x" , "eth3x" , "vix3x" , "gold10x", "eur20x", "ndx10x", "govt20x"}
+var ftxList=[]string{"mvi" , "btc" , "eth" , "vix" , "gold", "eur", "ndx", "govt"}
+//var ftxList=[]string{"btc" , "eth" ,  "gold"}
 var ftxMultipleMap = map[string]int{
-	"mvi2x": 2,
-	"btc3x": 3,
-	"eth3x": 3,
-	"vix3x": 3,
-	//"ust20x":  20,
-	"gold10x": 10,
-	"eur20x":  20,
-	"ndx10x":  10,
-	"govt20x": 20,
+	"mvi": 2,
+	"btc": 3,
+	"eth": 3,
+	"vix": 3,
+	//"ust":  20,
+	"gold": 10,
+	"eur":  20,
+	"ndx":  10,
+	"govt": 20,
 }
 
 //btc 3x：110054.79
@@ -42,33 +46,41 @@ var ftxMultipleMap = map[string]int{
 //eur 20x：244.66
 //ndx 10x：136488
 var ftxAJInitValueMap = map[string]float64{
-	"mvi2x": 99,
-	"btc3x": 110054.79,
-	"eth3x": 7900.56,
-	"vix3x": 53.7,
-	//"ust20x":  20,
-	"gold10x": 19022.8,
-	"eur20x":  244.66,
-	"ndx10x":  136488,
-	"govt20x": 5268,
+	"mvi": 99,
+	"btc": 110054.79,
+	"eth": 7900.56,
+	"vix": 53.7,
+	//"ust":  20,
+	"gold": 19022.8,
+	"eur":  244.66,
+	"ndx":  136488,
+	"govt": 5268,
 }
 
-var ftxXMap = map[string]float64{
-	"2x":  15,
-	"3x":  10,
-	"10x": 3,
-	"20x": 1.5,
+var ftxXMap = map[int]float64{
+	2:  15,
+	3:  10,
+	10: 3,
+	20: 1.5,
+}
+func getFtxBullType(item_type string) string{
+	return fmt.Sprintf("%s%dx",item_type,ftxMultipleMap[item_type])
+}
+func getFtxBearType(item_type string) string{
+	return fmt.Sprintf("%s%ds",item_type,ftxMultipleMap[item_type])
 }
 
-func getFtxXRate(coinType string) float64 {
-	coinType = strings.ToLower(coinType)
-	xArr := []string{"2x", "3x", "10x", "20x"}
-	for _, item := range xArr {
-		if strings.Contains(coinType, item) {
-			return ftxXMap[item]
-		}
-	}
-	return 10
+func getFtxXRate(itemType string) float64 {
+	return  ftxXMap[ftxMultipleMap[itemType]]
+	//
+	//itemType = strings.ToLower(itemType)
+	//xArr := []string{"2x", "3x", "10x", "20x"}
+	//for _, item := range xArr {
+	//	if strings.Contains(itemType, item) {
+	//		return ftxXMap[item]
+	//	}
+	//}
+	//return 10
 }
 
 /*ndx10x vix3x*/
@@ -152,24 +164,34 @@ func initCoinBull(coinType string) {
 		}
 	}
 }
-
+func getCoinType(itemType string,bullOrBear string)string{
+	coinType:=""
+	if bullOrBear=="bull"{
+		coinType=getFtxBullType(itemType)
+	}else if bullOrBear=="bear"{
+		coinType=getFtxBearType(itemType)
+	}else {
+		log.Fatalln("err item_type",itemType)
+	}
+	return coinType
+}
 //从twelvedata数据market_pirces表初始化　bull
-func initCoinBullFromTw(coinType string) {
+func initCoinBullFromTw(itemType string,bullOrBear string) {
 	var err error
 	utils.Orm.AutoMigrate(CoinBull{})
 	bullCount := int64(0)
-	utils.Orm.Model(CoinBull{}).Where("coin_type=?", coinType).Count(&bullCount)
+	utils.Orm.Model(CoinBull{}).Where("coin_type=?", itemType).Count(&bullCount)
 	if bullCount == 0 {
 		firstPrice := new(MarketPrice)
-		err = utils.Orm.Model(MarketPrice{}).Order("timestamp").Where("item_type=?", coinType).First(firstPrice).Error
+		err = utils.Orm.Model(MarketPrice{}).Order("timestamp").Where("item_type=?", itemType).First(firstPrice).Error
 		if err != nil {
 			log.Fatal(err)
 		}
 		cb := new(CoinBull)
-		cb.CoinType = coinType
+		cb.CoinType = getCoinType(itemType,bullOrBear )
 		cb.RawPrice = firstPrice.Price
 		cb.PriceID=int(firstPrice.ID)
-		cb.Rebalance = ftxAJInitValueMap[coinType]
+		cb.Rebalance = ftxAJInitValueMap[itemType]
 		cb.Bull = cb.Rebalance
 		cb.RawChange = 0
 		cb.BullChange = 0
@@ -181,7 +203,7 @@ func initCoinBullFromTw(coinType string) {
 		}
 	}
 }
-
+//for coingecko
 func SetAllBulls(coinType string) {
 	initCoinBull(coinType)
 	setFirstBull(coinType)
@@ -201,16 +223,24 @@ func SetAllBulls(coinType string) {
 
 //更新twelvedata数据源bull数据
 func SetAllBullsFromTw() {
-	for _, coinType := range ftxList {
-		initCoinBullFromTw(coinType)
-		setFirstBull(coinType)
-		setLastBullAJ(coinType)
+	for _, itemType := range ftxList {
+		initCoinBullFromTw(itemType,"bull")
+		coin_type:=getCoinType(itemType,"bull")
+		setFirstBull(coin_type)
+		setLastBullAJ(coin_type)
 	}
-	lastStat := LastBullPriceID()
-	//lastStat,_=SetBullsForTw(lastStat)
-	//log.Println(lastStat)
-	//return
+	for _, itemType := range ftxList {
+		initCoinBullFromTw(itemType,"bear")
+		coin_type:=getCoinType(itemType,"bear")
+		setFirstBull(coin_type)
+		setLastBullAJ(coin_type)
+	}
 
+
+	//lastStat := LastBullPriceID()
+	lastStat,_:=SetBullsForTw(0)
+	log.Println(lastStat)
+	return
 	proc := func() error {
 		lastId, err := SetBullsForTw(lastStat)
 		if err == nil {
@@ -246,47 +276,54 @@ func SetBullsForTw(lastStat int) (int, error) {
 			log.Println(err)
 			return lastStat, err
 		}
-		cb := new(CoinBull)
-		coinType := coin.ItemType
-		cb.CoinType = coin.ItemType
+		cbs:=[]*CoinBull{}
+		for _, bullOrBear := range []string{"bull", "bear"} {
+			coinType:=getCoinType(coin.ItemType,bullOrBear)
+			cb := new(CoinBull)
+			//coinType := coin.ItemType
+			cb.CoinType = coinType
 
-		cb.RawPrice = coin.Price
-		cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coinType)
-		cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
-		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
-		cb.Timestamp = int64(coin.Timestamp)
-		cb.CreatedAt = time.Now()
-		cb.Rebalance = LastBullAJ[coinType].Rebalance
-		cb.PriceID = int(coin.ID)
-		//cb.ID = uint(coin.ID)
-		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
-		ajChange := cb.RawChange
-
-		rate := getFtxXRate(coinType)
-		if math.Abs(ajChange) >= rate {
-			cb.IsAjustPoint = true
-			if ajChange > 0 {
-				cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
-			} else {
-				cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+			cb.RawPrice = coin.Price
+			if bullOrBear=="bull"{
+				cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
+			}else if bullOrBear=="bear" {
+				cb.Bull = CacuBearPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
 			}
-			LastBullAJ[coinType] = cb
-		}
+			cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
+			cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
+			cb.Timestamp = int64(coin.Timestamp)
+			cb.CreatedAt = time.Now()
+			cb.Rebalance = LastBullAJ[coinType].Rebalance
+			cb.PriceID = int(coin.ID)
+			//cb.ID = uint(coin.ID)
+			//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
+			ajChange := cb.RawChange
 
-		// 每天14点，检测是否在过去24小时之内触发过调仓
-		//now := time.Now()
-		now := time.Unix(cb.Timestamp, 0)
-		if now.Hour() == 14 && now.Minute() < 20 {
-			ltime := time.Unix(LastBullAJ[coinType].Timestamp, 0)
-			lastRebalanceTime := ltime
-			if now.Sub(lastRebalanceTime).Hours() >= 24 {
+			rate := getFtxXRate(coin.ItemType)
+			if math.Abs(ajChange) >= rate {
 				cb.IsAjustPoint = true
-				cb.Rebalance = cb.Bull
+				if ajChange > 0 {
+					cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
+				} else {
+					cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+				}
 				LastBullAJ[coinType] = cb
 			}
+			// 每天14点，检测是否在过去24小时之内触发过调仓
+			//now := time.Now()
+			now := time.Unix(cb.Timestamp, 0)
+			if now.Hour() == 14 && now.Minute() < 20 {
+				ltime := time.Unix(LastBullAJ[coinType].Timestamp, 0)
+				lastRebalanceTime := ltime
+				if now.Sub(lastRebalanceTime).Hours() >= 24 {
+					cb.IsAjustPoint = true
+					cb.Rebalance = cb.Bull
+					LastBullAJ[coinType] = cb
+				}
+			}
+			cbs=append(cbs,cb)
 		}
-
-		err = utils.Orm.Create(cb).Error
+		err = utils.Orm.CreateInBatches(cbs,10).Error
 		lastStat = int(coin.ID)
 	}
 	return lastStat, err

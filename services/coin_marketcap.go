@@ -69,12 +69,12 @@ func SaveCmmsg(msg []byte) {
 //{"method":"subscribe","id":"price","data":{"cryptoIds":[9207,1,1027,2010,1839,6636,52,1975,2,512,1831,7083,74,9023,9022],"index":"detail"}}
 var cmCoinMap =map[string]string{
 	//Metaverse Index
-	"mvi2x": "9207",
+	"mvi": "9207",
 }
 
 var cmIdMap =map[string]string{
 	//Metaverse Index
-	"9207": "mvi2x",
+	"9207": "mvi",
 }
 
 
