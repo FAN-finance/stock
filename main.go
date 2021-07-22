@@ -74,8 +74,8 @@ func main() {
 	//	//time.Sleep(time.Second*63)
 	//}
 	//return
-	//services.SetAllBullsFromTw()
-	//return
+	services.SetAllBullsFromTw(false)
+	return
 
 	if job {
 		//go services.GetStocks()
@@ -94,7 +94,7 @@ func main() {
 		go services.SubTwData()
 
 		//更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw()
+		go services.SetAllBullsFromTw(true)
 
 		//股票时间间隔价格统计
 		go services.SetStockStat()
