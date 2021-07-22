@@ -16,7 +16,7 @@ func CacuBullPrice(lastAjustPriceBull, lastAjustPric, curPric float64, coin_type
 }
 func CacuBearPrice(lastAjustPriceBear, lastAjustPric, curPric float64, coin_type string) float64 {
 	//return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric*3 + 1)
-	return lastAjustPriceBear * (1- (curPric-lastAjustPric)/lastAjustPric*float64(ftxMultipleMap[coin_type]))
+	return lastAjustPriceBear * (1 - (curPric-lastAjustPric)/lastAjustPric*float64(ftxMultipleMap[coin_type]))
 }
 func getMultipleFromCoinType(coinType string) int {
 	preg := regexp.MustCompile("(\\d+)x")
@@ -24,7 +24,9 @@ func getMultipleFromCoinType(coinType string) int {
 	multi, _ := strconv.Atoi(items[1])
 	return multi
 }
-var ftxList=[]string{"mvi" , "btc" , "eth" , "vix" , "gold", "eur", "ndx", "govt"}
+
+var ftxList = []string{"mvi", "btc", "eth", "vix", "gold", "eur", "ndx", "govt"}
+
 //var ftxList=[]string{"btc" , "eth" ,  "gold"}
 var ftxMultipleMap = map[string]int{
 	"mvi": 2,
@@ -63,15 +65,16 @@ var ftxXMap = map[int]float64{
 	10: 3,
 	20: 1.5,
 }
-func getFtxBullType(item_type string) string{
-	return fmt.Sprintf("%s%dx",item_type,ftxMultipleMap[item_type])
+
+func getFtxBullType(item_type string) string {
+	return fmt.Sprintf("%s%dx", item_type, ftxMultipleMap[item_type])
 }
-func getFtxBearType(item_type string) string{
-	return fmt.Sprintf("%s%ds",item_type,ftxMultipleMap[item_type])
+func getFtxBearType(item_type string) string {
+	return fmt.Sprintf("%s%ds", item_type, ftxMultipleMap[item_type])
 }
 
 func getFtxXRate(itemType string) float64 {
-	return  ftxXMap[ftxMultipleMap[itemType]]
+	return ftxXMap[ftxMultipleMap[itemType]]
 	//
 	//itemType = strings.ToLower(itemType)
 	//xArr := []string{"2x", "3x", "10x", "20x"}
@@ -164,23 +167,24 @@ func initCoinBull(coinType string) {
 		}
 	}
 }
-func getCoinType(itemType string,bullOrBear string)string{
-	coinType:=""
-	if bullOrBear=="bull"{
-		coinType=getFtxBullType(itemType)
-	}else if bullOrBear=="bear"{
-		coinType=getFtxBearType(itemType)
-	}else {
-		log.Fatalln("err item_type",itemType)
+func getCoinType(itemType string, bullOrBear string) string {
+	coinType := ""
+	if bullOrBear == "bull" {
+		coinType = getFtxBullType(itemType)
+	} else if bullOrBear == "bear" {
+		coinType = getFtxBearType(itemType)
+	} else {
+		log.Fatalln("err item_type", itemType)
 	}
 	return coinType
 }
+
 //从twelvedata数据market_pirces表初始化　bull
-func initCoinBullFromTw(itemType string,bullOrBear string) {
+func initCoinBullFromTw(itemType string, bullOrBear string) {
 	var err error
 	utils.Orm.AutoMigrate(CoinBull{})
 	bullCount := int64(0)
-	coinType:=getCoinType(itemType,bullOrBear )
+	coinType := getCoinType(itemType, bullOrBear)
 	utils.Orm.Model(CoinBull{}).Where("coin_type=?", coinType).Count(&bullCount)
 	if bullCount == 0 {
 		firstPrice := new(MarketPrice)
@@ -191,7 +195,7 @@ func initCoinBullFromTw(itemType string,bullOrBear string) {
 		cb := new(CoinBull)
 		cb.CoinType = coinType
 		cb.RawPrice = firstPrice.Price
-		cb.PriceID=int(firstPrice.ID)
+		cb.PriceID = int(firstPrice.ID)
 		cb.Rebalance = ftxAJInitValueMap[itemType]
 		cb.Bull = cb.Rebalance
 		cb.RawChange = 0
@@ -204,6 +208,7 @@ func initCoinBullFromTw(itemType string,bullOrBear string) {
 		}
 	}
 }
+
 //for coingecko
 func SetAllBulls(coinType string) {
 	initCoinBull(coinType)
@@ -225,18 +230,17 @@ func SetAllBulls(coinType string) {
 //更新twelvedata数据源bull数据
 func SetAllBullsFromTw() {
 	for _, itemType := range ftxList {
-		initCoinBullFromTw(itemType,"bull")
-		coin_type:=getCoinType(itemType,"bull")
+		initCoinBullFromTw(itemType, "bull")
+		coin_type := getCoinType(itemType, "bull")
 		setFirstBull(coin_type)
 		setLastBullAJ(coin_type)
 	}
 	for _, itemType := range ftxList {
-		initCoinBullFromTw(itemType,"bear")
-		coin_type:=getCoinType(itemType,"bear")
+		initCoinBullFromTw(itemType, "bear")
+		coin_type := getCoinType(itemType, "bear")
 		setFirstBull(coin_type)
 		setLastBullAJ(coin_type)
 	}
-
 
 	lastStat := LastBullPriceID()
 	//lastStat,_=SetBullsForTw(lastStat)
@@ -251,6 +255,7 @@ func SetAllBullsFromTw() {
 	}
 	utils.IntervalSync("SetAllBullsFromTw", 60, proc)
 }
+
 //生成杠杆币数据　twelvedata
 func SetBullsForTw(lastStat int) (int, error) {
 	//initCoinBull(coinType)
@@ -277,17 +282,17 @@ func SetBullsForTw(lastStat int) (int, error) {
 			log.Println(err)
 			return lastStat, err
 		}
-		cbs:=[]*CoinBull{}
+		cbs := []*CoinBull{}
 		for _, bullOrBear := range []string{"bull", "bear"} {
-			coinType:=getCoinType(coin.ItemType,bullOrBear)
+			coinType := getCoinType(coin.ItemType, bullOrBear)
 			cb := new(CoinBull)
 			//coinType := coin.ItemType
 			cb.CoinType = coinType
 
 			cb.RawPrice = coin.Price
-			if bullOrBear=="bull"{
+			if bullOrBear == "bull" {
 				cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
-			}else if bullOrBear=="bear" {
+			} else if bullOrBear == "bear" {
 				cb.Bull = CacuBearPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
 			}
 			cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
@@ -304,9 +309,17 @@ func SetBullsForTw(lastStat int) (int, error) {
 			if math.Abs(ajChange) >= rate {
 				cb.IsAjustPoint = true
 				if ajChange > 0 {
-					cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
+					if bullOrBear == "bull" {
+						cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
+					} else if bullOrBear == "bear" {
+						cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+					}
 				} else {
-					cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+					if bullOrBear == "bull" {
+						cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+					} else if bullOrBear == "bear" {
+						cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
+					}
 				}
 				LastBullAJ[coinType] = cb
 			}
@@ -322,9 +335,9 @@ func SetBullsForTw(lastStat int) (int, error) {
 					LastBullAJ[coinType] = cb
 				}
 			}
-			cbs=append(cbs,cb)
+			cbs = append(cbs, cb)
 		}
-		err = utils.Orm.CreateInBatches(cbs,10).Error
+		err = utils.Orm.CreateInBatches(cbs, 10).Error
 		lastStat = int(coin.ID)
 	}
 	return lastStat, err
@@ -415,6 +428,7 @@ func getCoinUSdPriceFromStr(coin, usd string) float64 {
 	//log.Println(coinPrice,usdPrice)
 	return usdPrice / coinPrice
 }
+
 //杠杆币对象
 type CoinBull struct {
 	ID uint `gorm:"primarykey"`
@@ -458,6 +472,7 @@ type FtxChartDate struct {
 	////Btc区间最低
 	//RawPriceLow float64
 }
+
 //杠杆图表
 func GetFtxTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
@@ -525,6 +540,7 @@ limit 1;
 	}
 	return datas, err
 }
+
 //股票图表
 func GetStockTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {
 	datas := []*FtxChartDate{}
