@@ -229,13 +229,20 @@ func SetAllBulls(coinType string) {
 
 //更新twelvedata数据源bull数据
 func SetAllBullsFromTw() {
-	for _, itemType := range ftxList {
+	ftxItmes:=[]string{}
+	utils.Orm.Model(MarketPrice{}).Where("item_type in (?)",ftxList).Distinct().Pluck("item_type",&ftxItmes)
+	if len(ftxItmes)==0{
+		log.Println("none ftxItmes")
+		return
+	}
+
+	for _, itemType := range ftxItmes {
 		initCoinBullFromTw(itemType, "bull")
 		coin_type := getCoinType(itemType, "bull")
 		setFirstBull(coin_type)
 		setLastBullAJ(coin_type)
 	}
-	for _, itemType := range ftxList {
+	for _, itemType := range ftxItmes {
 		initCoinBullFromTw(itemType, "bear")
 		coin_type := getCoinType(itemType, "bear")
 		setFirstBull(coin_type)
