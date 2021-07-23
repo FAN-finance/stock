@@ -143,8 +143,11 @@ END:
 
 var ftxAddres = map[string]string{
 	"mvi2x":   "0x6b5ab672ac243193b006ea819a5eb08bcd518de7",
+	"mvi2s":   "0xc7b86cc68c2b49f2609e9b5e12f0aa7be775bf1d",
 	"btc3x":   "0x5190144c70f024bbccf9b41690e4ce3ccac31a68",
+	"btc3s":   "0x66094a0624a4e8a8b9a7eff8dc0982706015340d",
 	"eth3x":   "0x247913d11957f3561d4a14166ec478c3c70a9297",
+	"eth3s":   "0xb1c1504c6f2646cad9ed291158b694723d38c394",
 	"vix3x":   "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
 	"govt20x": "0xab9016557b3fe80335415d60d33cf2be4b9ba461",
 	"gold10x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
