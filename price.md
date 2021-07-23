@@ -11,7 +11,9 @@
 1.  [uniswap交易所的token报价]
 在uniswap-info: https://v2.info.uniswap.org/ 上建立的pair相关token都可以报价
 1.  [ftx杠杆币模拟报价]
-目前提交供以下７种x杠杆币：btc3x, eth3x, vix3x, govt20x, gold10x, eur20x,ndx10x,mvi2x
+目前提交供以下几种杠杆币：
+- bull:mvi2x,usd, btc3x, eth3x, vix3x, gold10x, eur20x,ndx10x
+- govt20x,mvi2s, btc3s, eth3s
 
 #### 价格实时性：
 - 价格是有一定延时的，比如价格数据接口，在预言机端api有１分钟左右的缓存．
@@ -20,5 +22,6 @@
 
 - 美股价格，数据源于twelvedata端，未见延迟
 
-- ftx杠杆币价格，每分钟去twelvedata抓取新数据，新数据每分钟生成ftx杠杆代币价格，会有１分钟左右的延迟
+- ftx杠杆币价格，每分钟去twelvedata抓取新数据，新数据每分钟生成ftx杠杆代币价格，会有１分钟左右的延迟.
+
 
