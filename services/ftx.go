@@ -58,7 +58,9 @@ var ftxAJInitValueMap = map[string]float64{
 	"eur20x":  244.66,
 	"ndx10x":  136488,
 	"govt20x": 5268,
-
+	"mvi2s": 112.0,
+	"btc3s": 98265.0,
+	"eth3s": 6205.8,
 	//"mvi2s":1626825600,
 	//"btc3s":1626825600,
 	//"eth3s":1626825600,
@@ -67,8 +69,6 @@ var ftxAJInitValueMap = map[string]float64{
 	//"eur20s":1626825600,
 	//"ndx10s":1626825600,
 	//"govt20s":1626825600,
-
-
 }
 
 var ftxXMap = map[int]float64{
@@ -104,6 +104,10 @@ func getFtxXRate(itemType string) float64 {
 var FirstBull, LastBullAJ = map[string]*CoinBull{}, map[string]*CoinBull{}
 
 func setFirstBull(coinType string) {
+	if cointTypeInitTime[coinType] > int(time.Now().Unix()) {
+		log.Println("setFirstBull 初始化禁用", coinType)
+		return
+	}
 	firstBull := new(CoinBull)
 	err := utils.Orm.Where("coin_type=?", coinType).First(firstBull).Error
 	if err != nil {
@@ -114,6 +118,11 @@ func setFirstBull(coinType string) {
 }
 
 func setLastBullAJ(coinType string) {
+	if cointTypeInitTime[coinType] > int(time.Now().Unix()) {
+		log.Println("setLastBullAJ 初始化禁用", coinType)
+		return
+	}
+
 	lastAj := new(CoinBull)
 	err := utils.Orm.Order("timestamp desc").First(lastAj, "coin_type=? and is_ajust_point=?", coinType, 1).Error
 	if err != nil {
@@ -191,36 +200,42 @@ func getCoinType(itemType string, bullOrBear string) string {
 	return coinType
 }
 
-
+//1627005600 2021-07-23T02:00:00.000Z
 //1626825600 2021-07-21
-var cointTypeInitTime=map[string]int{
-	"mvi2x":0,
-	"btc3x":0,
-	"eth3x":0,
-	"vix3x":0,
-	"govt20x":0,
-	"gold10x":0,
-	"eur20x":0,
-	"ndx10x":0,
-	"mvi2s":1626825600,
-	"btc3s":1626825600,
-	"eth3s":1626825600,
-	"vix3s":1626825600,
-	"gold10s":1626825600,
-	"eur20s":1626825600,
-	"ndx10s":1626825600,
-	"govt20s":1626825600,
+var cointTypeInitTime = map[string]int{
+	"mvi2x":   0,
+	"btc3x":   0,
+	"eth3x":   0,
+	"vix3x":   0,
+	"govt20x": 0,
+	"gold10x": 0,
+	"eur20x":  0,
+	"ndx10x":  0,
+	"mvi2s":   1627005600,
+	"btc3s":   1627005600,
+	"eth3s":   1627005600,
+	"vix3s":   2626825600,
+	"gold10s": 2626825600,
+	"eur20s":  2626825600,
+	"ndx10s":  2626825600,
+	"govt20s": 2626825600,
 }
+
 //从twelvedata数据market_pirces表初始化　第一个bull
 func initCoinBullFromTw(itemType string, bullOrBear string) bool {
+	coinType := getCoinType(itemType, bullOrBear)
+	if cointTypeInitTime[coinType] > int(time.Now().Unix()) {
+		log.Println("初始化禁用", coinType)
+		return false
+	}
+
 	var err error
 	//utils.Orm.AutoMigrate(CoinBull{})
 	bullCount := int64(0)
-	coinType := getCoinType(itemType, bullOrBear)
 	utils.Orm.Model(CoinBull{}).Where("coin_type=?", coinType).Count(&bullCount)
 	if bullCount == 0 {
 		firstPrice := new(MarketPrice)
-		err = utils.Orm.Model(MarketPrice{}).Order("timestamp").Where("item_type=? and timestamp>=?", itemType,cointTypeInitTime[itemType]).First(firstPrice).Error
+		err = utils.Orm.Model(MarketPrice{}).Order("timestamp").Where("item_type=? and timestamp>=?", itemType, cointTypeInitTime[coinType]).First(firstPrice).Error
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -264,46 +279,46 @@ func SetAllBulls(coinType string) {
 //更新twelvedata数据源bull数据
 //initAll 有新标杆币时,使用initAll=false初始化新标杆币数据
 func SetAllBullsFromTw(initAll bool) {
-	ftxItmes:=[]string{}
-	utils.Orm.Model(MarketPrice{}).Where("item_type in (?)",ftxList).Distinct().Pluck("item_type",&ftxItmes)
-	if len(ftxItmes)==0{
+	ftxItmes := []string{}
+	utils.Orm.Model(MarketPrice{}).Where("item_type in (?)", ftxList).Distinct().Pluck("item_type", &ftxItmes)
+	if len(ftxItmes) == 0 {
 		log.Println("none ftxItmes")
 		return
 	}
 	for _, itemType := range ftxItmes {
-		ok:=initCoinBullFromTw(itemType, "bull")
+		ok := initCoinBullFromTw(itemType, "bull")
 		coin_type := getCoinType(itemType, "bull")
 		setFirstBull(coin_type)
 		setLastBullAJ(coin_type)
-		if ok && !initAll{ //非整表coinBull清空初始化时, 可初始化特定标杆币的历史数据
-			log.Println("初始化历史数据:",coin_type)
-			_,err:=SetBullsForTw(0,[]string{itemType},coin_type)
+		if ok && !initAll { //非整表coinBull清空初始化时, 可初始化特定标杆币的历史数据
+			log.Println("初始化历史数据:", coin_type)
+			_, err := SetBullsForTw(cointTypeInitTime[coin_type], []string{itemType}, coin_type)
 			if err != nil {
 				log.Fatalln(err)
 			}
 		}
 	}
 	for _, itemType := range ftxItmes {
-		ok:=initCoinBullFromTw(itemType, "bear")
+		ok := initCoinBullFromTw(itemType, "bear")
 		coin_type := getCoinType(itemType, "bear")
 		setFirstBull(coin_type)
 		setLastBullAJ(coin_type)
-		if ok && !initAll{ //非整表coinBull清空初始化时, 可初始化特定标杆币的历史数据
-			log.Println("初始化历史数据:",coin_type)
-			_,err:=SetBullsForTw(0,[]string{itemType},coin_type)
+		if ok && !initAll { //非整表coinBull清空初始化时, 可初始化特定标杆币的历史数据
+			log.Println("初始化历史数据:", coin_type)
+			_, err := SetBullsForTw(cointTypeInitTime[coin_type], []string{itemType}, coin_type)
 			if err != nil {
 				log.Fatalln(err)
 			}
 		}
 	}
 
-	log.Println("开始处理所有ftx",)
+	log.Println("开始处理所有ftx", )
 	lastStat := LastBullPriceID()
 	//lastStat,_=SetBullsForTw(lastStat)
 	//log.Println(lastStat)
 	//return
 	proc := func() error {
-		lastId, err := SetBullsForTw(lastStat,ftxItmes,"")
+		lastId, err := SetBullsForTw(lastStat, ftxItmes, "")
 		if err == nil {
 			lastStat = lastId
 		}
@@ -314,15 +329,15 @@ func SetAllBullsFromTw(initAll bool) {
 
 //生成杠杆币数据　twelvedata
 //specCoinType 用于指定初始化特定ftx;
-func SetBullsForTw(lastStat int,ftxList []string,specCoinType string) (int, error) {
+func SetBullsForTw(lastStat int, ftxList []string, specCoinType string) (int, error) {
 	//initCoinBull(coinType)
 	//setFirstBull(coinType)
 	//setLastBullAJ(coinType)
 	var err error
 	var rows *sql.Rows
-	if len(specCoinType)>0{//
+	if len(specCoinType) > 0 { //
 		rows, err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" timestamp>? and item_type in(?)", lastStat, ftxList).Rows()
-	}else{
+	} else {
 		rows, err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type in(?)", lastStat, ftxList).Rows()
 	}
 	if err != nil {
@@ -345,11 +360,11 @@ func SetBullsForTw(lastStat int,ftxList []string,specCoinType string) (int, erro
 		cbs := []*CoinBull{}
 		for _, bullOrBear := range []string{"bull", "bear"} {
 			coinType := getCoinType(coin.ItemType, bullOrBear)
-			if coin.Timestamp<cointTypeInitTime[coinType]{ //只处理coinType指定初始化时间以后的数据
+			if coin.Timestamp < cointTypeInitTime[coinType] { //只处理coinType指定初始化时间以后的数据
 				continue
 			}
-			if len(specCoinType)>0 && specCoinType!=coinType{//如果指定了specCoinType, 则只处理specCoinType指定标杆币
-				 continue
+			if len(specCoinType) > 0 && specCoinType != coinType { //如果指定了specCoinType, 则只处理specCoinType指定标杆币
+				continue
 			}
 			cb := new(CoinBull)
 			//coinType := coin.ItemType
