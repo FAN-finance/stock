@@ -58,9 +58,9 @@ var ftxAJInitValueMap = map[string]float64{
 	"eur20x":  244.66,
 	"ndx10x":  136488,
 	"govt20x": 5268,
-	"mvi2s": 112.0,
-	"btc3s": 98265.0,
-	"eth3s": 6205.8,
+	"mvi2s":   112.0,
+	"btc3s":   98265.0,
+	"eth3s":   6205.8,
 	//"mvi2s":1626825600,
 	//"btc3s":1626825600,
 	//"eth3s":1626825600,
@@ -214,7 +214,7 @@ var cointTypeInitTime = map[string]int{
 	"mvi2s":   1627005600,
 	"btc3s":   1627005600,
 	"eth3s":   1627005600,
-	"vix3s":   2626825600,
+	"vix3s":   3626825600,
 	"gold10s": 2626825600,
 	"eur20s":  2626825600,
 	"ndx10s":  2626825600,
@@ -312,7 +312,7 @@ func SetAllBullsFromTw(initAll bool) {
 		}
 	}
 
-	log.Println("开始处理所有ftx", )
+	log.Println("开始处理所有ftx")
 	lastStat := LastBullPriceID()
 	//lastStat,_=SetBullsForTw(lastStat)
 	//log.Println(lastStat)
