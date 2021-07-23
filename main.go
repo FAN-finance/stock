@@ -74,8 +74,8 @@ func main() {
 	//	//time.Sleep(time.Second*63)
 	//}
 	//return
-	services.SetAllBullsFromTw(false)
-	return
+	//services.SetAllBullsFromTw(false)
+	//return
 
 	if job {
 		//go services.GetStocks()
