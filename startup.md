@@ -97,8 +97,10 @@ http://62.234.169.68:8001/　换成　https://snode1.oss-cn-beijing.aliyuncs.com
 
 ```shell script
 #需要先关闭节点进程,
-#ssh 登陆数据库服务器后,执行以下命令,注意替换相应数据库账号,数据库名字.
-curl http://node1:8001/pub/db.sql.gz |gzip -d -c | mysql -u root -p  stock
+#ssh 登陆数据库服务器后,执行以下命令,注意替换相应数据库账号root和数据库名字stock.
+
+curl http://vnode/pub/db.sql.gz |gzip -d -c | mysql -u root -p  stock
+#需要80M数据下截,注意选择网速好点的服务器,提前测试下数据库账号db.sql.gz的下载速度,避免恢复数据超时中断出错. 
 
 #开启节点进程
 ```
