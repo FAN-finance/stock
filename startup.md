@@ -7,10 +7,23 @@
 - node0: 49.232.234.250
 为方便识别结点, 自己hosts文件里加上 node0 node1这样的ip 解析.
 
+国外节点
+gnode 34.94.44.103   #google
+mnode 52.250.67.202  #micrsoft
+vnode 45.76.76.192  # vultr
+anode 18.191.204.14  #aws
+
 ### oss list
 - https://snode0.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
 - https://snode1.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145
 - https://snode2.oss-cn-beijing.aliyuncs.com/pub/stock/aggre_info/AAPL/1620383145 
+
+国外节点
+- https://gnode.oss-us-west-1.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+- https://mnode.oss-us-west-1.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+- https://vnode1.oss-us-west-1.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+- https://anode1.oss-us-west-1.aliyuncs.com/pub/stock/aggre_info/AAPL/1/1620383144
+
 
 ### os system
 linux 系列即可．　在window系统上，下面的启动命令中的参数中的特殊字会有不兼容的处理方式，导致无法启动
