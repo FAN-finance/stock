@@ -9,8 +9,7 @@ FAN Oracle将给智能合约链外部可信的数据源。
 - 使用价格机，现有数据服务概览    
   - [数据源解释](dataSource.md)
   - [获取最新价格](price.md)          
-  - [获取历史数据，价格，交易量](historyData.md)  
-  - [使用数据绘制K线图表]      
+  - [获取历史数据，价格，交易量](historyData.md)    
   - [链下资产锚定合约的价格机]              
 - [安装部署，配置](startup.md)                    
 -  [接口使用](apis.md)  
