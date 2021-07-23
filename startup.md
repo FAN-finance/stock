@@ -15,13 +15,17 @@
 ### os system
 linux 系列即可．　在window系统上，下面的启动命令中的参数中的特殊字会有不兼容的处理方式，导致无法启动
 
+### 数据库
+mysql 5.7 5.5；
+下一步需要 db参数需要相应的账或是密码.
+
 ### startup 
 ```shell script
 
 git clone ...
 go build 
 
-./stock --db --port 8001 'root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true' --nodes=http://node0:8001,http://node1:8001,http://node2:8001 --infura 891eeaa3c7f945b880608e1cc9976284
+./stock --port 8001 --db  'root:password@tcp(localhost:3306)/stock?loc=Local&parseTime=true&multiStatements=true' --nodes=http://node0:8001,http://node1:8001,http://node2:8001 --infura 891eeaa3c7f945b880608e1cc9976284
 #infura 最后换成自己infura_proj_id；　infura的项目id,需要自行去https://infura.io申请
 #nodes参数指定, 其它节点列表
 #stock启动后，会另外启动一个线程，这个线程会在美股开盘时间，每隔１秒抓取苹果和特斯拉股价．
@@ -83,3 +87,18 @@ http://62.234.169.68:8001/docs/index.html
 http://62.234.169.68:8001/　换成　https://snode1.oss-cn-beijing.aliyuncs.com/　即可
 
 通过oss访问的目前限于价格签名类接口；其它如图表数据／any-api接口暂不使用oss访问，通过oss访问可能会有问题．
+
+
+### 初始化数据库(暂未实现)
+以上方式可以启动节点.但节点数据不完整,无法服务.
+
+这个需要从其它节点数据,初始化当前数据库.
+比如需要: ftx杠杆币历史数据；eth块/价格/时间戳对关关系数据；报表类接口需要的日期维度表；token供应量表；
+
+```shell script
+#需要先关闭节点进程,
+#ssh 登陆数据库服务器后,执行以下命令,注意替换相应数据库账号,数据库名字.
+curl http://node1:8001/pub/db.sql.gz |gzip -d -c | mysql -u root -p  stock
+
+#开启节点进程
+```
