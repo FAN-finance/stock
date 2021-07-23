@@ -74,8 +74,8 @@ func main() {
 	//	//time.Sleep(time.Second*63)
 	//}
 	//return
-	services.SetAllBullsFromTw(false)
-	return
+	//services.SetAllBullsFromTw(false)
+	//return
 
 	if job {
 		//go services.GetStocks()
@@ -90,20 +90,21 @@ func main() {
 			//services.SubPairlog(&tpc)
 		}()
 
-		//subcribe twelvedata data
-		go services.SubTwData()
+		////subcribe twelvedata data
+		//go services.SubTwData()
+		//
+		////更新twelvedata数据源bull数据
+		//go services.SetAllBullsFromTw(true)
+		//
+		////订阅coinmarketcap数据 Metaverse Index
+		//go services.SubCM()
 
-		//更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw(true)
+		// token totalSupply daily data
+		go services.TokenTotalSupplyDailyData()
 
 		//股票时间间隔价格统计
 		go services.SetStockStat()
 
-		//订阅coinmarketcap数据 Metaverse Index
-		go services.SubCM()
-
-		// token totalSupply daily data
-		go services.TokenTotalSupplyDailyData()
 	}
 
 	services.InitNodeKey()
