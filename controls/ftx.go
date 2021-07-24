@@ -90,7 +90,6 @@ func FtxPriceSignHandler(c *gin.Context) {
 			snode := new(services.HLPriceView)
 			json.Unmarshal(bs, snode)
 			snode.Node = nodeUrl
-
 			isMyData, _ := services.Verify(snode.GetHash(), snode.Sign, services.WalletAddre)
 			if isMyData {
 				//log.Println(myData,"124")
@@ -101,8 +100,10 @@ func FtxPriceSignHandler(c *gin.Context) {
 				resTokenView.DataType = dataType
 				resTokenView.Sign = snode.Sign
 			}
+
 			if isDisableSign{
 				snode.Sign=nil
+				resTokenView.Sign = nil
 			}
 			sc.Lock()
 			avgNodesPrice = append(avgNodesPrice, snode)
