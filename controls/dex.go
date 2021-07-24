@@ -155,7 +155,7 @@ func PairTokenPriceSignHandler(c *gin.Context) {
 	resTokenView.AvgSigns = avgNodesPrice
 	resTokenView.IsMarketOpening = resTokenView.Sign != nil
 	//resTokenView.Signs = nil
-	resTokenView.Sign = nil
+	//resTokenView.Sign = nil
 	c.JSON(200, resTokenView)
 	return
 
