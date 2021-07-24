@@ -520,7 +520,7 @@ type HLDataPriceView struct {
 	//最高最低价１最高　２最低价
 	DataType int
 	//Sign_Hash值由 Timestamp，DataType,Code,BigPrice
-	Sign     []byte         `json:",omitempty"`
+	Sign     []byte         `json:""`
 	Signs    []*HLPriceView `json:",omitempty"`
 	AvgSigns []*HLPriceView `json:",omitempty"`
 
