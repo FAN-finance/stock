@@ -47,7 +47,7 @@ insert into market_prices (item_type, price, timestamp, created_at)
             coins.id,
             now()
           from coins
-          where coins.id > 1627129140
+          where coins.id > unix_timestamp()-21
           order by coins.id
          )
          union all
@@ -57,17 +57,17 @@ insert into market_prices (item_type, price, timestamp, created_at)
             coins.id,
             now()
           from coins
-          where coins.id > 1627129140
+          where coins.id > unix_timestamp()-21
           order by coins.id
          )
        ) aa;`,
 			).Error;
 	return err }
-	err:=proc();
-	if err != nil {
-		log.Println(err)
-	}
-	//utils.IntervalSync("SubTwData", 20, proc)
+	//err:=proc();
+	//if err != nil {
+	//	log.Println(err)
+	//}
+	utils.IntervalSync("SyncCoinGeckoData", 20, proc)
 
 }
 //subcribe twelvedata data

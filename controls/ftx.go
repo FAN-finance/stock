@@ -10,7 +10,6 @@ import (
 	"stock/services"
 	"stock/utils"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -35,10 +34,10 @@ func FtxPriceSignHandler(c *gin.Context) {
 	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
-	isDisableSign:=false
-	if strings.HasPrefix(coin_type,"btc") ||strings.HasPrefix(coin_type,"eth"){
-		isDisableSign=true
-	}
+	//isDisableSign:=false
+	//if strings.HasPrefix(coin_type,"btc") ||strings.HasPrefix(coin_type,"eth"){
+	//	isDisableSign=true
+	//}
 
 	//ckey:=fmt.Sprintf("TokenPriceSignHandler-%s",code)
 	//var addres []*services.PriceView
@@ -101,10 +100,10 @@ func FtxPriceSignHandler(c *gin.Context) {
 				resTokenView.Sign = snode.Sign
 			}
 
-			if isDisableSign{
-				snode.Sign=nil
-				resTokenView.Sign = nil
-			}
+			//if isDisableSign{
+			//	snode.Sign=nil
+			//	resTokenView.Sign = nil
+			//}
 			sc.Lock()
 			avgNodesPrice = append(avgNodesPrice, snode)
 			sc.Unlock()

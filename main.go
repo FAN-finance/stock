@@ -79,7 +79,7 @@ func main() {
 
 	if job {
 		//sync coingecko数据
-		services.SyncCoinGeckoData()
+		go services.SyncCoinGeckoData()
 
 		//go services.GetStocks()
 		go services.SubEthPrice(0)
