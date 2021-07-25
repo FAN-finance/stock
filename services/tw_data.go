@@ -37,12 +37,14 @@ var twSymbolMap =map[string]string{
 func SyncCoinGeckoData() {
 	proc := func() error {
 		err:=utils.Orm.Exec(
-			`insert into market_prices (item_type, price, timestamp, created_at)
+			`
+insert into market_prices (item_type, price, timestamp, created_at)
   (
     (select
        'btc' as item_type,
        usd   as price,
-       coins.id
+       coins.id,
+      now()
      from coins
      where coins.id > 1627129140
      order by coins.id
@@ -51,7 +53,8 @@ func SyncCoinGeckoData() {
     (select
        'eth'     as item_type,
        usd / eth as price,
-       coins.id
+       coins.id,
+      now()
      from coins
      where coins.id > 1627129140
      order by coins.id
