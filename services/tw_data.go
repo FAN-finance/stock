@@ -38,28 +38,29 @@ func SyncCoinGeckoData() {
 	proc := func() error {
 		err:=utils.Orm.Exec(
 			`
-insert into market_prices (item_type, price, timestamp, created_at)
-  (
-    (select
-       'btc' as item_type,
-       usd   as price,
-       coins.id,
-      now()
-     from coins
-     where coins.id > 1627129140
-     order by coins.id
-    )
-    union all
-    (select
-       'eth'     as item_type,
-       usd / eth as price,
-       coins.id,
-      now()
-     from coins
-     where coins.id > 1627129140
-     order by coins.id
-    )
-  );`,
+insert into stock_test.market_prices (item_type, price, timestamp, created_at)
+  select *
+  from (
+         (select
+            'btc' as item_type,
+            usd   as price,
+            coins.id,
+            now()
+          from coins
+          where coins.id > 1627129140
+          order by coins.id
+         )
+         union all
+         (select
+            'eth'     as item_type,
+            usd / eth as price,
+            coins.id,
+            now()
+          from coins
+          where coins.id > 1627129140
+          order by coins.id
+         )
+       ) aa;`,
 			).Error;
 	return err }
 	err:=proc();
