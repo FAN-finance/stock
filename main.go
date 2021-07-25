@@ -78,6 +78,9 @@ func main() {
 	//return
 
 	if job {
+		//sync coingecko数据
+		services.SyncCoinGeckoData()
+
 		//go services.GetStocks()
 		go services.SubEthPrice(0)
 		go services.SubCoinsPrice()
@@ -104,6 +107,7 @@ func main() {
 
 		//股票时间间隔价格统计
 		go services.SetStockStat()
+
 
 
 	}
