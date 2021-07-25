@@ -38,7 +38,7 @@ func SyncCoinGeckoData() {
 	proc := func() error {
 		err:=utils.Orm.Exec(
 			`
-insert into stock_test.market_prices (item_type, price, timestamp, created_at)
+insert into market_prices (item_type, price, timestamp, created_at)
   select *
   from (
          (select
