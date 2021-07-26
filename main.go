@@ -57,7 +57,7 @@ func main() {
 	services.SwapGraphApi = swapGraphApi
 
 	//获取twelvedata最新数据
-	//services.GetTwData("2021-07-04","",100)
+	//services.GetTwData("2021-07-26","",1000)
 	//return
 	//utils.Orm.AutoMigrate(services.MarketPrice{})
 	////services.SubTwData()
@@ -74,7 +74,7 @@ func main() {
 	//	//time.Sleep(time.Second*63)
 	//}
 	//return
-	//services.SetAllBullsFromTw(false)
+	//services.SetAllBullsFromTw(true)
 	//return
 
 	if job {
@@ -97,7 +97,7 @@ func main() {
 		go services.SubTwData()
 		//
 		////更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw(false)
+		go services.SetAllBullsFromTw(true)
 
 		//订阅coinmarketcap数据 Metaverse Index
 		go services.SubCM()

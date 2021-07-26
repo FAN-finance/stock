@@ -263,7 +263,7 @@ END:
 type HLValuePair struct {
 	High float64
 	Low  float64
-	Avg float64
+	Avg  float64
 	Last float64
 }
 
@@ -558,7 +558,7 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.NodeAddress = services.WalletAddre
 
 		rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
-		if math.Abs(rate) > 0.3 {
+		if math.Abs(rate) > 0.001 {
 			log.Println("average is wrong ", rate, sdata.PriceUsd, currNode.PriceUsd)
 			c.JSON(200, sdata)
 			return
@@ -573,6 +573,7 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 				sdata.Sign = services.SignMsg(sdata.GetHash())
 			}
 		}
+		//sdata.Sign = nil
 		c.JSON(200, sdata)
 		return
 	}
