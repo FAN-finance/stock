@@ -50,10 +50,10 @@ var ftxMultipleMap = map[string]int{
 //ndx 10x：136488
 var ftxAJInitValueMap = map[string]float64{
 	"mvi2x": 99,
-	//"btc3x": 110054.79,
-	//"eth3x": 7900.56,
-	"btc3x": 102810.79,
-	"eth3x": 6411,
+	"btc3x": 110054.79,
+	"eth3x": 7900.56,
+	//"btc3x": 102810.79,
+	//"eth3x": 6411,
 	"vix3x": 53.7,
 	//"ust":  20,
 	"gold10x": 19022.8,
@@ -232,7 +232,7 @@ func initCoinBullFromTw(itemType string, bullOrBear string) bool {
 	}
 
 	var err error
-	//utils.Orm.AutoMigrate(CoinBull{})
+	utils.Orm.AutoMigrate(CoinBull{})
 	bullCount := int64(0)
 	utils.Orm.Model(CoinBull{}).Where("coin_type=?", coinType).Count(&bullCount)
 	if bullCount == 0 {
@@ -319,7 +319,7 @@ func SetAllBullsFromTw(initAll bool) {
 	log.Println("开始处理所有ftx")
 	lastStat := LastBullPriceID()
 
-	//lastStat:=1468544
+	//lastStat:=0
 	//lastStat,_=SetBullsForTw(lastStat,ftxItmes, "")
 	//log.Println(lastStat)
 	//return
@@ -343,10 +343,11 @@ func SetBullsForTw(lastStat int, ftxList []string, specCoinType string) (int, er
 	coins := []MarketPrice{}
 	idx_add := 0
 	proc := func(tx *gorm.DB, batch int) error {
+		cbs := []*CoinBull{}
 		for _, coin := range coins {
 			idx_add++
 			//log.Println(coin.ID,batch)
-			cbs := []*CoinBull{}
+
 			for _, bullOrBear := range []string{"bull", "bear"} {
 				coinType := getCoinType(coin.ItemType, bullOrBear)
 				if coin.Timestamp < cointTypeInitTime[coinType] { //只处理coinType指定初始化时间以后的数据
@@ -372,6 +373,8 @@ func SetBullsForTw(lastStat int, ftxList []string, specCoinType string) (int, er
 					//cb.Bull = CacuBearPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
 				}
 
+
+				cb.Timestamp = int64(coin.Timestamp)
 				// 每天14点，检测是否在过去24小时之内触发过调仓
 				//now := time.Now()
 				now := time.Unix(cb.Timestamp, 0)
@@ -389,7 +392,6 @@ func SetBullsForTw(lastStat int, ftxList []string, specCoinType string) (int, er
 				cb.TargetPriceOfCheckpoint = ftxCal.GetTargetPriceOfCheckpoint()
 				cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
 				cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
-				cb.Timestamp = int64(coin.Timestamp)
 				cb.CreatedAt = time.Now()
 				cb.Rebalance = LastBullAJ[coinType].Rebalance
 				cb.PriceID = int(coin.ID)
@@ -397,26 +399,28 @@ func SetBullsForTw(lastStat int, ftxList []string, specCoinType string) (int, er
 				//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
 
 				cb.Rebalance = ftxCal.GetLETFPriceOfCheckpoint()
-				if ftxCal.GetTargetPriceOfCheckpoint() != LastBullAJ[coinType].RawPrice {
+				if ftxCal.GetTargetPriceOfCheckpoint() != LastBullAJ[coinType].TargetPriceOfCheckpoint {
 					cb.IsAjustPoint = true
 					LastBullAJ[coinType] = cb
 				}
 
 				cbs = append(cbs, cb)
 			}
-			err := utils.Orm.CreateInBatches(cbs, 10).Error
-			if err != nil {
-				break
-			}
-			lastStat = int(coin.ID)
 		}
+		err := utils.Orm.CreateInBatches(cbs, 1000).Error
+		if err != nil {
+			//break
+			return err
+		}
+		//lastStat = int(coin.ID)
+		lastStat = int(cbs[len(cbs)-1].PriceID)
 		return nil
 	}
 	var err error
 	if len(specCoinType) > 0 { //
-		err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" timestamp>? and item_type in(?)", lastStat, ftxList).FindInBatches(&coins, 2, proc).Error
+		err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" timestamp>? and item_type in(?)", lastStat, ftxList).FindInBatches(&coins, 500, proc).Error
 	} else {
-		err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type in(?)", lastStat, ftxList).FindInBatches(&coins, 2, proc).Error
+		err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type in(?)", lastStat, ftxList).FindInBatches(&coins, 500, proc).Error
 	}
 	if err != nil {
 		log.Println("SetBullsForTw db err", err)

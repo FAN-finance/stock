@@ -57,7 +57,7 @@ func main() {
 	services.SwapGraphApi = swapGraphApi
 
 	//获取twelvedata最新数据
-	//services.GetTwData("2021-07-04","",100)
+	//services.GetTwData("2021-07-26 17:","",1000)
 	//return
 	//utils.Orm.AutoMigrate(services.MarketPrice{})
 	////services.SubTwData()
@@ -74,7 +74,7 @@ func main() {
 	//	//time.Sleep(time.Second*63)
 	//}
 	//return
-	//services.SetAllBullsFromTw(false)
+	//services.SetAllBullsFromTw(true)
 	//return
 
 	if job {
