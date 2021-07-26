@@ -88,7 +88,7 @@ func GetTwData(start_date ,end_date string ,limit int)error{
 	if !IsMarketTime(time.Now().Unix()-65) {
 		dataUrl = fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=xau/usd,eur/usd,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d", start_date, end_date, "21cad25580b74ba3a0a2ba9be29057bb", limit)
 	}
-	//dataUrl="https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=2021-07-26%2017:00:00&end_date=2021-07-27&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=5000"
+	//dataUrl="https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=2021-07-26%2019:00:00&end_date=2021-07-27&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=5000"
 	bs, err := utils.ReqResBody(dataUrl, "", "GET", nil, nil)
 	if err == nil {
 		//log.Println(string(bs))
