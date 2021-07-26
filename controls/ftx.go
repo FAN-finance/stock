@@ -20,7 +20,7 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,usd, btc3x, eth3x, vix3x, govt20x, gold10x, eur20x,ndx10x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
-// @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     data_type   path    int     true   "最高最低价１最高　２最低价 3平均价 4实时价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 //@Param     debug   query    int     false    "调试" default(0)
 // @Success 200 {object} services.HLDataPriceView	"token price info"
@@ -33,6 +33,11 @@ func FtxPriceSignHandler(c *gin.Context) {
 	timestamp, _ := strconv.Atoi(timestampstr)
 	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
+
+	//isDisableSign:=false
+	//if strings.HasPrefix(coin_type,"btc") ||strings.HasPrefix(coin_type,"eth"){
+	//	isDisableSign=true
+	//}
 
 	//ckey:=fmt.Sprintf("TokenPriceSignHandler-%s",code)
 	//var addres []*services.PriceView
@@ -84,7 +89,6 @@ func FtxPriceSignHandler(c *gin.Context) {
 			snode := new(services.HLPriceView)
 			json.Unmarshal(bs, snode)
 			snode.Node = nodeUrl
-
 			isMyData, _ := services.Verify(snode.GetHash(), snode.Sign, services.WalletAddre)
 			if isMyData {
 				//log.Println(myData,"124")
@@ -95,6 +99,11 @@ func FtxPriceSignHandler(c *gin.Context) {
 				resTokenView.DataType = dataType
 				resTokenView.Sign = snode.Sign
 			}
+
+			//if isDisableSign{
+			//	snode.Sign=nil
+			//	resTokenView.Sign = nil
+			//}
 			sc.Lock()
 			avgNodesPrice = append(avgNodesPrice, snode)
 			sc.Unlock()
@@ -143,8 +152,11 @@ END:
 
 var ftxAddres = map[string]string{
 	"mvi2x":   "0x6b5ab672ac243193b006ea819a5eb08bcd518de7",
+	"mvi2s":   "0xc7b86cc68c2b49f2609e9b5e12f0aa7be775bf1d",
 	"btc3x":   "0x5190144c70f024bbccf9b41690e4ce3ccac31a68",
+	"btc3s":   "0x66094a0624a4e8a8b9a7eff8dc0982706015340d",
 	"eth3x":   "0x247913d11957f3561d4a14166ec478c3c70a9297",
+	"eth3s":   "0xb1c1504c6f2646cad9ed291158b694723d38c394",
 	"vix3x":   "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
 	"govt20x": "0xab9016557b3fe80335415d60d33cf2be4b9ba461",
 	"gold10x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
@@ -160,7 +172,7 @@ var ftxAddres = map[string]string{
 // @Accept  json
 // @Produce  json
 // @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,usd, btc3x, eth3x, vix3x, gold10x, eur20x,ndx10x,govt20x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
-// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     data_type   query    int     true   "最高最低价１最高　２最低价 3平均价 4实时价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
@@ -187,17 +199,25 @@ func FtxPriceHandler(c *gin.Context) {
 		//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 		ckey := fmt.Sprintf("FtxPriceHandler-%s-%s-%d", coin_type, intreval, count)
 		proc := func() (interface{}, error) {
-			vp := new(HLValuePair)
+			lastPrice := 0.0
 			err := utils.Orm.Raw(
-				`SELECT max(bull) high,min(bull) low FROM coin_bull
+				`SELECT bull FROM coin_bull
+WHERE
+ coin_type=? order by  timestamp desc limit 1;`, coin_type).Scan(&lastPrice).Error
+			if err != nil {
+				return nil, err
+			}
+			vp := new(HLValuePair)
+			vp.Last=lastPrice
+			err = utils.Orm.Raw(
+				`SELECT max(bull) high,min(bull) low,avg(bull) avg FROM coin_bull
 WHERE
  timestamp >unix_timestamp()-3600 and coin_type=?;`, coin_type).Scan(vp).Error
 			if err == nil {
 				if vp.High == 0 {
-					err = utils.Orm.Raw(
-						`SELECT bull high,bull low FROM coin_bull
-WHERE
- coin_type=? order by  timestamp desc limit 1;`, coin_type).Scan(vp).Error
+					vp.High = lastPrice
+					vp.Low = lastPrice
+					vp.Avg = lastPrice
 				}
 			}
 			return vp, err
@@ -223,7 +243,7 @@ WHERE
 	//fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
 	//res.PriceUsd = fprice * price
 
-	log.Println(*vp)
+	log.Println("FtxPriceHandler vp",*vp)
 	tPriceView := new(services.HLPriceView)
 	tPriceView.Code = ftxAddres[coin_type]
 	//if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
@@ -236,6 +256,12 @@ WHERE
 	}
 	if dataType == 2 {
 		tPriceView.PriceUsd = vp.Low
+	}
+	if dataType == 3 {
+		tPriceView.PriceUsd = vp.Avg
+	}
+	if dataType == 4 {
+		tPriceView.PriceUsd = vp.Last
 	}
 
 	//tPriceView.PriceUsd =  math.Trunc(tPriceView.PriceUsd*1000) / 1000

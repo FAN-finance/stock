@@ -74,10 +74,13 @@ func main() {
 	//	//time.Sleep(time.Second*63)
 	//}
 	//return
-	services.SetAllBullsFromTw(false)
-	return
+	//services.SetAllBullsFromTw(false)
+	//return
 
 	if job {
+		//sync coingecko数据
+		//go services.SyncCoinGeckoData()
+
 		//go services.GetStocks()
 		go services.SubEthPrice(0)
 		go services.SubCoinsPrice()
@@ -90,20 +93,23 @@ func main() {
 			//services.SubPairlog(&tpc)
 		}()
 
-		//subcribe twelvedata data
+		////subcribe twelvedata data
 		go services.SubTwData()
-
-		//更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw(true)
-
-		//股票时间间隔价格统计
-		go services.SetStockStat()
+		//
+		////更新twelvedata数据源bull数据
+		go services.SetAllBullsFromTw(false)
 
 		//订阅coinmarketcap数据 Metaverse Index
 		go services.SubCM()
 
 		// token totalSupply daily data
 		go services.TokenTotalSupplyDailyData()
+
+		//股票时间间隔价格统计
+		go services.SetStockStat()
+
+
+
 	}
 
 	services.InitNodeKey()

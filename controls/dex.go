@@ -155,7 +155,7 @@ func PairTokenPriceSignHandler(c *gin.Context) {
 	resTokenView.AvgSigns = avgNodesPrice
 	resTokenView.IsMarketOpening = resTokenView.Sign != nil
 	//resTokenView.Signs = nil
-	resTokenView.Sign = nil
+	//resTokenView.Sign = nil
 	c.JSON(200, resTokenView)
 	return
 
@@ -263,6 +263,8 @@ END:
 type HLValuePair struct {
 	High float64
 	Low  float64
+	Avg float64
+	Last float64
 }
 
 // @Tags default
@@ -556,7 +558,7 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.NodeAddress = services.WalletAddre
 
 		rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
-		if math.Abs(rate) > 0.001 {
+		if math.Abs(rate) > 0.3 {
 			log.Println("average is wrong ", rate, sdata.PriceUsd, currNode.PriceUsd)
 			c.JSON(200, sdata)
 			return
