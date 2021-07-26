@@ -51,7 +51,7 @@ var ftxMultipleMap = map[string]int{
 var ftxAJInitValueMap = map[string]float64{
 	"mvi2x": 99,
 	"btc3x": 110054.79,
-	"eth3x": 1000,
+	"eth3x": 7900.56,
 	"vix3x": 53.7,
 	//"ust":  20,
 	"gold10x": 19022.8,
