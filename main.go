@@ -94,7 +94,7 @@ func main() {
 		}()
 
 		////subcribe twelvedata data
-		//go services.SubTwData()
+		go services.SubTwData()
 		//
 		////更新twelvedata数据源bull数据
 		//go services.SetAllBull以sFromTw(false)
