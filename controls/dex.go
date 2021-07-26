@@ -263,6 +263,8 @@ END:
 type HLValuePair struct {
 	High float64
 	Low  float64
+	Avg float64
+	Last float64
 }
 
 // @Tags default
