@@ -79,7 +79,7 @@ func main() {
 
 	if job {
 		//sync coingecko数据
-		go services.SyncCoinGeckoData()
+		//go services.SyncCoinGeckoData()
 
 		//go services.GetStocks()
 		go services.SubEthPrice(0)
@@ -93,11 +93,11 @@ func main() {
 			//services.SubPairlog(&tpc)
 		}()
 
-		//subcribe twelvedata data
-		go services.SubTwData()
-
-		//更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw(false)
+		////subcribe twelvedata data
+		//go services.SubTwData()
+		//
+		////更新twelvedata数据源bull数据
+		//go services.SetAllBull以sFromTw(false)
 
 		//订阅coinmarketcap数据 Metaverse Index
 		go services.SubCM()
