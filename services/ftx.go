@@ -1,8 +1,8 @@
 package services
 
 import (
-	"database/sql"
 	"fmt"
+	"gorm.io/gorm"
 	"log"
 	"math"
 	"regexp"
@@ -279,7 +279,8 @@ func SetAllBulls(coinType string) {
 //更新twelvedata数据源bull数据
 //initAll 有新标杆币时,使用initAll=false初始化新标杆币数据
 func SetAllBullsFromTw(initAll bool) {
-	ftxItmes := []string{}
+	ftxItmes := []string{""}
+	//ftxItmes = []string{"eth"}
 	utils.Orm.Model(MarketPrice{}).Where("item_type in (?)", ftxList).Distinct().Pluck("item_type", &ftxItmes)
 	if len(ftxItmes) == 0 {
 		log.Println("none ftxItmes")
@@ -314,9 +315,12 @@ func SetAllBullsFromTw(initAll bool) {
 
 	log.Println("开始处理所有ftx")
 	lastStat := LastBullPriceID()
-	//lastStat,_=SetBullsForTw(lastStat)
+
+	//lastStat:=1468544
+	//lastStat,_=SetBullsForTw(lastStat,ftxItmes, "")
 	//log.Println(lastStat)
 	//return
+
 	proc := func() error {
 		lastId, err := SetBullsForTw(lastStat, ftxItmes, "")
 		if err == nil {
@@ -333,95 +337,181 @@ func SetBullsForTw(lastStat int, ftxList []string, specCoinType string) (int, er
 	//initCoinBull(coinType)
 	//setFirstBull(coinType)
 	//setLastBullAJ(coinType)
-	var err error
-	var rows *sql.Rows
-	if len(specCoinType) > 0 { //
-		rows, err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" timestamp>? and item_type in(?)", lastStat, ftxList).Rows()
-	} else {
-		rows, err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type in(?)", lastStat, ftxList).Rows()
-	}
-	if err != nil {
-		log.Println(err)
-		return lastStat, err
-	}
-	defer rows.Close()
-	counter := 0
-	for rows.Next() {
-		counter++
-		if counter > 200 {
-			//return lastStat,nil
-		}
-		coin := new(MarketPrice)
-		err = utils.Orm.ScanRows(rows, coin)
-		if err != nil {
-			log.Println(err)
-			return lastStat, err
-		}
-		cbs := []*CoinBull{}
-		for _, bullOrBear := range []string{"bull", "bear"} {
-			coinType := getCoinType(coin.ItemType, bullOrBear)
-			if coin.Timestamp < cointTypeInitTime[coinType] { //只处理coinType指定初始化时间以后的数据
-				continue
-			}
-			if len(specCoinType) > 0 && specCoinType != coinType { //如果指定了specCoinType, 则只处理specCoinType指定标杆币
-				continue
-			}
-			cb := new(CoinBull)
-			//coinType := coin.ItemType
-			cb.CoinType = coinType
-
-			cb.RawPrice = coin.Price
-			if bullOrBear == "bull" {
-				cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
-			} else if bullOrBear == "bear" {
-				cb.Bull = CacuBearPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
-			}
-			cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
-			cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
-			cb.Timestamp = int64(coin.Timestamp)
-			cb.CreatedAt = time.Now()
-			cb.Rebalance = LastBullAJ[coinType].Rebalance
-			cb.PriceID = int(coin.ID)
-			//cb.ID = uint(coin.ID)
-			//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
-			ajChange := cb.RawChange
-
-			rate := getFtxXRate(coin.ItemType)
-			if math.Abs(ajChange) >= rate {
-				cb.IsAjustPoint = true
-				if ajChange > 0 {
-					if bullOrBear == "bull" {
-						cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
-					} else if bullOrBear == "bear" {
-						cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
-					}
-				} else {
-					if bullOrBear == "bull" {
-						cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
-					} else if bullOrBear == "bear" {
-						cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
-					}
+	coins := []MarketPrice{}
+	idx_add := 0
+	proc := func(tx *gorm.DB, batch int) error {
+		for _, coin := range coins {
+			idx_add++;
+			//log.Println(coin.ID,batch)
+			cbs := []*CoinBull{}
+			for _, bullOrBear := range []string{"bull", "bear"} {
+				coinType := getCoinType(coin.ItemType, bullOrBear)
+				if coin.Timestamp < cointTypeInitTime[coinType] { //只处理coinType指定初始化时间以后的数据
+					continue
 				}
-				LastBullAJ[coinType] = cb
-			}
-			// 每天14点，检测是否在过去24小时之内触发过调仓
-			//now := time.Now()
-			now := time.Unix(cb.Timestamp, 0)
-			if now.Hour() == 14 && now.Minute() < 20 {
-				ltime := time.Unix(LastBullAJ[coinType].Timestamp, 0)
-				lastRebalanceTime := ltime
-				if now.Sub(lastRebalanceTime).Hours() >= 24 {
+				if len(specCoinType) > 0 && specCoinType != coinType { //如果指定了specCoinType, 则只处理specCoinType指定标杆币
+					continue
+				}
+				cb := new(CoinBull)
+				//coinType := coin.ItemType
+				cb.CoinType = coinType
+
+				cb.RawPrice = coin.Price
+				if bullOrBear == "bull" {
+					cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
+				} else if bullOrBear == "bear" {
+					cb.Bull = CacuBearPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
+				}
+				cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
+				cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
+				cb.Timestamp = int64(coin.Timestamp)
+				cb.CreatedAt = time.Now()
+				cb.Rebalance = LastBullAJ[coinType].Rebalance
+				cb.PriceID = int(coin.ID)
+				//cb.ID = uint(coin.ID)
+				//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
+				ajChange := cb.RawChange
+
+				rate := getFtxXRate(coin.ItemType)
+				if math.Abs(ajChange) >= rate {
 					cb.IsAjustPoint = true
-					cb.Rebalance = cb.Bull
+					if ajChange > 0 {
+						if bullOrBear == "bull" {
+							cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
+						} else if bullOrBear == "bear" {
+							cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+						}
+					} else {
+						if bullOrBear == "bull" {
+							cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+						} else if bullOrBear == "bear" {
+							cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
+						}
+					}
 					LastBullAJ[coinType] = cb
 				}
+				// 每天14点，检测是否在过去24小时之内触发过调仓
+				//now := time.Now()
+				now := time.Unix(cb.Timestamp, 0)
+				if now.Hour() == 14 && now.Minute() < 20 {
+					ltime := time.Unix(LastBullAJ[coinType].Timestamp, 0)
+					lastRebalanceTime := ltime
+					if now.Sub(lastRebalanceTime).Hours() >= 24 {
+						cb.IsAjustPoint = true
+						cb.Rebalance = cb.Bull
+						LastBullAJ[coinType] = cb
+					}
+				}
+				cbs = append(cbs, cb)
 			}
-			cbs = append(cbs, cb)
+			err:= utils.Orm.CreateInBatches(cbs, 10).Error
+			if err != nil {
+				break
+			}
+			lastStat = int(coin.ID)
 		}
-		err = utils.Orm.CreateInBatches(cbs, 10).Error
-		lastStat = int(coin.ID)
+		return nil
 	}
-	return lastStat, err
+	var err error
+	if len(specCoinType) > 0 { //
+		 err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" timestamp>? and item_type in(?)", lastStat, ftxList).FindInBatches(&coins, 2, proc).Error
+	} else {
+		err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type in(?)", lastStat, ftxList).FindInBatches(&coins, 2, proc).Error
+	}
+	if err != nil {
+		log.Println("SetBullsForTw db err", err)
+	}
+	return lastStat,err
+
+	//
+	//var rows *sql.Rows
+	//if len(specCoinType) > 0 { //
+	//	rows, err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" timestamp>? and item_type in(?)", lastStat, ftxList).Rows()
+	//} else {
+	//	rows, err = utils.Orm.Model(MarketPrice{}).Order("id").Where(" id>? and item_type in(?)", lastStat, ftxList).Rows()
+	//}
+	//if err != nil {
+	//	log.Println(err)
+	//	return lastStat, err
+	//}
+	//defer rows.Close()
+	//counter := 0
+	//for rows.Next() {
+	//	counter++
+	//	if counter > 200 {
+	//		//return lastStat,nil
+	//	}
+	//	coin := new(MarketPrice)
+	//	err = utils.Orm.ScanRows(rows, coin)
+	//	if err != nil {
+	//		log.Println(err)
+	//		return lastStat, err
+	//	}
+	//	cbs := []*CoinBull{}
+	//	for _, bullOrBear := range []string{"bull", "bear"} {
+	//		coinType := getCoinType(coin.ItemType, bullOrBear)
+	//		if coin.Timestamp < cointTypeInitTime[coinType] { //只处理coinType指定初始化时间以后的数据
+	//			continue
+	//		}
+	//		if len(specCoinType) > 0 && specCoinType != coinType { //如果指定了specCoinType, 则只处理specCoinType指定标杆币
+	//			continue
+	//		}
+	//		cb := new(CoinBull)
+	//		//coinType := coin.ItemType
+	//		cb.CoinType = coinType
+	//
+	//		cb.RawPrice = coin.Price
+	//		if bullOrBear == "bull" {
+	//			cb.Bull = CacuBullPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
+	//		} else if bullOrBear == "bear" {
+	//			cb.Bull = CacuBearPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
+	//		}
+	//		cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
+	//		cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
+	//		cb.Timestamp = int64(coin.Timestamp)
+	//		cb.CreatedAt = time.Now()
+	//		cb.Rebalance = LastBullAJ[coinType].Rebalance
+	//		cb.PriceID = int(coin.ID)
+	//		//cb.ID = uint(coin.ID)
+	//		//|| cb.Timestamp.Sub(cb.Timestamp.Truncate(24*time.Hour).Add(2*time.Minute)).Seconds() < 25
+	//		ajChange := cb.RawChange
+	//
+	//		rate := getFtxXRate(coin.ItemType)
+	//		if math.Abs(ajChange) >= rate {
+	//			cb.IsAjustPoint = true
+	//			if ajChange > 0 {
+	//				if bullOrBear == "bull" {
+	//					cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
+	//				} else if bullOrBear == "bear" {
+	//					cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+	//				}
+	//			} else {
+	//				if bullOrBear == "bull" {
+	//					cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 - rate/100.0)
+	//				} else if bullOrBear == "bear" {
+	//					cb.Rebalance = LastBullAJ[coinType].Rebalance * (1 + rate/100.0)
+	//				}
+	//			}
+	//			LastBullAJ[coinType] = cb
+	//		}
+	//		// 每天14点，检测是否在过去24小时之内触发过调仓
+	//		//now := time.Now()
+	//		now := time.Unix(cb.Timestamp, 0)
+	//		if now.Hour() == 14 && now.Minute() < 20 {
+	//			ltime := time.Unix(LastBullAJ[coinType].Timestamp, 0)
+	//			lastRebalanceTime := ltime
+	//			if now.Sub(lastRebalanceTime).Hours() >= 24 {
+	//				cb.IsAjustPoint = true
+	//				cb.Rebalance = cb.Bull
+	//				LastBullAJ[coinType] = cb
+	//			}
+	//		}
+	//		cbs = append(cbs, cb)
+	//	}
+	//	err = utils.Orm.CreateInBatches(cbs, 10).Error
+	//	lastStat = int(coin.ID)
+	//}
+	//return lastStat, err
 }
 
 //生成杠杆币数据　only for coin from coingecko
