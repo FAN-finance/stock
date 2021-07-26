@@ -97,7 +97,7 @@ func main() {
 		go services.SubTwData()
 		//
 		////更新twelvedata数据源bull数据
-		//go services.SetAllBull以sFromTw(false)
+		go services.SetAllBullsFromTw(false)
 
 		//订阅coinmarketcap数据 Metaverse Index
 		go services.SubCM()
