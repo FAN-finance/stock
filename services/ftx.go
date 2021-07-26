@@ -372,7 +372,8 @@ func SetBullsForTw(lastStat int, ftxList []string, specCoinType string) (int, er
 					//cb.Bull = CacuBearPrice(LastBullAJ[coinType].Rebalance, LastBullAJ[coinType].RawPrice, cb.RawPrice, coin.ItemType)
 				}
 
-				cb.Bull = ftxCal.FeedPrice(coin.Price)
+				cb.Timestamp = int64(coin.Timestamp)
+
 				// 每天14点，检测是否在过去24小时之内触发过调仓
 				//now := time.Now()
 				now := time.Unix(cb.Timestamp, 0)
@@ -385,11 +386,10 @@ func SetBullsForTw(lastStat int, ftxList []string, specCoinType string) (int, er
 						ftxCal.Rebalance(coin.Price)
 					}
 				}
-
+				cb.Bull = ftxCal.FeedPrice(coin.Price)
 				cb.TargetPriceOfCheckpoint = ftxCal.GetTargetPriceOfCheckpoint()
 				cb.RawChange = RoundPercentageChange(LastBullAJ[coinType].RawPrice, cb.RawPrice, 1)
 				cb.BullChange = RoundPercentageChange(FirstBull[coinType].Bull, cb.Bull, 1)
-				cb.Timestamp = int64(coin.Timestamp)
 				cb.CreatedAt = time.Now()
 				cb.Rebalance = LastBullAJ[coinType].Rebalance
 				cb.PriceID = int(coin.ID)
