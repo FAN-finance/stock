@@ -177,6 +177,7 @@ func main() {
 	api.GET("/dex/pair/token_chart_prices/:pair/:token/:count/:interval/:timestamp", controls.PairTokenDayPricesHandler)
 
 	api.GET("/dex/token/token_chart_supply/:token/:amount/:timestamp", controls.TokenChartSupplyHandler)
+	api.GET("/ok", controls.OkHandler)
 
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
