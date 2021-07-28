@@ -14,7 +14,7 @@ func BtcSignCheckHandler(c *gin.Context) {
 		ErrJson(c,err.Error())
 		return
 	}
-	res.Sign=nil
+	//res.Sign=nil
 	if res.Sign==nil{
 		time.Sleep(3*time.Second)
 		c.JSON(200,"BtcSignCheck err")
