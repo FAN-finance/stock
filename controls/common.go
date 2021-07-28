@@ -66,6 +66,10 @@ func  Stat() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//key:=c.Request.URL.Path
 		key:=c.FullPath()
+		_,ok:=services.StatPath2IDMap[key]
+		if !ok{
+			key="other"
+		}
 		counter,_:=ReqStatMap.LoadOrStore(key,0)
 		ReqStatMap.Store(key,counter.(int)+1)
 		log.Println("req ",key,counter)

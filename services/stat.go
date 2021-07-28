@@ -3,6 +3,7 @@ package services
 import "stock/utils"
 
 var StatPathMap = map[string]string{
+	"other":"其它",
 	"/pub/coin_price/:coin/:vs_coin/:timestamp":                                 "获取币价换算，多节点签名版",
 	"/pub/dex/ftx_chart_prices/:coin_type/:count/:interval/:timestamp":          "获取杠杆btc代币不同时间区间的价格图表信息",
 	"/pub/dex/ftx_price/:coin_type/:data_type/:timestamp":                       "获取ftx token价格信息",
@@ -68,6 +69,7 @@ var StatID2PathMap = map[int]string{ }
 var StatID2ResMap = map[int]string{ }
 
 func init(){
+	StatPath2IDMap["other"]=100
 	for key, value := range StatPath2IDMap {
 		StatID2PathMap[value]=key
 		StatID2ResMap[value]=StatPathMap[key]
