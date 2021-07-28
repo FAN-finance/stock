@@ -125,5 +125,5 @@ func SaveStat(){
 		}
 		return nil
 	}
-	utils.IntervalSync("saveStat",10,proc)
+	utils.IntervalSync("saveStat",600,proc)
 }
