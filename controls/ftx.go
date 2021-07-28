@@ -34,6 +34,13 @@ func FtxPriceSignHandler(c *gin.Context) {
 	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
+	res,err:=ftxPriceSignHandler(coin_type,dataType,timestamp)
+	if err != nil {
+		ErrJson(c, err.Error())
+	}
+	c.JSON(200, res)
+}
+func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView *services.HLDataPriceView,err error){
 	//isDisableSign:=false
 	//if strings.HasPrefix(coin_type,"btc") ||strings.HasPrefix(coin_type,"eth"){
 	//	isDisableSign=true
@@ -43,8 +50,7 @@ func FtxPriceSignHandler(c *gin.Context) {
 	//var addres []*services.PriceView
 	//proc:= func()(interface{},error) {}
 	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
-
-	resTokenView := new(services.HLDataPriceView)
+	resTokenView = new(services.HLDataPriceView)
 	avgNodesPrice := []*services.HLPriceView{}
 	sc := sync.RWMutex{}
 	wg := new(sync.WaitGroup)
@@ -69,17 +75,17 @@ func FtxPriceSignHandler(c *gin.Context) {
 		go porcNode(nurl)
 	}
 	wg.Wait()
-	var err error
+	//var err error
 
 	if len(resTokenView.Signs) == 0 {
 		err = errors.New("数据不可用")
-		goto END
+		return
+
 	}
 	if len(resTokenView.Signs) < len(utils.Nodes)/2+1 {
 		err = errors.New("节点不够用")
-		goto END
+		return
 	}
-
 	porcNode = func(nodeUrl string) {
 		defer wg.Done()
 		reqUrl := fmt.Sprintf(nodeUrl + "/pub/internal/token_avgprice")
@@ -116,11 +122,11 @@ func FtxPriceSignHandler(c *gin.Context) {
 	wg.Wait()
 	if len(avgNodesPrice) == 0 {
 		err = errors.New("数据不可用")
-		goto END
+		return
 	}
 	if len(avgNodesPrice) < len(utils.Nodes)/2+1 {
 		err = errors.New("节点不够用")
-		goto END
+		return
 	}
 	resTokenView.AvgSigns = avgNodesPrice
 
@@ -142,12 +148,12 @@ func FtxPriceSignHandler(c *gin.Context) {
 			resTokenView.MarketOpenTime = ts
 		}
 	}
-	c.JSON(200, resTokenView)
+	//c.JSON(200, resTokenView)
 	return
-END:
-	if err == nil {
-		ErrJson(c, err.Error())
-	}
+//END:
+//	if err != nil {
+//		ErrJson(c, err.Error())
+//	}
 }
 
 var ftxAddres = map[string]string{

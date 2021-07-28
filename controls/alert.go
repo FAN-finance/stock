@@ -8,7 +8,21 @@ import (
 	"time"
 )
 
-func CoinDataHandler(c *gin.Context) {
+func BtcSignCheckHandler(c *gin.Context) {
+	res,err:=ftxPriceSignHandler("btc3x",1,238299929)
+	if err != nil {
+		ErrJson(c,err.Error())
+		return
+	}
+	res.Sign=nil
+	if res.Sign==nil{
+		time.Sleep(3*time.Second)
+		c.JSON(200,"BtcSignCheck err")
+		return
+	}
+	c.JSON(200,"BtcSignCheck ok")
+}
+func CoinDataCheckHandler(c *gin.Context) {
 	d,_:=strconv.Atoi(c.Query("d"))
 	if d==0{
 		d=300
