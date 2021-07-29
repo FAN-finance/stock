@@ -20,7 +20,7 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,usd, btc3x, eth3x, vix3x, govt20x, gold10x, eur20x,ndx10x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
-// @Param     data_type   path    int     true   "最高最低价１最高　２最低价 3平均价 4实时价" default(1) Enums(1,2,3,4)
+// @Param     data_type   path    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 //@Param     debug   query    int     false    "调试" default(0)
 // @Success 200 {object} services.HLDataPriceView	"token price info"
@@ -37,6 +37,7 @@ func FtxPriceSignHandler(c *gin.Context) {
 	res,err:=ftxPriceSignHandler(coin_type,dataType,timestamp)
 	if err != nil {
 		ErrJson(c, err.Error())
+		return
 	}
 	c.JSON(200, res)
 }
@@ -178,7 +179,7 @@ var ftxAddres = map[string]string{
 // @Accept  json
 // @Produce  json
 // @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,usd, btc3x, eth3x, vix3x, gold10x, eur20x,ndx10x,govt20x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
-// @Param     data_type   query    int     true   "最高最低价１最高　２最低价 3平均价 4实时价" default(1) Enums(1,2,3,4)
+// @Param     data_type   query    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
@@ -197,6 +198,8 @@ func FtxPriceHandler(c *gin.Context) {
 	if coin_type == "usd" {
 		vp.High = 1
 		vp.Low = 1
+		vp.Avg = 1
+		vp.Last = 1
 	} else {
 		intreval := "60s"
 		count := 60
