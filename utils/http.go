@@ -21,7 +21,7 @@ func GetUa()string{
 func ReqResBody(url,ref, method string, header http.Header, bodyBs []byte) (bs []byte, err error) {
 	resp, err1 := ReqRes(url,ref, method, header, bodyBs)
 	err = err1
-	if err == nil {
+	if err == nil && resp!=nil {
 		bs, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			err = errors.New(err.Error() + " " + string(bs))
@@ -53,16 +53,15 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 		resp, err = hclient.Do(request)
 		err = err1
 		if err == nil {
-			//bs, err = ioutil.ReadAll(res.Body)
 			if resp == nil {
+				log.Println("retry resp nil")
 				retry += 1
-				if retry < 5 {
-					log.Println("retry resp nil")
+				if retry < 2 {
 					time.Sleep(time.Millisecond * 100)
 					goto RETRY
 				}
 				err = errors.New("err resp nil")
-				log.Println("ReqRes", err)
+				log.Println("ReqRes", err.Error(),url)
 			} else if resp.StatusCode != 200 && resp.StatusCode != 206 {
 				err = errors.New("err status:" + resp.Status)
 			}
@@ -75,6 +74,7 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 		if err != nil {
 			retry += 1
 			if retry < retryMax && method != "HEAD" {
+				time.Sleep(time.Millisecond * 100)
 				goto RETRY
 			}
 		}

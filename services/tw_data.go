@@ -74,8 +74,16 @@ insert into market_prices (item_type, price, timestamp, created_at)
 func SubTwData(){
 	//GetTwData("","",10)
 	//return
+	//抓取失败次数:每失败一次,下次抓取相的就多抓取一行数据.
+	fails:=0
 	proc:=func()error{
-		return GetTwData("","",10)
+		err:=GetTwData("","",10+fails)
+		if err != nil {
+			fails+=1
+		}else{
+			fails=0
+		}
+		return err
 	}
 	utils.IntervalSync("SubTwData", 60, proc)
 }

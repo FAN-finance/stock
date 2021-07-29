@@ -72,7 +72,7 @@ func  Stat() gin.HandlerFunc {
 		}
 		counter,_:=ReqStatMap.LoadOrStore(key,0)
 		ReqStatMap.Store(key,counter.(int)+1)
-		log.Println("req ",key,counter)
+		//log.Println("req ",key,counter)
 	}
 }
 type ApiStat struct {
