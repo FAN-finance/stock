@@ -280,7 +280,7 @@ func GetTokenTotalSupply(token string) float64 {
 			res, err := contract.TotalSupply(nil)
 			if err == nil {
 				currTotalSupply, _ := decimal.NewFromString(res.String())
-				temp, _ := decimal.NewFromString("100000000000000000")
+				temp, _ := decimal.NewFromString("1000000000000000000")
 				currTotalSupply = currTotalSupply.Div(temp)
 				totalSupply, _ := currTotalSupply.Float64()
 				return totalSupply
