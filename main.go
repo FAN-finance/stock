@@ -76,7 +76,6 @@ func main() {
 	//return
 	//services.SetAllBullsFromTw(true)
 	//return
-
 	if job {
 		//sync coingecko数据
 		//go services.SyncCoinGeckoData()
@@ -94,10 +93,14 @@ func main() {
 		}()
 
 		////subcribe twelvedata data
-		go services.SubTwData()
+		//go services.SubTwData()
 		//
 		////更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw(true)
+		//go services.SetAllBullsFromTw(true)
+
+		services.SetAllBullsFromTw(true)
+		services.CronTwData()
+		services.Cn.Start()
 
 		//订阅coinmarketcap数据 Metaverse Index
 		go services.SubCM()
