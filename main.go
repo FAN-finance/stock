@@ -108,8 +108,6 @@ func main() {
 		//股票时间间隔价格统计
 		go services.SetStockStat()
 
-
-
 	}
 
 	services.InitNodeKey()
@@ -177,6 +175,7 @@ func main() {
 	api.GET("/dex/pair/token_chart_prices/:pair/:token/:count/:interval/:timestamp", controls.PairTokenDayPricesHandler)
 
 	api.GET("/dex/token/token_chart_supply/:token/:amount/:timestamp", controls.TokenChartSupplyHandler)
+	api.GET("/dex/token/token_total_supply/:token/:timestamp", controls.GetTokenSupplyHandler)
 	api.GET("/alert/ok", controls.OkHandler)
 	api.GET("/alert/coindata", controls.CoinDataCheckHandler)
 	api.GET("/alert/btc_sign_check", controls.BtcSignCheckHandler)

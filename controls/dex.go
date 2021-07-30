@@ -945,3 +945,24 @@ func TokenChartSupplyHandler(c *gin.Context) {
 		ErrJson(c, "empty data")
 	}
 }
+
+// @Tags Token
+// @Summary　获取某个token的totalSupply的变化量
+// @Description token totalSupply
+// @ID GetTokenSupplyHandler
+// @Accept  json
+// @Produce  json
+// @Param     token   path    string     true        "token" default(0x011864d37035439e078d64630777ec518138af05)
+// @Param     timestamp   path    int     false      "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
+// @Success 200 {object} services.TokenTotalSupply	"totalSupply"
+// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/dex/token/token_total_supply/{token}/{timestamp} [get]
+func GetTokenSupplyHandler(c *gin.Context) {
+	token := c.Param("token")
+	if token == "" {
+		ErrJson(c, "wrong token address")
+		return
+	}
+	res := services.GetTokenTotalSupply(token)
+	c.JSON(200, res)
+}
