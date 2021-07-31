@@ -98,10 +98,10 @@ var Cn = cron.New(cron.WithSeconds(),
 	))
 
 func CronTwData() {
-	fails := 0
+	fails := 15
 	proc := func() error {
 		log.Println("fails", fails)
-		err := GetTwData("", "", 1+fails)
+		err := GetTwData("", "", 2+fails)
 		if err != nil {
 			fails += 1
 		} else {
