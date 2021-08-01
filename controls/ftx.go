@@ -41,6 +41,7 @@ func FtxPriceSignHandler(c *gin.Context) {
 	}
 	c.JSON(200, res)
 }
+var IsDisableFtxSign=true
 func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView *services.HLDataPriceView,err error){
 	//isDisableSign:=false
 	//if strings.HasPrefix(coin_type,"btc") ||strings.HasPrefix(coin_type,"eth"){
@@ -107,10 +108,10 @@ func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView 
 				resTokenView.Sign = snode.Sign
 			}
 
-			//if isDisableSign{
-			//	snode.Sign=nil
-			//	resTokenView.Sign = nil
-			//}
+			if IsDisableFtxSign{
+				snode.Sign=nil
+				resTokenView.Sign = nil
+			}
 			sc.Lock()
 			avgNodesPrice = append(avgNodesPrice, snode)
 			sc.Unlock()

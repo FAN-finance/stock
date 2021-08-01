@@ -573,7 +573,7 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 				sdata.Sign = services.SignMsg(sdata.GetHash())
 			}
 		}
-		sdata.Sign = nil
+		//sdata.Sign = nil
 		c.JSON(200, sdata)
 		return
 	}
