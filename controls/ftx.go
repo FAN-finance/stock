@@ -34,15 +34,17 @@ func FtxPriceSignHandler(c *gin.Context) {
 	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
-	res,err:=ftxPriceSignHandler(coin_type,dataType,timestamp)
+	res, err := ftxPriceSignHandler(coin_type, dataType, timestamp)
 	if err != nil {
 		ErrJson(c, err.Error())
 		return
 	}
 	c.JSON(200, res)
 }
-var IsDisableFtxSign=true
-func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView *services.HLDataPriceView,err error){
+
+var IsDisableFtxSign = false
+
+func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenView *services.HLDataPriceView, err error) {
 	//isDisableSign:=false
 	//if strings.HasPrefix(coin_type,"btc") ||strings.HasPrefix(coin_type,"eth"){
 	//	isDisableSign=true
@@ -108,8 +110,8 @@ func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView 
 				resTokenView.Sign = snode.Sign
 			}
 
-			if IsDisableFtxSign{
-				snode.Sign=nil
+			if IsDisableFtxSign {
+				snode.Sign = nil
 				resTokenView.Sign = nil
 			}
 			sc.Lock()
@@ -152,10 +154,10 @@ func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView 
 	}
 	//c.JSON(200, resTokenView)
 	return
-//END:
-//	if err != nil {
-//		ErrJson(c, err.Error())
-//	}
+	//END:
+	//	if err != nil {
+	//		ErrJson(c, err.Error())
+	//	}
 }
 
 var ftxAddres = map[string]string{
@@ -218,7 +220,7 @@ WHERE
 				return nil, err
 			}
 			vp := new(HLValuePair)
-			vp.Last=lastPrice
+			vp.Last = lastPrice
 			err = utils.Orm.Raw(
 				`SELECT max(bull) high,min(bull) low,avg(bull) avg FROM coin_bull
 WHERE
@@ -253,7 +255,7 @@ WHERE
 	//fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
 	//res.PriceUsd = fprice * price
 
-	log.Println("FtxPriceHandler vp",*vp)
+	log.Println("FtxPriceHandler vp", *vp)
 	tPriceView := new(services.HLPriceView)
 	tPriceView.Code = ftxAddres[coin_type]
 	//if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
