@@ -1,4 +1,5 @@
 ## 数据源
+
 ###　thegraph　
 著名的uniswap，以太坊数据，查询使用的就是thegraph平台．
 
@@ -10,6 +11,7 @@ Graph 是一种用于查询**以太坊**和 IPFS 等网络的索引协议。任�
 
 这个数据源用于　
 - uniswap交易所的token报价
+
 ###　twelvedata
 官方站点　https://twelvedata.com/pricing
 知名价格数据站点，提供股票，加密货币时实报价；我们已经购买期专业版报务；
@@ -17,6 +19,7 @@ Graph 是一种用于查询**以太坊**和 IPFS 等网络的索引协议。任�
    这个数据源用于   
 - 美股报价
 - ftx杠杆币模拟报价
+
 ###　coingecko
 官方站点　https://www.coingecko.com/
 

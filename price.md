@@ -4,8 +4,7 @@
 
 #### 价格类型列表
 最新价格有以下３种价格类型列.
-1.  [美股报价](stock.md)　：如苹果代码 AAPL；特斯拉代码 TSLA
-
+1.  [美股报价](stock.md)　：如苹果代码 AAPL,特斯拉代码 TSLA ;
 可报价的股票代码，可从这里查询https://twelvedata.com/docs#symbol-search
 
 1.  [uniswap交易所的token报价]
