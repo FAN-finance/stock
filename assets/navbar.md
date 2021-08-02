@@ -1,1 +1,1 @@
-
+<a target="github" href="https://github.com/FAN-finance/stock">GitHub</a>
