@@ -414,7 +414,7 @@ func TokenPriceHandler(c *gin.Context) {
 func PairTokenPriceHandler(c *gin.Context) {
 	dataProc := func(pair, token string) (interface{}, error) {
 		count := 120
-		intreval := strconv.Itoa(count) + "s"
+		intreval := "60s"
 		items, err := services.GetTokenTimesPriceFromPair(pair, token, intreval, count)
 		if err != nil {
 			return nil, err

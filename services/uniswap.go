@@ -65,8 +65,6 @@ func getTokenTimes(interval string, count int) []int64 {
 	switch interval {
 	case "60s":
 		span = time.Second * 60
-	case "120s":
-		span = time.Second * 60
 	case "15minite":
 		span = time.Minute * 15
 	case "hour":
