@@ -1,5 +1,5 @@
  ### 获取币价换算　
-/pub/coin_price/{coin}/{vs_coin}
+/pub/coin_price/{coin}/{vs_coin}/{timestamp}
 
 详见swag 文件档：
 http://62.234.169.68:8001/docs/index.html
@@ -40,7 +40,7 @@ response body:
 }
 ```
 
-对应的**solidity**hash字段拼接顺序为 Timestamp Coin VsCoin BigPrice ：
+价格签名对应的**solidity**hash字段拼接顺序为 Timestamp Coin VsCoin BigPrice ：
 ```js
  prefixedHash=keccak256(abi.encodePacked(Timestamp,Coin,VsCoin,BigPrice)).toEthSignedMessageHash()
  prefixedHash.recover(sign)

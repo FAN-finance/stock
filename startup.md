@@ -1,3 +1,5 @@
+# 节点安装部署
+
 ### 节点eth钱包
 启动时,会自动创建 asset/pkey 私钥文件；应用接口 /pub/stock/node_wallets,会反返回所有节点的钱包地址
 
@@ -35,7 +37,7 @@ linux 系列即可．　在window系统上，下面的启动命令中的参数�
 
 下一步需要 db参数需要相应的账或是密码.
 
-### startup 
+### 启动 
 ```shell script
 
 git clone ...
@@ -48,7 +50,7 @@ go build
 
 #stock启动后,会在8001端口，响应获取股价的http请求．
 #例如获取苹果这个时间点1620383144的股价
-curl -X GET "http://62.234.169.68:8001/pub/stock/aggre_info/AAPL/1620383145" -H "accept: application/json"
+curl -X GET "http://62.234.169.68:8001/pub/stock/aggre_info/AAPL/1/1620383145" -H "accept: application/json"
 Response body:
 {
   "Code": "AAPL",
@@ -78,7 +80,7 @@ Response body:
 
 
 ```
-### startup args
+### 启动 args
 ```shell script
 ./stock -h
 Usage of /tmp/go-build868767577/b001/exe/main:
@@ -105,8 +107,8 @@ http://62.234.169.68:8001/　换成　https://snode1.oss-cn-beijing.aliyuncs.com
 通过oss访问的目前限于价格签名类接口；其它如图表数据／any-api接口暂不使用oss访问，通过oss访问可能会有问题．
 
 
-### 初始化数据库(很快会实现)
-以上方式可以启动节点.但节点数据不完整,无法服务.
+### 初始化数据库
+以上方式可以启动节点.但节点数据不完整,无法提供完整服务.
 
 这个需要从其它节点数据,初始化当前数据库.
 比如需要: ftx杠杆币历史数据；eth块/价格/时间戳对关系数据；报表类接口需要的日期维度表；token供应量表；

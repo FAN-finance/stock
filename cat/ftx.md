@@ -1,3 +1,20 @@
+### api 列表
+|api-path|api名字|类别|
+|--|----------------|----------------|
+|"/pub/dex/ftx_chart_prices/:coin_type/:count/:interval/:timestamp"|          "获取杠杆btc代币不同时间区间的价格图表信息" |ftx杠杆代币|
+|"/pub/dex/ftx_price/:coin_type/:data_type/:timestamp"|                       "获取ftx token价格信息"         |ftx杠杆代币|
+
+价格签名对应的**solidity**hash验签recover：
+```js
+    struct Object {
+        address token;
+        uint256 price;
+        uint256 timestamp;
+    }
+prefixedHash=keccak256(abi.encode(Object)).toEthSignedMessageHash()
+prefixedHash.recover(sign)
+```
+
 ##  概念
 ftx杠杆币是，随某种主流币种价格，以相应的倍数涨跌的币.
 
