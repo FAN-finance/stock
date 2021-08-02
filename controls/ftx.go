@@ -190,6 +190,10 @@ var ftxAddres = map[string]string{
 // @Router /pub/internal/dex/ftx_price/{coin_type}/{timestamp} [get]
 func FtxPriceHandler(c *gin.Context) {
 	coin_type := c.Param("coin_type")
+	duration := 7200
+	if isStockFtx(coin_type) {
+		duration = 3600
+	}
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
 	dataTypeStr := c.Query("data_type")
@@ -224,7 +228,7 @@ WHERE
 			err = utils.Orm.Raw(
 				`SELECT max(bull) high,min(bull) low,avg(bull) avg FROM coin_bull
 WHERE
- timestamp >unix_timestamp()-3600 and coin_type=?;`, coin_type).Scan(vp).Error
+ timestamp >unix_timestamp()-? and coin_type=?;`, duration, coin_type).Scan(vp).Error
 			if err == nil {
 				if vp.High == 0 {
 					vp.High = lastPrice
@@ -288,7 +292,6 @@ WHERE
 		} else {
 			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 		}
-
 	}
 	c.JSON(200, tPriceView)
 	return
