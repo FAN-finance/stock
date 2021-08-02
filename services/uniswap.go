@@ -66,7 +66,7 @@ func getTokenTimes(interval string, count int) []int64 {
 	case "60s":
 		span = time.Second * 60
 	case "120s":
-		span = time.Second * 120
+		span = time.Second * 60
 	case "15minite":
 		span = time.Minute * 15
 	case "hour":
@@ -205,6 +205,7 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 	result := gjson.Parse(string(body))
 	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
 	bps, err := getBlockPrices(times, blockHeight)
+	log.Println(bps)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for _, item := range bps {
