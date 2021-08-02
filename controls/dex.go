@@ -413,8 +413,8 @@ func TokenPriceHandler(c *gin.Context) {
 // @Router /pub/internal/dex/pair/token_price/{pair}/{token}/{timestamp} [get]
 func PairTokenPriceHandler(c *gin.Context) {
 	dataProc := func(pair, token string) (interface{}, error) {
-		intreval := "60s"
-		count := 60
+		count := 120
+		intreval := strconv.Itoa(count) + "s"
 		items, err := services.GetTokenTimesPriceFromPair(pair, token, intreval, count)
 		if err != nil {
 			return nil, err
