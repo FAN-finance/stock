@@ -34,14 +34,17 @@ func FtxPriceSignHandler(c *gin.Context) {
 	dataTypeStr := c.Param("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
-	res,err:=ftxPriceSignHandler(coin_type,dataType,timestamp)
+	res, err := ftxPriceSignHandler(coin_type, dataType, timestamp)
 	if err != nil {
 		ErrJson(c, err.Error())
 		return
 	}
 	c.JSON(200, res)
 }
-func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView *services.HLDataPriceView,err error){
+
+var IsDisableFtxSign = false
+
+func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenView *services.HLDataPriceView, err error) {
 	//isDisableSign:=false
 	//if strings.HasPrefix(coin_type,"btc") ||strings.HasPrefix(coin_type,"eth"){
 	//	isDisableSign=true
@@ -107,10 +110,10 @@ func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView 
 				resTokenView.Sign = snode.Sign
 			}
 
-			//if isDisableSign{
-			//	snode.Sign=nil
-			//	resTokenView.Sign = nil
-			//}
+			if IsDisableFtxSign {
+				snode.Sign = nil
+				resTokenView.Sign = nil
+			}
 			sc.Lock()
 			avgNodesPrice = append(avgNodesPrice, snode)
 			sc.Unlock()
@@ -151,10 +154,10 @@ func ftxPriceSignHandler(coin_type string,dataType,timestamp int) (resTokenView 
 	}
 	//c.JSON(200, resTokenView)
 	return
-//END:
-//	if err != nil {
-//		ErrJson(c, err.Error())
-//	}
+	//END:
+	//	if err != nil {
+	//		ErrJson(c, err.Error())
+	//	}
 }
 
 var ftxAddres = map[string]string{
@@ -187,6 +190,10 @@ var ftxAddres = map[string]string{
 // @Router /pub/internal/dex/ftx_price/{coin_type}/{timestamp} [get]
 func FtxPriceHandler(c *gin.Context) {
 	coin_type := c.Param("coin_type")
+	duration := 7200
+	if isStockFtx(coin_type) {
+		duration = 3600
+	}
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
 	dataTypeStr := c.Query("data_type")
@@ -217,11 +224,11 @@ WHERE
 				return nil, err
 			}
 			vp := new(HLValuePair)
-			vp.Last=lastPrice
+			vp.Last = lastPrice
 			err = utils.Orm.Raw(
 				`SELECT max(bull) high,min(bull) low,avg(bull) avg FROM coin_bull
 WHERE
- timestamp >unix_timestamp()-3600 and coin_type=?;`, coin_type).Scan(vp).Error
+ timestamp >unix_timestamp()-? and coin_type=?;`, duration, coin_type).Scan(vp).Error
 			if err == nil {
 				if vp.High == 0 {
 					vp.High = lastPrice
@@ -252,7 +259,7 @@ WHERE
 	//fprice, _ := strconv.ParseFloat(res.DerivedETH, 64)
 	//res.PriceUsd = fprice * price
 
-	log.Println("FtxPriceHandler vp",*vp)
+	log.Println("FtxPriceHandler vp", *vp)
 	tPriceView := new(services.HLPriceView)
 	tPriceView.Code = ftxAddres[coin_type]
 	//if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
@@ -285,7 +292,6 @@ WHERE
 		} else {
 			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 		}
-
 	}
 	c.JSON(200, tPriceView)
 	return
