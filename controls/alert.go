@@ -42,7 +42,7 @@ func DbExportHandler(c *gin.Context) {
 			return
 		}
 
-		var command= exec.Command("bash","-c",fmt.Sprintf( "mysqldump --column-statistics=0 -u root -h 127.0.0.1 -P 3306 stock %s |gzip -c > %s",tableName, fileName))
+		var command= exec.Command("bash","-c",fmt.Sprintf( "mysqldump -u root -h 127.0.0.1 -P 3306 stock %s |gzip -c > %s",tableName, fileName))
 		out, err1 := command.Output()
 
 		err=err1
