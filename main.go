@@ -180,6 +180,7 @@ func main() {
 	api.GET("/alert/ok", controls.OkHandler)
 	api.GET("/alert/coindata", controls.CoinDataCheckHandler)
 	api.GET("/alert/btc_sign_check", controls.BtcSignCheckHandler)
+	api.GET("/db.sql.gz", controls.DbExportHandler)
 
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
