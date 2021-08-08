@@ -128,7 +128,10 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	//times=[]int64{12427306,12429525}
 	times := getTokenTimes(interval, count)
 	log.Println(times)
-	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	body, reqerr := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	if reqerr != nil {
+		return nil,reqerr
+	}
 	result := gjson.Parse(string(body))
 	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
 	bps, err := getBlockPrices(times, blockHeight)
