@@ -30,7 +30,9 @@ func ReqResBody(url,ref, method string, header http.Header, bodyBs []byte) (bs [
 	}
 	return
 }
+var hclient = http.DefaultClient
 func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *http.Response, err error) {
+	reqTime:=time.Now()
 	if DebugReq {
 		log.Println(method, ":", url)
 	}
@@ -48,8 +50,7 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 		}
 	RETRY:
 		//hclient := HClient()
-		hclient := http.DefaultClient
-		hclient.Timeout = 5 * time.Second
+		hclient.Timeout = 2 * time.Second
 		resp, err = hclient.Do(request)
 		err = err1
 		if err == nil {
@@ -61,7 +62,7 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 					goto RETRY
 				}
 				err = errors.New("err resp nil")
-				log.Println("ReqRes", err.Error(),url)
+				log.Println("ReqRes", err.Error(),url,reqTime.Unix())
 			} else if resp.StatusCode != 200 && resp.StatusCode != 206 {
 				err = errors.New("err status:" + resp.Status)
 			}
@@ -81,7 +82,7 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 	}
 	if DebugReq {
 		if retry > 1 {
-			log.Println("retry", retry, url)
+			log.Println("retry", retry, url,time.Now().Sub(reqTime).Seconds())
 		}
 		if err == nil {
 			clen, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
@@ -90,6 +91,5 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 			}
 		}
 	}
-
 	return
 }

@@ -265,3 +265,27 @@ func TokenChartSupply(token string, amt int) (data []TokenTotalSupply, err error
 	}
 	return nil, find.Error
 }
+
+func GetTokenTotalSupply(token string) float64 {
+	isExist := false
+	for _, address := range TokenAddressArr {
+		if address == token {
+			isExist = true
+			break
+		}
+	}
+	if isExist {
+		contract, err := contracts.NewRei(common.HexToAddress(token), EthConn)
+		if err == nil {
+			res, err := contract.TotalSupply(nil)
+			if err == nil {
+				currTotalSupply, _ := decimal.NewFromString(res.String())
+				temp, _ := decimal.NewFromString("1000000000000000000")
+				currTotalSupply = currTotalSupply.Div(temp)
+				totalSupply, _ := currTotalSupply.Float64()
+				return totalSupply
+			}
+		}
+	}
+	return 0
+}

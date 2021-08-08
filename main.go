@@ -76,7 +76,6 @@ func main() {
 	//return
 	//services.SetAllBullsFromTw(true)
 	//return
-
 	if job {
 		//sync coingecko数据
 		//go services.SyncCoinGeckoData()
@@ -94,10 +93,14 @@ func main() {
 		}()
 
 		////subcribe twelvedata data
-		go services.SubTwData()
+		//go services.SubTwData()
 		//
 		////更新twelvedata数据源bull数据
-		go services.SetAllBullsFromTw(true)
+		//go services.SetAllBullsFromTw(true)
+
+		services.SetAllBullsFromTw(true)
+		services.CronTwData()
+		services.Cn.Start()
 
 		//订阅coinmarketcap数据 Metaverse Index
 		go services.SubCM()
@@ -107,8 +110,6 @@ func main() {
 
 		//股票时间间隔价格统计
 		go services.SetStockStat()
-
-
 
 	}
 
@@ -177,6 +178,7 @@ func main() {
 	api.GET("/dex/pair/token_chart_prices/:pair/:token/:count/:interval/:timestamp", controls.PairTokenDayPricesHandler)
 
 	api.GET("/dex/token/token_chart_supply/:token/:amount/:timestamp", controls.TokenChartSupplyHandler)
+	api.GET("/dex/token/token_total_supply/:token/:timestamp", controls.GetTokenSupplyHandler)
 	api.GET("/alert/ok", controls.OkHandler)
 	api.GET("/alert/coindata", controls.CoinDataCheckHandler)
 	api.GET("/alert/btc_sign_check", controls.BtcSignCheckHandler)

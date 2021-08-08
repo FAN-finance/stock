@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/robfig/cron/v3"
 	"log"
 	"stock/utils"
 	"strconv"
@@ -20,23 +21,24 @@ type resTw struct {
 		Volume   string `json:"volume" example:"543"`
 	} `json:"values"`
 }
-var twSymbolMap =map[string]string{
-	"vix":"vix",
+
+var twSymbolMap = map[string]string{
+	"vix": "vix",
 	//"ust": "ust20x",
-	"ndx": "ndx",
-	"xau/usd":"gold",
-	"eur/usd":"eur",
-	"govt":"govt",
-	"eth/usd":"eth",
-	"btc/usd":"btc",
-	"AAPL":"AAPL",
-	"TSLA":"TSLA",
+	"ndx":     "ndx",
+	"xau/usd": "gold",
+	"eur/usd": "eur",
+	"govt":    "govt",
+	"eth/usd": "eth",
+	"btc/usd": "btc",
+	"AAPL":    "AAPL",
+	"TSLA":    "TSLA",
 }
 
 //subcribe twelvedata data
 func SyncCoinGeckoData() {
 	proc := func() error {
-		err:=utils.Orm.Exec(
+		err := utils.Orm.Exec(
 			`
 insert into market_prices (item_type, price, timestamp, created_at)
   select *
@@ -61,8 +63,9 @@ insert into market_prices (item_type, price, timestamp, created_at)
           order by coins.id
          )
        ) aa;`,
-			).Error;
-	return err }
+		).Error
+		return err
+	}
 	//err:=proc();
 	//if err != nil {
 	//	log.Println(err)
@@ -70,33 +73,58 @@ insert into market_prices (item_type, price, timestamp, created_at)
 	utils.IntervalSync("SyncCoinGeckoData", 20, proc)
 
 }
+
 //subcribe twelvedata data
-func SubTwData(){
+func SubTwData() {
 	//GetTwData("","",10)
 	//return
 	//抓取失败次数:每失败一次,下次抓取相的就多抓取一行数据.
-	fails:=0
-	proc:=func()error{
-		err:=GetTwData("","",10+fails)
+	fails := 0
+	proc := func() error {
+		err := GetTwData("", "", 10+fails)
 		if err != nil {
-			fails+=1
-		}else{
-			fails=0
+			fails += 1
+		} else {
+			fails = 0
 		}
 		return err
 	}
 	utils.IntervalSync("SubTwData", 60, proc)
 }
-func GetTwData(start_date ,end_date string ,limit int)error{
+
+var Cn = cron.New(cron.WithSeconds(),
+	cron.WithChain(
+		cron.Recover(cron.DefaultLogger),
+	))
+
+func CronTwData() {
+	fails := 15
+	proc := func() error {
+		log.Println("fails", fails)
+		err := GetTwData("", "", 2+fails)
+		if err != nil {
+			fails += 1
+		} else {
+			fails = 0
+		}
+		return err
+	}
+	Cn.AddFunc("45 * * * * *", func() {
+		proc()
+	})
+	//Cn.Start()
+}
+func GetTwData(start_date, end_date string, limit int) error {
 	//appkey="4e8a6b8b4afe47be815d9e3b4d8cf163"
 	//appkey="21cad25580b74ba3a0a2ba9be29057bb"
-	dataUrl:= fmt.Sprintf( "https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d",start_date ,end_date,"21cad25580b74ba3a0a2ba9be29057bb",limit)
+	dataUrl := fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d", start_date, end_date, "21cad25580b74ba3a0a2ba9be29057bb", limit)
 
 	//非开盘时间，不请求股市数据, 减65用来确保收盘后，再请求一次．
-	if !IsMarketTime(time.Now().Unix()-65) {
+	if !IsMarketTime(time.Now().Unix() - 65) {
 		dataUrl = fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=xau/usd,eur/usd,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d", start_date, end_date, "21cad25580b74ba3a0a2ba9be29057bb", limit)
 	}
 	//dataUrl="https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=2021-07-26%2019:00:00&end_date=2021-07-27&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=5000"
+	//dataUrl="https://api.twelvedata.com/time_series?symbol=AAPL,TSLA&interval=1min&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize="+strconv.Itoa(limit)
 	bs, err := utils.ReqResBody(dataUrl, "", "GET", nil, nil)
 	if err == nil {
 		//log.Println(string(bs))
@@ -105,22 +133,22 @@ func GetTwData(start_date ,end_date string ,limit int)error{
 		if err == nil {
 			for key, data := range res {
 				//log.Println("key",key)
-				twData:=new(resTw)
+				twData := new(resTw)
 				err = json.Unmarshal(data, twData)
 				if err == nil {
-					for i:=len(twData.Values)-1;i>-1;i--{
-						value:=twData.Values[i]
+					for i := len(twData.Values) - 1; i > -1; i-- {
+						value := twData.Values[i]
 						//log.Printf("%v",value)
-						mprice:=new(MarketPrice)
-						mprice.ItemType= twSymbolMap[key]
-						mprice.Price,_=strconv.ParseFloat(value.Close,64)
-						ts,_:=time.ParseInLocation("2006-01-02 15:04:05",value.Datetime,time.UTC)
-						mprice.Timestamp=int(ts.Unix())
-						err=utils.Orm.Save(mprice).Error
-						if err != nil {
-							log.Println(err)
+						mprice := new(MarketPrice)
+						mprice.ItemType = twSymbolMap[key]
+						mprice.Price, _ = strconv.ParseFloat(value.Close, 64)
+						ts, _ := time.ParseInLocation("2006-01-02 15:04:05", value.Datetime, time.UTC)
+						mprice.Timestamp = int(ts.Unix())
+						dberr := utils.Orm.Save(mprice).Error
+						if dberr != nil {
+							log.Println(dberr)
 						}
-						log.Println("process mm %v", mprice)
+						//log.Println("process mm %v", mprice)
 					}
 				}
 			}
@@ -132,26 +160,26 @@ func GetTwData(start_date ,end_date string ,limit int)error{
 	return err
 }
 
-func GetTwHL(code string)(max ,min float64,err error){
-	min=0
-	dataUrl:=fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=%s&interval=1min&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=60",code)
+func GetTwHL(code string) (max, min float64, err error) {
+	min = 0
+	dataUrl := fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=%s&interval=1min&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=60", code)
 	bs, err1 := utils.ReqResBody(dataUrl, "", "GET", nil, nil)
-	err=err1
+	err = err1
 	if err == nil {
-		twData:=new(resTw)
-		err=json.Unmarshal(bs,twData)
+		twData := new(resTw)
+		err = json.Unmarshal(bs, twData)
 		if err == nil {
 			for _, value := range twData.Values {
-				high,_:=strconv.ParseFloat(value.High,64)
-				low,_:=strconv.ParseFloat(value.Low,64)
-				if high>max{
-					max=high
+				high, _ := strconv.ParseFloat(value.High, 64)
+				low, _ := strconv.ParseFloat(value.Low, 64)
+				if high > max {
+					max = high
 				}
-				if min==0{
-					min=low
+				if min == 0 {
+					min = low
 				}
-				if low<min{
-					min=low
+				if low < min {
+					min = low
 				}
 			}
 		}

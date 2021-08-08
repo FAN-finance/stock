@@ -331,7 +331,10 @@ func SetAllBullsFromTw(initAll bool) {
 		}
 		return err
 	}
-	utils.IntervalSync("SetAllBullsFromTw", 20, proc)
+	Cn.AddFunc("55 * * * * *", func() {
+		proc()
+	})
+	//utils.IntervalSync("SetAllBullsFromTw", 20, proc)
 }
 
 //生成杠杆币数据　twelvedata
