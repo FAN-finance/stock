@@ -117,6 +117,29 @@ func (s *HLPriceView) GetHash() []byte {
 	)
 	return prefixedHash
 }
+func (s *HLPriceViewRaw) GetHash() []byte {
+	uint256Ty, _ := abi.NewType("uint256", "", nil)
+	addressTy, _ := abi.NewType("address", "", nil)
+	arguments := abi.Arguments{
+		{Type: uint256Ty},
+		{Type: addressTy},
+		{Type: uint256Ty},
+		{Type: uint256Ty},
+	}
+	pint := new(big.Int)
+	pint.SetString(s.BigPrice, 10)
+
+	pack, _ := arguments.Pack(big.NewInt(int64(s.DataType)), common.HexToAddress(s.Code), big.NewInt(s.Timestamp), pint)
+	hash := crypto.Keccak256Hash(pack)
+
+	// normally we sign prefixed hash
+	// as in solidity with `ECDSA.toEthSignedMessageHash`
+	prefixedHash := crypto.Keccak256(
+		[]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%v", len(hash))),
+		hash.Bytes(),
+	)
+	return prefixedHash
+}
 
 func (s *HLDataPriceView) GetHash() []byte {
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)

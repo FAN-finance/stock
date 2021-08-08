@@ -228,6 +228,10 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 		if err == nil {
 			//使其直接返回字符串
 			dataJson := gjson.ParseBytes(bs).Get("data")
+			if !dataJson.Exists(){
+				err=errors.New("data err")
+				return nil,err
+			}
 			if dataJson.Exists() {
 				//log.Println(res)
 				key := fmt.Sprintf("t%d", bps[len(bps)-1].BlockTime)
@@ -526,6 +530,10 @@ type HLPriceView struct {
 	DataType int
 	//Sign_Hash值由 Timestamp，DataType,Code,BigPrice
 	Sign []byte
+}
+//同HLPriceView ,但使用不一样的签名字段顺序
+type HLPriceViewRaw struct {
+	HLPriceView
 }
 type HLDataPriceView struct {
 	DataPriceView
