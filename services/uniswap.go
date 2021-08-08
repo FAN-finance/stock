@@ -127,7 +127,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	//var times []int64
 	//times=[]int64{12427306,12429525}
 	times := getTokenTimes(interval, count)
-	log.Println(times)
+	//log.Println(times)
 	body, reqerr := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
 	if reqerr != nil {
 		return nil,reqerr
@@ -201,7 +201,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 
 func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, count int) ([]*BlockPrice, error) {
 	times := getTokenTimes(interval, count)
-	log.Println(times)
+	//log.Println(times)
 	body, reqErr := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
 	if reqErr != nil {
 		return nil, reqErr
