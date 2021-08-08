@@ -199,10 +199,18 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, count int) ([]*BlockPrice, error) {
 	times := getTokenTimes(interval, count)
 	log.Println(times)
-	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	body, reqErr := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	if reqErr != nil {
+		return nil, reqErr
+	}
 	result := gjson.Parse(string(body))
 	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
 	bps, err := getBlockPrices(times, blockHeight)
+
+	//GetTokenTimesPriceFromPair 不需要以太坊价格
+	for _, bp := range bps {
+		bp.Price=0
+	}
 	log.Println(bps)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
