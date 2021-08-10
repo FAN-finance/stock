@@ -7,11 +7,14 @@ import (
 	"github.com/spf13/pflag"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"io/ioutil"
 	"log"
+	"os"
 	"stock/controls"
 	_ "stock/docs"
 	"stock/services"
 	"stock/utils"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -31,9 +34,14 @@ import (
 //host 192.168.122.1:8080
 // @BasePath /
 func main() {
+	log.SetFlags(log.LstdFlags)
+	log.SetOutput(os.Stdout)
+	pidFileName:="stock.pid"
+	ioutil.WriteFile(pidFileName, []byte(strconv.Itoa(os.Getpid())), os.ModePerm)
+	log.Println("start at pid:", os.Getpid())
+
 	var dbUrl, serverPort, env, infura, swapGraphApi string
 	var job bool
-
 	var nodes []string
 	pflag.StringVarP(&dbUrl, "db", "d", "root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true", "mysql database url")
 	pflag.StringVarP(&serverPort, "port", "p", "8001", "api　service port")
@@ -118,7 +126,6 @@ func main() {
 	if env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	log.SetFlags(log.LstdFlags)
 	ReqHeader := []string{
 		"Content-Type", "Origin", "Authorization", "Accept", "tokenId", "tokenid", "authorization", "ukey", "token", "cache-control", "x-requested-with"}
 	router := gin.Default()

@@ -20,6 +20,7 @@ func SubCoinsPrice (){
 	//{command: "subscribe", identifier: "{"channel":"CEChannel"}"}
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
+	defer signal.Stop(interrupt)
 
 	u := url.URL{Scheme: "wss", Host: "cables.coingecko.com", Path: "/cable"}
 	log.Printf("connecting to %s", u.String())
@@ -96,7 +97,7 @@ func SubCoinsPrice (){
 				return
 			}
 		case <-interrupt:
-			log.Println("interrupt")
+			log.Println("interrupt coingecko")
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
