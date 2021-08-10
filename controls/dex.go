@@ -333,8 +333,8 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 		//res.PriceUsd = fprice * price
 
 		vp := res.(*HLValuePair)
-		log.Println(*vp)
-		tPriceView := new(services.HLPriceView)
+		//log.Println(*vp)
+		tPriceView := new(services.HLPriceViewRaw)
 		tPriceView.Code = code
 		if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
 			tPriceView.Code = "0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
@@ -468,7 +468,7 @@ func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token st
 
 		vp := res.(*HLValuePair)
 		log.Println(*vp)
-		tPriceView := new(services.HLPriceView)
+		tPriceView := new(services.HLPriceViewRaw)
 		tPriceView.Code = token
 		tPriceView.Timestamp = int64(timestamp)
 		tPriceView.DataType = dataType
