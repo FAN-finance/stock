@@ -35,16 +35,13 @@ import (
 // @BasePath /
 func main() {
 	log.SetFlags(log.LstdFlags)
-
-	//go func (){}()
+	log.SetOutput(os.Stdout)
 	pidFileName:="stock.pid"
 	ioutil.WriteFile(pidFileName, []byte(strconv.Itoa(os.Getpid())), os.ModePerm)
 	log.Println("start at pid:", os.Getpid())
 
-
 	var dbUrl, serverPort, env, infura, swapGraphApi string
 	var job bool
-
 	var nodes []string
 	pflag.StringVarP(&dbUrl, "db", "d", "root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true", "mysql database url")
 	pflag.StringVarP(&serverPort, "port", "p", "8001", "api　service port")
