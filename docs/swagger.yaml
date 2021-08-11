@@ -132,6 +132,9 @@ definitions:
       dataType:
         description: 最高最低价１最高　２最低价
         type: integer
+      msg:
+        description: debug msg
+        type: string
       node:
         type: string
       nodeAddress:
@@ -152,6 +155,9 @@ definitions:
         type: string
       code:
         description: 合约代码
+        type: string
+      msg:
+        description: debug msg
         type: string
       node:
         type: string
@@ -732,13 +738,13 @@ paths:
       description: 从Pair获取token价格信息
       operationId: PairTokenPriceSignHandler
       parameters:
-      - default: 0x4612b8de9fb6281f6d5aa29635cf5700148d1b67
+      - default: 0xdfb8824b094f56b9216a015ff77bdb056923aaf6
         description: pair地址
         in: path
         name: pair
         required: true
         type: string
-      - default: 0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b
+      - default: 0x011864d37035439e078d64630777ec518138af05
         description: token地址
         in: path
         name: token

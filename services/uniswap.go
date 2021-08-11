@@ -214,7 +214,6 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 	for _, bp := range bps {
 		bp.Price=0
 	}
-	log.Println(bps)
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
 		for _, item := range bps {
@@ -512,6 +511,9 @@ type PriceView struct {
 	//Sign_Hash值由 Timestamp,Code,BigPrice
 	Sign []byte
 	//Signs []*PriceView `json:",omitempty"`
+
+	//debug msg
+	Msg string `json:"msg,omitempty"`
 }
 type DataPriceView struct {
 	//合约代码
@@ -530,6 +532,9 @@ type HLPriceView struct {
 	DataType int
 	//Sign_Hash值由 Timestamp，DataType,Code,BigPrice
 	Sign []byte
+
+	//debug msg
+	Msg string `json:"msg,omitempty"`
 }
 //同HLPriceView ,但使用不一样的签名字段顺序
 type HLPriceViewRaw struct {
@@ -549,6 +554,17 @@ type HLDataPriceView struct {
 	//股票杠杆币需要这个字段
 	MarketOpenTime int64
 }
+func(hldv *HLDataPriceView)Clean(){
+	for _, p := range hldv.Signs {
+		p.Sign=nil
+	}
+}
+func(sd *StockData)Clean(){
+	for _, p := range sd.Signs {
+		p.Sign=nil
+	}
+}
+
 
 var infoTokenGraph = `{"query":"{\n  token(id:\"%s\") {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n  }\n}","variables":null}`
 

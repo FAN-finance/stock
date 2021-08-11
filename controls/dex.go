@@ -57,8 +57,8 @@ func TokenPriceSignHandler(c *gin.Context) {
 // @ID PairTokenPriceSignHandler
 // @Accept  json
 // @Produce  json
-// @Param     pair   path    string     true        "pair地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
-// @Param     token   path    string     true        "token地址" default(0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b)
+// @Param     pair   path    string     true        "pair地址" default(0xdfb8824b094f56b9216a015ff77bdb056923aaf6)
+// @Param     token   path    string     true        "token地址" default(0x011864d37035439e078d64630777ec518138af05)
 // @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Param     debug   query    int     false    "调试" default(0)
@@ -154,6 +154,7 @@ func PairTokenPriceSignHandler(c *gin.Context) {
 	}
 	resTokenView.AvgSigns = avgNodesPrice
 	resTokenView.IsMarketOpening = resTokenView.Sign != nil
+	resTokenView.Clean()
 	//resTokenView.Signs = nil
 	//resTokenView.Sign = nil
 	c.JSON(200, resTokenView)
@@ -252,6 +253,7 @@ func tokenPriceSignProces(c *gin.Context, providerUrl string) {
 	}
 	resTokenView.AvgSigns = avgNodesPrice
 	resTokenView.IsMarketOpening = true
+	resTokenView.Clean()
 	c.JSON(200, resTokenView)
 	return
 END:
@@ -351,9 +353,13 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 		tPriceView.PriceUsd, _ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
 		tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 		tPriceView.NodeAddress = services.WalletAddre
-		if tPriceView.PriceUsd > 0.001 {
-			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
-		}
+		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+
+		//if tPriceView.PriceUsd > PriceMin {
+		//	tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+		//} else {
+		//	tPriceView.Msg = fmt.Sprintf("disable sign for price(%f)<priceMin(%f)", tPriceView.PriceUsd, PriceMin)
+		//}
 		c.JSON(200, tPriceView)
 		return
 	}
@@ -482,9 +488,12 @@ func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token st
 		tPriceView.PriceUsd, _ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
 		tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 		tPriceView.NodeAddress = services.WalletAddre
-		if tPriceView.PriceUsd > 0.001 {
-			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
-		}
+		tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
+		//if tPriceView.PriceUsd > PriceMin {
+		//
+		//} else {
+		//	tPriceView.Msg = fmt.Sprintf("disable sign for price(%f)<priceMin(%f)", tPriceView.PriceUsd, PriceMin)
+		//}
 		c.JSON(200, tPriceView)
 		return
 	}
@@ -506,7 +515,7 @@ func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token st
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/token_avgprice [post]
 func TokenAvgHlPriceHandler(c *gin.Context) {
-	nodePrices := []*services.HLPriceView{}
+	nodePrices := []*services.HLPriceViewRaw{}
 	err := c.BindJSON(&nodePrices)
 	if err == nil {
 		if len(nodePrices) == 0 {
@@ -525,31 +534,41 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		dataType := nodePrices[0].DataType
 
 		sumPrice := decimal.NewFromFloat(0.0)
-		var currNode *services.HLPriceView
+		//var currNode *services.HLPriceView
 		for _, node := range nodePrices {
-			if node.NodeAddress == services.WalletAddre {
-				currNode = node
-			}
+			//if node.NodeAddress == services.WalletAddre {
+			//	currNode = node
+			//}
 			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.PriceUsd))
 			//验证数据
 			if timestamp != node.Timestamp || code != node.Code || dataType != node.DataType {
 				err = errors.New("需要共识的数据不一致")
 				break
 			}
-			//TODO 验证数据签名
-			//services.Verify(node.GetHash(),node.Sign,"")
+			// 验证数据签名
+			if node.Sign == nil {
+				err = errors.New("miss node.sign")
+				break
+			}
+			ok, err1 := services.Verify(node.GetHash(), node.Sign, node.NodeAddress)
+			if !ok {
+				log.Println("Verify err", node.NodeAddress,err1 )
+				err = errors.New("Verify err " + node.NodeAddress+" "+ err1.Error())
+				break
+			}
 		}
 		if err != nil {
+			log.Println("avgprice err",err)
 			ErrJson(c, err.Error())
 			return
 		}
+		//if currNode == nil || currNode.PriceUsd == 0 {
+		//	ErrJson(c, "wrong price info")
+		//	return
+		//}
+		log.Println(sumPrice.String(), nodePrices[0].PriceUsd)
 		sdata := new(services.HLPriceView)
 		sdata.PriceUsd, _ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))), 18).Float64()
-
-		if currNode == nil || currNode.PriceUsd == 0 {
-			ErrJson(c, "wrong price info")
-			return
-		}
 
 		sdata.BigPrice = services.GetUnDecimalPrice(sdata.PriceUsd).String()
 		sdata.Timestamp = int64(timestamp)
@@ -557,23 +576,42 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
 
-		rate := (sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd
-		if math.Abs(rate) > 0.001 {
-			log.Println("average is wrong ", rate, sdata.PriceUsd, currNode.PriceUsd)
-			c.JSON(200, sdata)
-			return
-		}
-
-		if sdata.PriceUsd > 0.001 {
-			if isStockFtx(code) { //股票签名
-				if services.IsSignTime(0) {
-					sdata.Sign = services.SignMsg(sdata.GetHash())
-				}
-			} else {
-				sdata.Sign = services.SignMsg(sdata.GetHash())
+		//千分之一处理：　是平均值与每个节点的报价进行比较　见issues/8
+		for _, currNode := range nodePrices {
+			rate := math.Abs((sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd)
+			if rate > PriceChangeMax {
+				msg := fmt.Sprintf("disable sign for rate(%f) > maxChange(%f),avgPrice %f,nodePrice %f", rate, PriceChangeMax, sdata.PriceUsd, currNode.PriceUsd)
+				log.Println("average is wrong ", msg)
+				sdata.Msg = msg
+				c.JSON(200, sdata)
+				return
 			}
 		}
-		//sdata.Sign = nil
+
+		signAble:=true
+		if sdata.PriceUsd > PriceMin {
+			if isFtx(code) {
+				if IsDisableFtxSign{
+					signAble=false
+					sdata.Msg = "system disable ftxSign"
+				}else{
+					if isStockFtx(code) { //股票ftx签名
+						if !services.IsSignTime(0)  {
+							signAble=false
+							sdata.Msg = "none stockTime"
+						}
+					}
+				}
+			}else{
+				log.Println("sign for none ftx" ,code)
+			}
+		} else {
+			signAble = false
+			sdata.Msg = fmt.Sprintf("disable sign for price(%f)<priceMin(%f)", sdata.PriceUsd, PriceMin)
+		}
+		if signAble{
+			sdata.Sign = services.SignMsg(sdata.GetHash())
+		}
 		c.JSON(200, sdata)
 		return
 	}
@@ -582,6 +620,9 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		return
 	}
 }
+
+var PriceMin = 0.001
+var PriceChangeMax = 0.001
 
 // @Tags default
 // @Summary　获取token信息,内部单节点

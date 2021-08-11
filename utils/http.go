@@ -19,13 +19,20 @@ func GetUa()string{
 	return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/80.0.3987.87 Chrome/80.0.3987.87 Safari/537.36"
 }
 func ReqResBody(url,ref, method string, header http.Header, bodyBs []byte) (bs []byte, err error) {
-	resp, err1 := ReqRes(url,ref, method, header, bodyBs)
+	resp, err1 := ReqRes(url, ref, method, header, bodyBs)
 	err = err1
-	if err == nil && resp!=nil {
-		bs, err = ioutil.ReadAll(resp.Body)
-		if err != nil {
-			err = errors.New(err.Error() + " " + string(bs))
-			return
+	if resp != nil {
+		if err == nil {
+			bs, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				err = errors.New(err.Error() + " " + string(bs))
+				return
+			}
+		} else {
+			bs, _ = ioutil.ReadAll(resp.Body)
+			if resp != nil {
+				err = errors.New(err.Error() + " " + string(bs))
+			}
 		}
 	}
 	return

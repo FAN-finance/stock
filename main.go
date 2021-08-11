@@ -7,14 +7,12 @@ import (
 	"github.com/spf13/pflag"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	"io/ioutil"
 	"log"
 	"os"
 	"stock/controls"
 	_ "stock/docs"
 	"stock/services"
 	"stock/utils"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -36,9 +34,6 @@ import (
 func main() {
 	log.SetFlags(log.LstdFlags)
 	log.SetOutput(os.Stdout)
-	pidFileName:="stock.pid"
-	ioutil.WriteFile(pidFileName, []byte(strconv.Itoa(os.Getpid())), os.ModePerm)
-	log.Println("start at pid:", os.Getpid())
 
 	var dbUrl, serverPort, env, infura, swapGraphApi string
 	var job bool

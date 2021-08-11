@@ -99,6 +99,13 @@ func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenVie
 			snode := new(services.HLPriceView)
 			json.Unmarshal(bs, snode)
 			snode.Node = nodeUrl
+			sc.Lock()
+			avgNodesPrice = append(avgNodesPrice, snode)
+			sc.Unlock()
+
+			if snode.Sign==nil{
+				return
+			}
 			isMyData, _ := services.Verify(snode.GetHash(), snode.Sign, services.WalletAddre)
 			if isMyData {
 				//log.Println(myData,"124")
@@ -109,14 +116,11 @@ func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenVie
 				resTokenView.DataType = dataType
 				resTokenView.Sign = snode.Sign
 			}
-
-			if IsDisableFtxSign {
-				snode.Sign = nil
-				resTokenView.Sign = nil
-			}
-			sc.Lock()
-			avgNodesPrice = append(avgNodesPrice, snode)
-			sc.Unlock()
+			//if IsDisableFtxSign {
+			//	snode.Sign = nil
+			//	snode.Msg="system Disable FtxSign"
+			//	resTokenView.Sign = nil
+			//}
 		}
 	}
 	for _, nurl := range utils.Nodes {
@@ -133,24 +137,25 @@ func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenVie
 		return
 	}
 	resTokenView.AvgSigns = avgNodesPrice
+	resTokenView.Clean()
 
 	resTokenView.IsMarketOpening = true
-	if coin_type == "ndx10x" || coin_type == "vix3x" || coin_type == "govt20x" {
+	if isStockFtx(coin_type) {
 		status, ts := services.IsWorkTime(0)
 		if !status {
 			resTokenView.IsMarketOpening = false
-			//收盘没有签名时，选择第一个价格，方便应用显示价格
-			if resTokenView.AvgSigns[0].Sign == nil {
-				snode := resTokenView.AvgSigns[0]
-				resTokenView.PriceUsd = snode.PriceUsd
-				resTokenView.BigPrice = snode.BigPrice
-				resTokenView.Timestamp = snode.Timestamp
-				resTokenView.Code = snode.Code
-				resTokenView.DataType = dataType
-			}
 		} else {
 			resTokenView.MarketOpenTime = ts
 		}
+	}
+	//没有签名时，选择第一个价格，方便应用显示价格  签名禁用:ftx禁用 ftx-stock收盘禁用
+	if resTokenView.AvgSigns[0].Sign == nil {
+		snode := resTokenView.AvgSigns[0]
+		resTokenView.PriceUsd = snode.PriceUsd
+		resTokenView.BigPrice = snode.BigPrice
+		resTokenView.Timestamp = snode.Timestamp
+		resTokenView.Code = snode.Code
+		resTokenView.DataType = dataType
 	}
 	//c.JSON(200, resTokenView)
 	return
@@ -160,6 +165,13 @@ func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenVie
 	//	}
 }
 
+
+func init(){
+	for i, i2 := range ftxAddres {
+		addresFtx[i2]=i
+	}
+}
+var addresFtx = map[string]string{}
 var ftxAddres = map[string]string{
 	"mvi2x":   "0x6b5ab672ac243193b006ea819a5eb08bcd518de7",
 	"mvi2s":   "0xc7b86cc68c2b49f2609e9b5e12f0aa7be775bf1d",
@@ -284,19 +296,18 @@ WHERE
 	tPriceView.PriceUsd, _ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
 	tPriceView.BigPrice = services.GetUnDecimalPrice(tPriceView.PriceUsd).String()
 	tPriceView.NodeAddress = services.WalletAddre
-	if tPriceView.PriceUsd > 0.001 {
-		if isStockFtx(coin_type) { //股票签名
-			if services.IsSignTime(0) {
-				tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
-			}
-		} else {
-			tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
-		}
-	}
+	tPriceView.Sign = services.SignMsg(tPriceView.GetHash())
 	c.JSON(200, tPriceView)
 	return
 }
 
+func isFtx(code string) bool {
+	_, ok := ftxAddres[code]
+	if !ok{
+		_, ok = addresFtx[code]
+	}
+	return ok
+}
 //股票类ftx判断
 func isStockFtx(code string) bool {
 	if code == "ndx10x" || code == "vix3x" || code == "govt20x" {
@@ -307,6 +318,7 @@ func isStockFtx(code string) bool {
 	}
 	return false
 }
+
 
 // @Tags default
 // @Summary　获取杠杆btc代币不同时间区间的价格图表信息
