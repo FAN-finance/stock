@@ -831,11 +831,13 @@ var doc = `{
                     {
                         "enum": [
                             1,
-                            2
+                            2,
+                            3,
+                            4
                         ],
                         "type": "integer",
                         "default": 1,
-                        "description": "最高最低价１最高　２最低价",
+                        "description": "最高最低价１最高　２最低价 3平均价 4最后价",
                         "name": "data_type",
                         "in": "path",
                         "required": true
@@ -1580,11 +1582,13 @@ var doc = `{
                     {
                         "enum": [
                             1,
-                            2
+                            2,
+                            3,
+                            4
                         ],
                         "type": "integer",
                         "default": 1,
-                        "description": "最高最低价１最高　２最低价",
+                        "description": "最高最低价１最高　２最低价 3平均价 4最后价",
                         "name": "data_type",
                         "in": "query",
                         "required": true

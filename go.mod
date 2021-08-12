@@ -4,6 +4,8 @@ go 1.15
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21
+	github.com/emersion/go-smtp v0.15.0
 	github.com/ethereum/go-ethereum v1.10.1
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-openapi/spec v0.20.3 // indirect
@@ -17,6 +19,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shopspring/decimal v1.2.0
 	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.7.0
 	github.com/tidwall/gjson v1.7.5
@@ -27,6 +30,4 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/gorm v1.21.6
-    github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21
-    github.com/emersion/go-smtp v0.15.0
 )

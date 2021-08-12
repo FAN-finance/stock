@@ -272,6 +272,19 @@ WHERE
 	//res.PriceUsd = fprice * price
 
 	log.Println("FtxPriceHandler vp", *vp)
+	vmsg:=""
+	if vp.Low==0{
+		vmsg="最低价错误"
+	}
+	if vp.High/vp.Low>2{
+		vmsg="最高最低价变化太大"
+	}
+	if vmsg!=""{
+		log.Println(vmsg)
+		ErrJson(c,vmsg)
+		return
+	}
+
 	tPriceView := new(services.HLPriceViewRaw)
 	tPriceView.Code = ftxAddres[coin_type]
 	//if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {

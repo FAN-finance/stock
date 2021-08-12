@@ -23,7 +23,7 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param     token   path    string     true        "token地址" default(0xc61624355667e4d5ca9cee25ad339c990a90eaea)
-// @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     data_type   path    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 //@Param     debug   query    int     false    "调试" default(0)
 // @Success 200 {object} services.HLDataPriceView	"token price info"
@@ -277,7 +277,7 @@ type HLValuePair struct {
 // @Accept  json
 // @Produce  json
 // @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
-// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     data_type   query    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
@@ -286,22 +286,35 @@ type HLValuePair struct {
 func TokenChainPriceHandler(c *gin.Context) {
 	dataProc := func(code string) (interface{}, error) {
 		vp := new(HLValuePair)
-		err := utils.Orm.Raw(`
+		lastPrice := 0.0
+		err := utils.Orm.Raw(`select prices.token_price
+			from token_prices prices where prices.token_addre=?
+			order by id desc
+			limit 1;`, code).Scan(&lastPrice).Error
+		if err != nil {
+			return nil, err
+		}
+		vp.Last = lastPrice
+
+		err = utils.Orm.Raw(`
 select *
 from (
-        select max(prices.token_price) high, min(prices.token_price) low
+        select avg(prices.token_price) avg,max(prices.token_price) high, min(prices.token_price) low
         from token_prices prices
         where prices.token_addre=? and prices.block_number >
-              (select t.id from block_prices t where t.block_time > unix_timestamp() - 3600 limit 1)
+              (select t.id from block_prices t where t.block_time > unix_timestamp() - 7200 limit 1)
     ) a
 where a.high is not null`, code).First(vp).Error
+		if err != nil {
+			vp.Avg = vp.Last
+			vp.Low = vp.Last
+			vp.High = vp.Last
+			err = nil
+		}
 		if err == nil {
 			return vp, err
 		}
-		err = utils.Orm.Raw(`select prices.token_price high, prices.token_price low
-			from token_prices prices where prices.token_addre=?
-			order by id desc
-			limit 1;`, code).First(vp).Error
+
 		return vp, err
 
 	}
@@ -336,6 +349,19 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 		//res.PriceUsd = fprice * price
 
 		vp := res.(*HLValuePair)
+		vmsg := ""
+		if vp.Low == 0 {
+			vmsg = "最低价错误"
+		}
+		if vp.High/vp.Low > 2 {
+			vmsg = "最高最低价变化太大"
+		}
+		if vmsg != "" {
+			log.Println(vmsg, *vp)
+			ErrJson(c, vmsg)
+			return
+		}
+
 		//log.Println(*vp)
 		tPriceView := new(services.HLPriceViewRaw)
 		tPriceView.Code = code
@@ -349,6 +375,12 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 		}
 		if dataType == 2 {
 			tPriceView.PriceUsd = vp.Low
+		}
+		if dataType == 3 {
+			tPriceView.PriceUsd = vp.Avg
+		}
+		if dataType == 4 {
+			tPriceView.PriceUsd = vp.Last
 		}
 		//tPriceView.PriceUsd = math.Trunc( tPriceView.PriceUsd*1000) / 1000
 		tPriceView.PriceUsd, _ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
@@ -601,10 +633,10 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 					signAble = false
 					sdata.Msg = "system disable ftxSign"
 				} else {
-					if !SpecialOpenTime(){
+					if !SpecialOpenTime() {
 						signAble = false
 						sdata.Msg = "不在间隔开放期"
-					}else if isStockFtx(code) { //股票ftx签名
+					} else if isStockFtx(code) { //股票ftx签名
 						if !services.IsSignTime(0) {
 							signAble = false
 							sdata.Msg = "none stockTime"
@@ -618,6 +650,13 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 			signAble = false
 			sdata.Msg = fmt.Sprintf("disable sign for price(%f)<priceMin(%f)", sdata.PriceUsd, PriceMin)
 		}
+
+		if signAble {
+			if !CheckSafePrice(code, sdata.PriceUsd) {
+				signAble = false
+				sdata.Msg = fmt.Sprintf("safe price check fail %f", sdata.PriceUsd)
+			}
+		}
 		if signAble {
 			sdata.Sign = services.SignMsg(sdata.GetHash())
 		}
@@ -629,15 +668,32 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		return
 	}
 }
-func SpecialOpenTime()bool{
-	n:=time.Now()
+
+var safePrice = map[string]*mm{
+	"0x011864d37035439e078d64630777ec518138af05": &mm{1, 5},
+}
+func CheckSafePrice(code string, price float64) bool {
+	item := safePrice[code]
+	if item != nil && (price > item.Max || price < item.Min) {
+		return false
+	}
+	return true
+}
+type mm struct {
+	Min float64
+	Max float64
+}
+
+
+func SpecialOpenTime() bool {
+	n := time.Now()
 	//n,_=time.ParseInLocation("2006-01-02 15:04","2021-08-13 02:01",time.UTC )
-	btime,err:=time.ParseInLocation("2006-01-02 15","2021-08-13 13",time.UTC)
+	btime, err := time.ParseInLocation("2006-01-02 15", "2021-08-13 13", time.UTC)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	h:=n.Hour()
-	if n.After(btime) && (h==14 ||h ==2){
+	h := n.Hour()
+	if n.After(btime) && (h == 14 || h == 2) {
 		return true
 	}
 	return false
