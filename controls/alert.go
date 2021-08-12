@@ -63,7 +63,7 @@ func BtcSignCheckHandler(c *gin.Context) {
 		return
 	}
 	//res.Sign=nil
-	if res.Sign==nil && IsDisableFtxSign==false{
+	if  IsDisableFtxSign==false && SpecialOpenTime() && res.Sign==nil {
 		time.Sleep(3*time.Second)
 		c.JSON(200,"BtcSignCheck err")
 		return
