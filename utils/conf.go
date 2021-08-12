@@ -1,8 +1,21 @@
 package utils
 
+import "sync"
 
 //节点列表
 var Nodes []string
+//钱包地址白名单列表
+var wList=new(sync.Map)
+func SetWList(list []string) {
+ for _, value := range list {
+  wList.Store(value, true)
+ }
+}
+func IsInWL(addre string)bool{
+ _,ok:=wList.Load(addre)
+ return ok
+}
+
 //twelvedata数据源的api-key,需要自行去https://twelvedata.com/申请
 var TwKey string
 type PubConf struct {

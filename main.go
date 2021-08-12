@@ -37,13 +37,14 @@ func main() {
 
 	var dbUrl, serverPort, env, infura, swapGraphApi string
 	var job bool
-	var nodes []string
+	var nodes ,wlist []string
 	pflag.StringVarP(&dbUrl, "db", "d", "root:password@tcp(localhost:3306)/mydb?loc=Local&parseTime=true&multiStatements=true", "mysql database url")
 	pflag.StringVarP(&serverPort, "port", "p", "8001", "api　service port")
 	//var keyfile,certFile string
 	//pflag.StringVarP(&keyfile,"key","k","./asset/key.pem","pem encoded private key")
 	//pflag.StringVarP(&certFile,"cert","c","./asset/cert.pem","pem encoded x509 cert")
 	pflag.StringSliceVarP(&nodes, "nodes", "n", strings.Split("http://49.232.234.250:8001,http://localhost:8001,http://62.234.188.160:8001", ","), "所有节点列表,节点间用逗号分开")
+	pflag.StringSliceVarP(&wlist, "wlist", "", strings.Split("0x4448993f493B1D8D9ED51F22F1d30b9B4377dFD2,0x0d93A21b4A971dF713CfC057e43F5D230E76261C,0x3054e19707447800f0666ba274A249fC9a67aA4a,0xa55203c75c95A95f5DdD7B58E877A9EBd85A1631", ","), "所有钱包地址白名单列表,节点间用逗号分开")
 	pflag.StringVarP(&env, "env", "e", "debug", "环境名字debug prod test")
 	pflag.StringVar(&infura, "infura", "27f0b03a4654478db14295fd1021e1b8", "infura的项目id,需要自行去https://infura.io申请")
 	//https://api.thegraph.com/subgraphs/name/wxf4150/fanswap2 https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2
@@ -54,6 +55,7 @@ func main() {
 	//nodes =  strings.Split("http://localhost:8001,http://localhost:8001,http://localhost:8001",",")
 	pflag.Parse()
 	utils.Nodes = nodes
+	utils.SetWList(wlist)
 	//utils.TwKey=twkey
 	utils.InitDb(dbUrl)
 	services.InitEConn(infura)

@@ -42,7 +42,7 @@ func FtxPriceSignHandler(c *gin.Context) {
 	c.JSON(200, res)
 }
 
-var IsDisableFtxSign = true
+var IsDisableFtxSign = false
 
 func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenView *services.HLDataPriceView, err error) {
 	//isDisableSign:=false

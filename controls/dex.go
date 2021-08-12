@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // @Tags default
@@ -534,12 +535,12 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		dataType := nodePrices[0].DataType
 
 		sumPrice := decimal.NewFromFloat(0.0)
-		//var currNode *services.HLPriceView
+		var currNode *services.HLPriceViewRaw
 		for _, node := range nodePrices {
-			//if node.NodeAddress == services.WalletAddre {
-			//	currNode = node
-			//}
-			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.PriceUsd))
+			if node.NodeAddress == services.WalletAddre {
+				currNode = node
+			}
+
 			//验证数据
 			if timestamp != node.Timestamp || code != node.Code || dataType != node.DataType {
 				err = errors.New("需要共识的数据不一致")
@@ -550,23 +551,31 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 				err = errors.New("miss node.sign")
 				break
 			}
-			ok, err1 := services.Verify(node.GetHash(), node.Sign, node.NodeAddress)
-			if !ok {
-				log.Println("Verify err", node.NodeAddress,err1 )
-				err = errors.New("Verify err " + node.NodeAddress+" "+ err1.Error())
+			//白名单验证
+			if !utils.IsInWL(node.NodeAddress) {
+				err = errors.New("addre not int whiteList")
 				break
 			}
+
+			ok, err1 := services.Verify(node.GetHash(), node.Sign, node.NodeAddress)
+			if !ok {
+				log.Println("Verify err", node.NodeAddress, err1)
+				err = errors.New("Verify err " + node.NodeAddress + " " + err1.Error())
+				break
+			}
+			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.PriceUsd))
 		}
 		if err != nil {
-			log.Println("avgprice err",err)
+			log.Println("avgprice err", err)
 			ErrJson(c, err.Error())
 			return
 		}
-		//if currNode == nil || currNode.PriceUsd == 0 {
-		//	ErrJson(c, "wrong price info")
-		//	return
-		//}
-		log.Println(sumPrice.String(), nodePrices[0].PriceUsd)
+		if currNode == nil || currNode.PriceUsd == 0 {
+			ErrJson(c, "miss currNode Price")
+			return
+		}
+
+		//log.Println(sumPrice.String(), nodePrices[0].PriceUsd)
 		sdata := new(services.HLPriceView)
 		sdata.PriceUsd, _ = sumPrice.DivRound(decimal.NewFromInt(int64(len(nodePrices))), 18).Float64()
 
@@ -576,40 +585,40 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
 
-		//千分之一处理：　是平均值与每个节点的报价进行比较　见issues/8
-		for _, currNode := range nodePrices {
-			rate := math.Abs((sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd)
-			if rate > PriceChangeMax {
-				msg := fmt.Sprintf("disable sign for rate(%f) > maxChange(%f),avgPrice %f,nodePrice %f", rate, PriceChangeMax, sdata.PriceUsd, currNode.PriceUsd)
-				log.Println("average is wrong ", msg)
-				sdata.Msg = msg
-				c.JSON(200, sdata)
-				return
-			}
+		rate := math.Abs((sdata.PriceUsd - currNode.PriceUsd) / currNode.PriceUsd)
+		if rate > PriceChangeMax {
+			msg := fmt.Sprintf("disable sign for rate(%f) > maxChange(%f),avgPrice %f,nodePrice %f", rate, PriceChangeMax, sdata.PriceUsd, currNode.PriceUsd)
+			log.Println("average is wrong ", msg)
+			sdata.Msg = msg
+			c.JSON(200, sdata)
+			return
 		}
 
-		signAble:=true
+		signAble := true
 		if sdata.PriceUsd > PriceMin {
 			if isFtx(code) {
-				if IsDisableFtxSign{
-					signAble=false
+				if IsDisableFtxSign {
+					signAble = false
 					sdata.Msg = "system disable ftxSign"
-				}else{
-					if isStockFtx(code) { //股票ftx签名
-						if !services.IsSignTime(0)  {
-							signAble=false
+				} else {
+					if !SpecialOpenTime(){
+						signAble = false
+						sdata.Msg = "不在间隔开放期"
+					}else if isStockFtx(code) { //股票ftx签名
+						if !services.IsSignTime(0) {
+							signAble = false
 							sdata.Msg = "none stockTime"
 						}
 					}
 				}
-			}else{
-				log.Println("sign for none ftx" ,code)
+			} else {
+				log.Println("sign for none ftx", code)
 			}
 		} else {
 			signAble = false
 			sdata.Msg = fmt.Sprintf("disable sign for price(%f)<priceMin(%f)", sdata.PriceUsd, PriceMin)
 		}
-		if signAble{
+		if signAble {
 			sdata.Sign = services.SignMsg(sdata.GetHash())
 		}
 		c.JSON(200, sdata)
@@ -619,6 +628,19 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		ErrJson(c, err.Error())
 		return
 	}
+}
+func SpecialOpenTime()bool{
+	n:=time.Now()
+	//n,_=time.ParseInLocation("2006-01-02 15:04","2021-08-13 02:01",time.UTC )
+	btime,err:=time.ParseInLocation("2006-01-02 15","2021-08-13 13",time.UTC)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	h:=n.Hour()
+	if n.After(btime) && (h==14 ||h ==2){
+		return true
+	}
+	return false
 }
 
 var PriceMin = 0.001
