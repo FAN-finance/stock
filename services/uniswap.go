@@ -674,6 +674,7 @@ type TokenPrice struct {
 	BlockTime   int64
 	//eth or bsc
 	ChainName string
+	CreatedAt time.Time
 }
 
 //ethUsd 0xdac17f958d2ee523a2206206994597c13d831ec7
