@@ -60,7 +60,7 @@ func TokenPriceSignHandler(c *gin.Context) {
 // @Produce  json
 // @Param     pair   path    string     true        "pair地址" default(0xdfb8824b094f56b9216a015ff77bdb056923aaf6)
 // @Param     token   path    string     true        "token地址" default(0x011864d37035439e078d64630777ec518138af05)
-// @Param     data_type   path    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     data_type   path    int     true    "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Param     debug   query    int     false    "调试" default(0)
 // @Success 200 {object} services.HLDataPriceView	"token price info"
