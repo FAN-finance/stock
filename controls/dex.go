@@ -626,11 +626,11 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 			return
 		}
 
-		signAble,msg:=IsSignAble(sdata.Code,sdata.PriceUsd)
+		signAble, msg := IsSignAble(sdata.Code, sdata.PriceUsd)
 		if signAble {
 			sdata.Sign = services.SignMsg(sdata.GetHash())
-		}else{
-			sdata.Msg=msg
+		} else {
+			sdata.Msg = msg
 		}
 		c.JSON(200, sdata)
 		return
@@ -640,35 +640,38 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		return
 	}
 }
+
 //禁用所有签名
 var IsDisableAllSign = false
+
 //禁用ftx签名
 var IsDisableFtxSign = false
-func IsSignAble(code string,price float64)(signAble bool ,msg string) {
+
+func IsSignAble(code string, price float64) (signAble bool, msg string) {
 	signAble = true
 	if price < PriceMin {
 		signAble = false
 		msg = fmt.Sprintf("disable sign for price(%f)<priceMin(%f)", price, PriceMin)
 		return
 	}
-	if  IsDisableAllSign{
+	if IsDisableAllSign {
 		signAble = false
 		msg = "All Sign　is disable now"
 		return
 	}
-	if signAble && isFtx(code) {
+	if  !SpecialOpenTime() {
+		signAble = false
+		msg = "only open in hour utc02 and utc14"
+		return
+	}
+	if isFtx(code) {
 		if IsDisableFtxSign {
 			signAble = false
 			msg = "system disable ftxSign"
-		} else {
-			if !SpecialOpenTime() {
+		} else if isStockFtx(code) { //股票ftx签名
+			if !services.IsSignTime(0) {
 				signAble = false
-				msg = "only open in hour utc02 and utc14"
-			} else if isStockFtx(code) { //股票ftx签名
-				if !services.IsSignTime(0) {
-					signAble = false
-					msg = "none stockTime"
-				}
+				msg = "none stockTime"
 			}
 		}
 	} else {
@@ -681,6 +684,7 @@ func IsSignAble(code string,price float64)(signAble bool ,msg string) {
 	}
 	return
 }
+
 var safePrice = map[string]*mm{
 	"0x011864d37035439e078d64630777ec518138af05": &mm{1, 5},
 }

@@ -44,6 +44,31 @@ var blockGraph = `{"operationName":"blocks","variables":{},"query":"query blocks
 var SwapGraphApi = "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2"
 var tokenDayDataGraph = `{"operationName":"tokenDayDatas","variables":{"tokenAddr":"%s","skip":0},"query":"query tokenDayDatas($tokenAddr: String\u0021, $skip: Int\u0021) {\n  tokenDayDatas(first: %d, skip: $skip, orderBy: date, orderDirection: desc, where: {token: $tokenAddr}) {\n    id\n    date\n    priceUSD\n    totalLiquidityToken\n    totalLiquidityUSD\n    totalLiquidityETH\n    dailyVolumeETH\n    dailyVolumeToken\n    dailyVolumeUSD\n    __typename\n  }\n}\n"}`
 
+func ReqSwapGraph(body string) ([]byte, error) {
+	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(body))
+	if err != nil {
+		return bs, err
+	}
+	if bytes.HasPrefix(bs, []byte(`{"errors"`)) {
+		serr:=new(subGrahpErr)
+		err=json.Unmarshal(bs,serr)
+		if err == nil {
+			errmsg:=""
+			for _, item := range serr.Errors {
+				errmsg+=item.Message+";"
+			}
+			err=errors.New(errmsg)
+		}
+	}
+	return bs, err
+}
+
+type subGrahpErr struct {
+	Errors []struct {
+		Message string `json:"message" example:"Failed to decode block.number value: subgraph Qmc7K8dKoadu1VcHfAV45pN4sPnwZcU2okV6cuU4B7qQp1 has only indexed up to block number 13015747 and data for block number 123412341 is therefore not yet available"`
+	} `json:"errors"`
+}
+
 func GetTokenDayData(tokenAddre string, days int) ([]byte, error) {
 	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(tokenDayDataGraph, tokenAddre, days)))
 	if err == nil {
@@ -130,7 +155,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	//log.Println(times)
 	body, reqerr := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
 	if reqerr != nil {
-		return nil,reqerr
+		return nil, reqerr
 	}
 	result := gjson.Parse(string(body))
 	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
@@ -212,7 +237,7 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 
 	//GetTokenTimesPriceFromPair 不需要以太坊价格
 	for _, bp := range bps {
-		bp.Price=0
+		bp.Price = 0
 	}
 	if err == nil {
 		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
@@ -227,9 +252,9 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 		if err == nil {
 			//使其直接返回字符串
 			dataJson := gjson.ParseBytes(bs).Get("data")
-			if !dataJson.Exists(){
-				err=errors.New("data err")
-				return nil,err
+			if !dataJson.Exists() {
+				err = errors.New("data err")
+				return nil, err
 			}
 			if dataJson.Exists() {
 				//log.Println(res)
@@ -536,6 +561,7 @@ type HLPriceView struct {
 	//debug msg
 	Msg string `json:"msg,omitempty"`
 }
+
 //同HLPriceView ,但使用不一样的签名字段顺序
 type HLPriceViewRaw struct {
 	HLPriceView
@@ -554,17 +580,17 @@ type HLDataPriceView struct {
 	//股票杠杆币需要这个字段
 	MarketOpenTime int64
 }
-func(hldv *HLDataPriceView)Clean(){
-	for _, p := range hldv.Signs {
-		p.Sign=nil
-	}
-}
-func(sd *StockData)Clean(){
-	for _, p := range sd.Signs {
-		p.Sign=nil
-	}
-}
 
+func (hldv *HLDataPriceView) Clean() {
+	for _, p := range hldv.Signs {
+		p.Sign = nil
+	}
+}
+func (sd *StockData) Clean() {
+	for _, p := range sd.Signs {
+		p.Sign = nil
+	}
+}
 
 var infoTokenGraph = `{"query":"{\n  token(id:\"%s\") {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n  }\n}","variables":null}`
 
@@ -679,7 +705,7 @@ type TokenPrice struct {
 //ethUsd 0xdac17f958d2ee523a2206206994597c13d831ec7
 var chainUsdtDecimal = map[string]int{"bsc": 18, "eth": 6}
 
-func getSyncLog(item types.Log, tpc *TokenPairConf)*TokenPrice {
+func getSyncLog(item types.Log, tpc *TokenPairConf) *TokenPrice {
 	transferEvent := new(FanswapV2PairSync)
 	err := pairAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
 	if err != nil {
@@ -807,17 +833,17 @@ func SubPairlog(tpc *TokenPairConf) {
 		log.Fatalln(err)
 	}
 	log.Println("getlog len(logs)", len(logs1))
-	tps:=[]*TokenPrice{}
+	tps := []*TokenPrice{}
 	for _, item := range logs1 {
 		//log.Println(item) // pointer to event log
 		if item.Topics[0].Hex() == logTransferSigHash.Hex() {
 			//log.Printf("Log Name: Sync\n")
-			tps=append(tps, getSyncLog(item, tpc))
+			tps = append(tps, getSyncLog(item, tpc))
 			fromBlock = int64(item.BlockNumber)
 		}
 	}
-	if len(tps)>0{
-		utils.Orm.CreateInBatches(tps,2000)
+	if len(tps) > 0 {
+		utils.Orm.CreateInBatches(tps, 2000)
 	}
 
 	log.Println("begin sublog fromBlock", fromBlock)
@@ -843,13 +869,13 @@ RETRY:
 			goto RETRY
 		case vLog := <-logs:
 			//log.Println(vLog) // pointer to event log
-			tps:=[]*TokenPrice{}
+			tps := []*TokenPrice{}
 
 			if vLog.Topics[0].Hex() == logTransferSigHash.Hex() {
-				tps=append(tps, getSyncLog(vLog, tpc))
+				tps = append(tps, getSyncLog(vLog, tpc))
 			}
-			if len(tps)>0{
-				utils.Orm.CreateInBatches(tps,2000)
+			if len(tps) > 0 {
+				utils.Orm.CreateInBatches(tps, 2000)
 			}
 			fromBlock = int64(vLog.BlockNumber)
 		}
