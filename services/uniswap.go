@@ -41,7 +41,8 @@ type TokenDayData struct {
 var SwapBlockGraphApi = "https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks"
 var blockGraph = `{"operationName":"blocks","variables":{},"query":"query blocks {\n  t1624159500: blocks(first: 1, orderBy: timestamp, orderDirection: desc, where: {timestamp_gt: 1624159500, timestamp_lt: 1624160100}) {\n    number\n    __typename\n  }\n  t1624073100: blocks(first: 1, orderBy: timestamp, orderDirection: desc, where: {timestamp_gt: 1624073100, timestamp_lt: 1624073700}) {\n    number\n    __typename\n  }\n  t1623641100: blocks(first: 1, orderBy: timestamp, orderDirection: desc, where: {timestamp_gt: 1623641100, timestamp_lt: 1623641700}) {\n    number\n    __typename\n  }\n}\n"}`
 
-var SwapGraphApi = "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2"
+
+var SwapGraphApi = "https://api.thegraph.com/subgraphs/name/ianlapham/uniswapv2" //"https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
 var tokenDayDataGraph = `{"operationName":"tokenDayDatas","variables":{"tokenAddr":"%s","skip":0},"query":"query tokenDayDatas($tokenAddr: String\u0021, $skip: Int\u0021) {\n  tokenDayDatas(first: %d, skip: $skip, orderBy: date, orderDirection: desc, where: {token: $tokenAddr}) {\n    id\n    date\n    priceUSD\n    totalLiquidityToken\n    totalLiquidityUSD\n    totalLiquidityETH\n    dailyVolumeETH\n    dailyVolumeToken\n    dailyVolumeUSD\n    __typename\n  }\n}\n"}`
 
 func ReqSwapGraph(body string) ([]byte, error) {
@@ -70,7 +71,7 @@ type subGrahpErr struct {
 }
 
 func GetTokenDayData(tokenAddre string, days int) ([]byte, error) {
-	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(tokenDayDataGraph, tokenAddre, days)))
+	bs, err := ReqSwapGraph(fmt.Sprintf(tokenDayDataGraph, tokenAddre, days))
 	if err == nil {
 		//使其直接返回字符串
 		bs = bytes.TrimPrefix(bs, []byte(`{"data":{"tokenDayDatas":`))
@@ -153,7 +154,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	//times=[]int64{12427306,12429525}
 	times := getTokenTimes(interval, count)
 	//log.Println(times)
-	body, reqerr := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	body, reqerr := ReqSwapGraph(getBlockHeight)
 	if reqerr != nil {
 		return nil, reqerr
 	}
@@ -166,7 +167,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 			gql += fmt.Sprintf(`\nt%d: token(id: \"%s\", block: {number: %d}) {\n    derivedETH\n  }`, item.BlockTime, tokenAddre, item.ID)
 		}
 		gql += `\n}\n"}`
-		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
+		bs, err1 := ReqSwapGraph(gql)
 		err = err1
 		if err == nil {
 			//使其直接返回字符串
@@ -227,7 +228,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, count int) ([]*BlockPrice, error) {
 	times := getTokenTimes(interval, count)
 	//log.Println(times)
-	body, reqErr := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
+	body, reqErr := ReqSwapGraph(getBlockHeight)
 	if reqErr != nil {
 		return nil, reqErr
 	}
@@ -246,7 +247,7 @@ func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, cou
 		}
 		gql += `\n}\n"}`
 
-		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
+		bs, err1 := ReqSwapGraph(gql)
 		//log.Println("GetTokenTimesPriceFromPair",gql)
 		err = err1
 		if err == nil {
@@ -325,7 +326,7 @@ type LpSnapPairInfo struct {
 var infoLpDataGraph = `{"query":"{\n  liquidityPositionSnapshots(first:1,orderBy:timestamp,orderDirection:desc where:{pair:\"%s\"}) {\n  # id\n  timestamp\n  block\n  token0PriceUSD\n  token1PriceUSD\n  reserve0\n  reserve1\n  reserveUSD\n  liquidityTokenTotalSupply\n  # liquidityTokenBalance\n  }\n}","variables":null}`
 
 func GetLpPairInfo(pairAddre string) (pair *LpSnapPairInfo, err error) {
-	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(infoLpDataGraph, pairAddre)))
+	bs, err := ReqSwapGraph(fmt.Sprintf(infoLpDataGraph, pairAddre))
 	if err == nil {
 		//使其直接返回字符串
 		bs = bytes.TrimPrefix(bs, []byte(`{"data":{"liquidityPositionSnapshots":`))
@@ -387,62 +388,65 @@ func GetTokenInfosForStat(tokenAddre string, ethPrice float64) (OneDayStat, erro
 	times = []int64{twoDay.Unix(), oneDay.Unix(), now.Unix()}
 	//times=[]int64{12427306,12429525}
 	//times = getTokenTimes(interval, count)
-	body, _ := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(getBlockHeight))
-	result := gjson.Parse(string(body))
-	blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
-	bps, err := getBlockPrices(times, blockHeight)
-	log.Println(times)
+	body, err := ReqSwapGraph(getBlockHeight)
 	if err == nil {
-		gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
-		for _, item := range bps {
-			gql += fmt.Sprintf(`\nt%d: token(id: \"%s\", block: {number: %d}) {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n}`, item.BlockTime, tokenAddre, item.ID)
-		}
-		gql += `\n}\n"}`
-
-		bs, err1 := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(gql))
+		result := gjson.Parse(string(body))
+		blockHeight := result.Get("data").Get("_meta").Get("block").Get("number").Int()
+		bps, err1 := getBlockPrices(times, blockHeight)
 		err = err1
+		log.Println(times)
 		if err == nil {
-			//使其直接返回字符串
-			bs = bytes.TrimPrefix(bs, []byte(`{"data":`))
-			bs = bytes.TrimSuffix(bs, []byte(`}`))
-			res := map[string]*TokenInfo{}
-			err = json.Unmarshal(bs, &res)
-			if err == nil {
-				//log.Println(res)
-				tokens := []*TokenInfo{}
-				for _, item := range bps {
-					key := fmt.Sprintf("t%d", item.BlockTime)
-					log.Println("key", key, item.ID)
-					resItem, ok := res[key]
-					if ok {
-						tokens = append(tokens, resItem)
-						resItem.BlockTime = item.BlockTime
-					}
-				}
-				log.Println("GetTokenInfosForStat got tokens", len(tokens))
-				if len(tokens) < 3 {
-					for i := 0; i < 3-len(tokens); i++ {
-						tokens = append(tokens, tokens[len(tokens)-1])
-					}
-				}
-				ost := new(OneDayStat)
-				ost.LiquidityUsd, ost.LiquidityChange = get2DayPercentChangeFloat(parseFloat(tokens[2].TotalLiquidity)*bps[2].Price, parseFloat(tokens[1].TotalLiquidity)*bps[1].Price, parseFloat(tokens[0].TotalLiquidity)*bps[0].Price)
-				//ost.LiquidityUsd=RoundPrice(ost.LiquidityUsd*ethPrice)
-
-				ost.VolumeUsd, ost.VolumeChange = get2DayPercentChange(tokens[2].TradeVolumeUSD, tokens[1].TradeVolumeUSD, tokens[0].TradeVolumeUSD)
-
-				ost.TxCount, ost.TxCountChange = get2DayPercentChange(tokens[2].TxCount, tokens[1].TxCount, tokens[0].TxCount)
-
-				ost.PriceChange = getPercentChange(parseFloat(tokens[2].DerivedETH)*bps[2].Price, parseFloat(tokens[1].DerivedETH)*bps[1].Price)
-
-				log.Println(*ost)
-				return *ost, nil
-				//ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
-				//item.Price = RoundPrice(ethValue * item.Price)
-				//TotalLiquidity TradeVolumeUSD  TxCount PriceChange
+			gql := `{"operationName":"blocks","variables":{},"query":"query blocks {`
+			for _, item := range bps {
+				gql += fmt.Sprintf(`\nt%d: token(id: \"%s\", block: {number: %d}) {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n}`, item.BlockTime, tokenAddre, item.ID)
 			}
+			gql += `\n}\n"}`
+
+			bs, err1 := ReqSwapGraph(gql)
+			err = err1
+			if err == nil {
+				//使其直接返回字符串
+				bs = bytes.TrimPrefix(bs, []byte(`{"data":`))
+				bs = bytes.TrimSuffix(bs, []byte(`}`))
+				res := map[string]*TokenInfo{}
+				err = json.Unmarshal(bs, &res)
+				if err == nil {
+					//log.Println(res)
+					tokens := []*TokenInfo{}
+					for _, item := range bps {
+						key := fmt.Sprintf("t%d", item.BlockTime)
+						log.Println("key", key, item.ID)
+						resItem, ok := res[key]
+						if ok {
+							tokens = append(tokens, resItem)
+							resItem.BlockTime = item.BlockTime
+						}
+					}
+					log.Println("GetTokenInfosForStat got tokens", len(tokens))
+					if len(tokens) < 3 {
+						for i := 0; i < 3-len(tokens); i++ {
+							tokens = append(tokens, tokens[len(tokens)-1])
+						}
+					}
+					ost := new(OneDayStat)
+					ost.LiquidityUsd, ost.LiquidityChange = get2DayPercentChangeFloat(parseFloat(tokens[2].TotalLiquidity)*bps[2].Price, parseFloat(tokens[1].TotalLiquidity)*bps[1].Price, parseFloat(tokens[0].TotalLiquidity)*bps[0].Price)
+					//ost.LiquidityUsd=RoundPrice(ost.LiquidityUsd*ethPrice)
+
+					ost.VolumeUsd, ost.VolumeChange = get2DayPercentChange(tokens[2].TradeVolumeUSD, tokens[1].TradeVolumeUSD, tokens[0].TradeVolumeUSD)
+
+					ost.TxCount, ost.TxCountChange = get2DayPercentChange(tokens[2].TxCount, tokens[1].TxCount, tokens[0].TxCount)
+
+					ost.PriceChange = getPercentChange(parseFloat(tokens[2].DerivedETH)*bps[2].Price, parseFloat(tokens[1].DerivedETH)*bps[1].Price)
+
+					log.Println(*ost)
+					return *ost, nil
+					//ethValue, _ := strconv.ParseFloat(resItem.DerivedETH, 64)
+					//item.Price = RoundPrice(ethValue * item.Price)
+					//TotalLiquidity TradeVolumeUSD  TxCount PriceChange
+				}
+			}
+			//log.Println(gql ,string(bs),err)
 		}
-		//log.Println(gql ,string(bs),err)
 	}
 	if err != nil {
 		log.Println(err)
@@ -595,7 +599,7 @@ func (sd *StockData) Clean() {
 var infoTokenGraph = `{"query":"{\n  token(id:\"%s\") {\nsymbol\nname\ndecimals\ntotalSupply\ntradeVolume\ntradeVolumeUSD\nuntrackedVolumeUSD\ntxCount\ntotalLiquidity\nderivedETH\n\n  }\n}","variables":null}`
 
 func GetTokenInfo(pairAddre string) (token *TokenInfo, err error) {
-	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(infoTokenGraph, pairAddre)))
+	bs, err := ReqSwapGraph(fmt.Sprintf(infoTokenGraph, pairAddre))
 	if err == nil {
 		//使其直接返回字符串
 		bs = bytes.TrimPrefix(bs, []byte(`{"data":{"token":`))
@@ -613,7 +617,7 @@ func GetTokenInfo(pairAddre string) (token *TokenInfo, err error) {
 const pairInfoGraph = `{"query":"{\n  pair(id:\"%s\") {\n    id,\n reserveUSD, \n    token0Price,\n    token1Price,\n    token0{id,symbol,name,decimals,totalSupply,tradeVolume,tradeVolumeUSD,untrackedVolumeUSD,txCount,totalLiquidity,derivedETH},\n    token1{id,symbol,name,decimals,totalSupply,tradeVolume,tradeVolumeUSD,untrackedVolumeUSD,txCount,totalLiquidity,derivedETH}\n  \n  }\n}\n","variables":null}`
 
 func GetTokenInfoFromPair(pairAddr, tokenAddr string) (token *TokenInfo, err error) {
-	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(pairInfoGraph, pairAddr)))
+	bs, err := ReqSwapGraph(fmt.Sprintf(pairInfoGraph, pairAddr))
 	if err == nil {
 		//使其直接返回字符串
 		pairInfo := gjson.ParseBytes(bs).Get("data").Get("pair")
@@ -669,7 +673,7 @@ type PairInfo struct {
 var infoPairGraph = `{"query":"{\n  pair(id:\"%s\") {\ntoken0 {\n  id\n} \ntoken1 {\n  id\n} \nreserve0 \nreserve1 \ntotalSupply \nreserveETH \nreserveUSD \ntrackedReserveETH \ntoken0Price \ntoken1Price \nvolumeToken0 \nvolumeToken1 \nvolumeUSD \nuntrackedVolumeUSD \ntxCount \ncreatedAtTimestamp \ncreatedAtBlockNumber \nliquidityProviderCount\n  }\n}\n","variables":null}`
 
 func GetPairInfo(pairAddre string) (pair *PairInfo, err error) {
-	bs, err := utils.ReqResBody(SwapGraphApi, "", "POST", nil, []byte(fmt.Sprintf(infoPairGraph, pairAddre)))
+	bs, err := ReqSwapGraph(fmt.Sprintf(infoPairGraph, pairAddre))
 	if err == nil {
 		//使其直接返回字符串
 		bs = bytes.TrimPrefix(bs, []byte(`{"data":{"pair":`))

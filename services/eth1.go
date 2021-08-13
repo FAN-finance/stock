@@ -65,7 +65,7 @@ RETRYSUB:
 						payload := fmt.Sprintf(payloadFmt, targetBlock)
 						log.Println(string(payload))
 					RETRY:
-						bs, err1 := utils.ReqResBody("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", "https://opensea.io/rankings?sortBy=seven_day_volume&category=art", "POST", nil, json.RawMessage(payload))
+						bs, err1 := utils.ReqResBody(SwapGraphApi, "https://opensea.io/rankings?sortBy=seven_day_volume&category=art", "POST", nil, json.RawMessage(payload))
 						if err1 != nil {
 							log.Println("get price http err:", err1, string(bs))
 							time.Sleep(10 * time.Second)
@@ -81,7 +81,7 @@ RETRYSUB:
 							goto RETRY
 						}
 						if len(epayload.Data.Bundles) == 0 {
-							log.Println(string(bs))
+							log.Println("get price bundle err",string(bs))
 							time.Sleep(10 * time.Second)
 							log.Println("empty data goto retry")
 							goto RETRY

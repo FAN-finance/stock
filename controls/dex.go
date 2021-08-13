@@ -444,7 +444,7 @@ func TokenPriceHandler(c *gin.Context) {
 // @Produce  json
 // @Param     pair   path    string     true        "pair地址" default(0x4612b8de9fb6281f6d5aa29635cf5700148d1b67)
 // @Param     token   path    string     true        "token地址" default(0x5df42c20d79fe40b51aba8fe5c8aa6531a3c453b)
-// @Param     data_type   query    int     true   "最高最低价１最高　２最低价" default(1) Enums(1,2)
+// @Param     data_type   query    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
@@ -459,16 +459,23 @@ func PairTokenPriceHandler(c *gin.Context) {
 			return nil, err
 		}
 		vp := new(HLValuePair)
-		for _, item := range items {
-			if item.Price == 0 {
-				continue
+		sumPrice:=0.0
+		if len(items)>0 {
+			for _, item := range items {
+				if item.Price == 0 {
+					continue
+				}
+				log.Println("PairTokenPriceHandler internal", item.Price, item.CreatedAt, item.BlockTime)
+				vp.High = math.Max(vp.High, item.Price)
+				if vp.Low == 0 {
+					vp.Low = item.Price
+				}
+				vp.Low = math.Min(vp.Low, item.Price)
+				vp.Last = item.Price;
+
+				sumPrice += item.Price
 			}
-			log.Println(item.Price, item.CreatedAt, item.BlockTime)
-			vp.High = math.Max(vp.High, item.Price)
-			if vp.Low == 0 {
-				vp.Low = item.Price
-			}
-			vp.Low = math.Min(vp.Low, item.Price)
+			vp.Avg = sumPrice / float64(len(items))
 		}
 		return vp, err
 	}
@@ -516,6 +523,12 @@ func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token st
 		}
 		if dataType == 2 {
 			tPriceView.PriceUsd = vp.Low
+		}
+		if dataType == 3 {
+			tPriceView.PriceUsd = vp.Avg
+		}
+		if dataType == 4 {
+			tPriceView.PriceUsd = vp.Last
 		}
 		//tPriceView.PriceUsd = math.Trunc( tPriceView.PriceUsd*1000) / 1000
 		tPriceView.PriceUsd, _ = decimal.NewFromFloat(tPriceView.PriceUsd).Round(18).Float64()
