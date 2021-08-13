@@ -200,16 +200,18 @@ func StockInfoHandler(c *gin.Context) {
 	}
 	if err == nil {
 		//info.Price=avgPrice
-		snode := new(services.StockNode)
+		snode := new(services.StockNodeRaw)
 		snode.StockCode = code
 		snode.DataType = dataType
 		snode.NodeAddress = services.WalletAddre
 		snode.Price = (math.Trunc(float64(avgPrice)*1000) / 1000)
 		snode.BigPrice = services.GetUnDecimalPrice(float64(snode.Price)).String()
 		snode.Timestamp = int64(timestamp)
-		if services.IsSignTime(0) {
-			snode.SetSign()
-		}
+		snode.SetCode()
+		snode.SetSign()
+		//if services.IsSignTime(0) {
+		//	snode.SetSign()
+		//}
 		c.JSON(200, snode)
 		return
 	}
@@ -313,7 +315,7 @@ func StockAggreHandler(c *gin.Context) {
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
 	//节点数据
-	nodesPirce := []services.StockNode{}
+	nodesPirce := []*services.StockNodeRaw{}
 	//节点间平均值数据
 	avgNodesPrice := []services.StockNode{}
 	sdata := new(services.StockData)
@@ -325,11 +327,11 @@ func StockAggreHandler(c *gin.Context) {
 		reqUrl := fmt.Sprintf(nodeUrl+"/pub/stock/info/%s/%d/%d", code, dataType, timestamp)
 		bs, err := utils.ReqResBody(reqUrl, "", "GET", nil, nil)
 		if err == nil {
-			snode := new(services.StockNode)
+			snode := new(services.StockNodeRaw)
 			json.Unmarshal(bs, snode)
 			snode.Node = nodeUrl
 			sc.Lock()
-			nodesPirce = append(nodesPirce, *snode)
+			nodesPirce = append(nodesPirce, snode)
 			sc.Unlock()
 		}
 	}
@@ -454,7 +456,7 @@ END:
 // @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/stock_avgprice [post]
 func StockAvgPriceHandler(c *gin.Context) {
-	nodePrices := []*services.StockNode{}
+	nodePrices := []*services.StockNodeRaw{}
 	err := c.BindJSON(&nodePrices)
 	if err == nil {
 		if len(nodePrices) == 0 {
@@ -469,21 +471,46 @@ func StockAvgPriceHandler(c *gin.Context) {
 		}
 
 		timestamp := nodePrices[0].Timestamp
+		code := nodePrices[0].Code
 		stockCode := nodePrices[0].StockCode
 		dataType := nodePrices[0].DataType
 
 		sumPrice := decimal.NewFromFloat(0.0)
 		for _, node := range nodePrices {
-			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.Price))
+
 			//验证数据
-			if timestamp != node.Timestamp || stockCode != node.StockCode || dataType != node.DataType {
+			if timestamp != node.Timestamp || code != node.Code || dataType != node.DataType {
 				err = errors.New("需要共识的数据不一致")
 				break
 			}
-			//TODO 验证数据签名
-			//services.Verify(node.GetHash(),node.Sign,"")
+
+			//验证数据
+			if timestamp != node.Timestamp || code != node.Code || dataType != node.DataType {
+				err = errors.New("需要共识的数据不一致")
+				break
+			}
+			// 验证数据签名
+			if node.Sign == nil {
+				err = errors.New("miss node.sign")
+				break
+			}
+			//白名单验证
+			if !utils.IsInWL(node.NodeAddress) {
+				err = errors.New("addre not int whiteList")
+				break
+			}
+
+			ok, err1 := services.Verify(node.GetHash(), node.Sign, node.NodeAddress)
+			if !ok {
+				log.Println("Verify err", node.NodeAddress, err1)
+				err = errors.New("Verify err " + node.NodeAddress + " " + err1.Error())
+				break
+			}
+			sumPrice = sumPrice.Add(decimal.NewFromFloat(node.Price))
+
 		}
 		if err != nil {
+			log.Println( "StockAvgPriceHandler check",err)
 			ErrJson(c, err.Error())
 			return
 		}
@@ -493,14 +520,17 @@ func StockAvgPriceHandler(c *gin.Context) {
 		sdata.BigPrice = services.GetUnDecimalPrice(sdata.Price).String()
 		sdata.Timestamp = int64(timestamp)
 		sdata.StockCode = stockCode
+		sdata.SetCode()
 		sdata.DataType = dataType
 		sdata.NodeAddress = services.WalletAddre
-		if services.IsSignTime(0) {
+
+		signAble,msg:=IsSignAble(sdata.Code, sdata.Price)
+		sdata.Msg=msg
+		if signAble && services.IsSignTime(0) {
 			sdata.SetSign()
+		}else{
+			sdata.Msg="not in market time"
 		}
-		// TODO just for test need to delete
-		sdata.SetSign()
-		//sdata.SetSign()
 		c.JSON(200, sdata)
 		return
 	}

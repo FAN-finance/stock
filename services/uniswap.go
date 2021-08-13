@@ -676,9 +676,10 @@ type TokenPrice struct {
 	ChainName string
 }
 
+//ethUsd 0xdac17f958d2ee523a2206206994597c13d831ec7
 var chainUsdtDecimal = map[string]int{"bsc": 18, "eth": 6}
 
-func saveSyncLog(item types.Log, tpc *TokenPairConf) {
+func getSyncLog(item types.Log, tpc *TokenPairConf)*TokenPrice {
 	transferEvent := new(FanswapV2PairSync)
 	err := pairAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
 	if err != nil {
@@ -712,7 +713,7 @@ func saveSyncLog(item types.Log, tpc *TokenPairConf) {
 	tp.TokenPrice = RoundPrice(tp.TokenPrice)
 	tp.BlockNumber = item.BlockNumber
 	//log.Printf("%v",tp)
-	utils.Orm.Save(tp)
+	return tp
 }
 
 var pairAbi, _ = abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
@@ -806,14 +807,19 @@ func SubPairlog(tpc *TokenPairConf) {
 		log.Fatalln(err)
 	}
 	log.Println("getlog len(logs)", len(logs1))
+	tps:=[]*TokenPrice{}
 	for _, item := range logs1 {
 		//log.Println(item) // pointer to event log
 		if item.Topics[0].Hex() == logTransferSigHash.Hex() {
 			//log.Printf("Log Name: Sync\n")
-			saveSyncLog(item, tpc)
+			tps=append(tps, getSyncLog(item, tpc))
 			fromBlock = int64(item.BlockNumber)
 		}
 	}
+	if len(tps)>0{
+		utils.Orm.CreateInBatches(tps,2000)
+	}
+
 	log.Println("begin sublog fromBlock", fromBlock)
 	logs := make(chan types.Log)
 	query.FromBlock = fromBlockNum.SetInt64(fromBlock)
@@ -837,8 +843,13 @@ RETRY:
 			goto RETRY
 		case vLog := <-logs:
 			//log.Println(vLog) // pointer to event log
+			tps:=[]*TokenPrice{}
+
 			if vLog.Topics[0].Hex() == logTransferSigHash.Hex() {
-				saveSyncLog(vLog, tpc)
+				tps=append(tps, getSyncLog(vLog, tpc))
+			}
+			if len(tps)>0{
+				utils.Orm.CreateInBatches(tps,2000)
 			}
 			fromBlock = int64(vLog.BlockNumber)
 		}

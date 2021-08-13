@@ -50,9 +50,12 @@ type StockData struct {
 	BigPrice  string
 	Timestamp int64 `json:"Timestamp" gorm:"DEFAULT:0;"` //unix 秒数
 	//所有节点签名列表
-	Signs []StockNode
+	Signs []*StockNodeRaw
 	//所有节点平均价格签名列表
 	AvgSigns []StockNode
+}
+type StockNodeRaw struct {
+	StockNode
 }
 type StockNode struct {
 	//股票代码
@@ -69,8 +72,15 @@ type StockNode struct {
 	BigPrice string
 	// Sign_Hash值由 Timestamp　DataType BigPrice Code计算
 	Sign []byte
+	//debug
+	Msg string
 }
 
+func (s *StockNodeRaw) SetSign() {
+	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
+	hash := s.GetHash()
+	s.Sign = SignMsg(hash)
+}
 func (s *StockNode) SetSign() {
 	//msg:=fmt.Sprintf("%s,%d,%f",s.Code,s.Timestamp, s.Price)
 	hash := s.GetHash()
