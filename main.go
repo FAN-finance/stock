@@ -142,7 +142,9 @@ func main() {
 	api := router.Group("/pub")
 	api.Use(controls.Stat())
 	go controls.SaveStat()
+	controls.InitConfig()
 
+	api.GET("/system/config", controls.ConfigHandler)
 	api.GET("/stock/info/:code/:data_type/:timestamp", controls.StockInfoHandler)
 	api.GET("/stock/market_status/:timestamp", controls.UsaMarketStatusHandler)
 	api.POST("/internal/stock_avgprice", controls.StockAvgPriceHandler)
@@ -188,6 +190,8 @@ func main() {
 	api.GET("/alert/coindata", controls.CoinDataCheckHandler)
 	api.GET("/alert/btc_sign_check", controls.BtcSignCheckHandler)
 	api.GET("/db.sql.gz", controls.DbExportHandler)
+
+
 
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 

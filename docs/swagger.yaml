@@ -22,6 +22,30 @@ definitions:
       Error:
         type: string
     type: object
+  controls.config:
+    properties:
+      ftxTokenAddres:
+        additionalProperties:
+          type: string
+        type: object
+      isDisableAllSign:
+        description: 禁用所有签名
+        type: boolean
+      isDisableFtxSign:
+        description: 禁用ftx签名
+        type: boolean
+      safePrice:
+        additionalProperties:
+          $ref: '#/definitions/controls.mm'
+        type: object
+    type: object
+  controls.mm:
+    properties:
+      max:
+        type: number
+      min:
+        type: number
+    type: object
   controls.resMarketStatus:
     properties:
       isOpening:
@@ -1944,6 +1968,26 @@ paths:
           schema:
             $ref: '#/definitions/controls.ApiErr'
       summary: 所有节点状态:记录数,钱包地址
+      tags:
+      - default
+  /pub/system/config:
+    get:
+      consumes:
+      - application/json
+      description: 配制信息
+      operationId: ConfigHandler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: config json
+          schema:
+            $ref: '#/definitions/controls.config'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/controls.ApiErr'
+      summary: 配制信息
       tags:
       - default
 swagger: "2.0"

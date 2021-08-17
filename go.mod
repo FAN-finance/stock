@@ -23,11 +23,9 @@ require (
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.7.0
 	github.com/tidwall/gjson v1.7.5
-	go.etcd.io/etcd/client/v3 v3.5.0-alpha.0
+	go.etcd.io/etcd/client/v3 v3.5.0
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
 	golang.org/x/text v0.3.6 // indirect
-	golang.org/x/tools v0.1.0 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/gorm v1.21.6
 )

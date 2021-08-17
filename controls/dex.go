@@ -709,7 +709,6 @@ func CheckSafePrice(code string, price float64) bool {
 	}
 	return true
 }
-
 type mm struct {
 	Min float64
 	Max float64

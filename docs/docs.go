@@ -2189,6 +2189,36 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/pub/system/config": {
+            "get": {
+                "description": "配制信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "default"
+                ],
+                "summary": "配制信息",
+                "operationId": "ConfigHandler",
+                "responses": {
+                    "200": {
+                        "description": "config json",
+                        "schema": {
+                            "$ref": "#/definitions/controls.config"
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/controls.ApiErr"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2221,6 +2251,42 @@ var doc = `{
             "properties": {
                 "Error": {
                     "type": "string"
+                }
+            }
+        },
+        "controls.config": {
+            "type": "object",
+            "properties": {
+                "ftxTokenAddres": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "isDisableAllSign": {
+                    "description": "禁用所有签名",
+                    "type": "boolean"
+                },
+                "isDisableFtxSign": {
+                    "description": "禁用ftx签名",
+                    "type": "boolean"
+                },
+                "safePrice": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/controls.mm"
+                    }
+                }
+            }
+        },
+        "controls.mm": {
+            "type": "object",
+            "properties": {
+                "max": {
+                    "type": "number"
+                },
+                "min": {
+                    "type": "number"
                 }
             }
         },
