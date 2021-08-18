@@ -699,7 +699,7 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 }
 
 var safePrice = map[string]*mm{
-	"0x011864d37035439e078d64630777ec518138af05": &mm{1, 5},
+	"0x011864d37035439e078d64630777ec518138af05": &mm{0.5, 3},
 }
 
 func CheckSafePrice(code string, price float64) bool {
