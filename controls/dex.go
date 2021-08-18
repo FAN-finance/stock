@@ -716,7 +716,7 @@ type mm struct {
 }
 
 func SpecialOpenTime() bool {
-	n := time.Now()
+	n := time.Now().In(time.UTC)
 	//n,_=time.ParseInLocation("2006-01-02 15:04","2021-08-13 02:01",time.UTC )
 	btime, err := time.ParseInLocation("2006-01-02 15", "2021-08-13 13", time.UTC)
 	if err != nil {
