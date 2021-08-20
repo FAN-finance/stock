@@ -20,7 +20,7 @@ type ResBody struct {
 	Code int    `example:"200" json:"code"`
 	Msg  string `example:"ok" json:"msg"`
 	//Data interface{} `json:"data"`
-	Data interface{} `json:"result"`
+	Data interface{} `json:"data"`
 	Time time.Time
 }
 type ResPager struct {
