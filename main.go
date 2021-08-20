@@ -140,7 +140,7 @@ func main() {
 	//domainDir:=router.Group("/nft")
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := router.Group("/pub")
-	api.Use(controls.Stat())
+	api.Use(controls.MiddleWareStat())
 	go controls.SaveStat()
 
 	api.GET("/stock/info/:code/:data_type/:timestamp", controls.StockInfoHandler)
@@ -189,6 +189,11 @@ func main() {
 	api.GET("/alert/btc_sign_check", controls.BtcSignCheckHandler)
 	api.GET("/db.sql.gz", controls.DbExportHandler)
 
+	sys := router.Group("/sys")
+	controls.InitJwt(sys)
+	api.POST("/login", controls.AuthMiddleware.LoginHandler)
+	api.GET("/pre_login", controls.ChallengeHandler)
+	sys.GET("/hello", controls.HelloJwtHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context) {
@@ -198,6 +203,7 @@ func main() {
 	go router.RunTLS(":8002", "./asset/tls.pem", "./asset/tls.pem")
 	log.Fatal(router.Run(":" + serverPort))
 }
+
 
 // @Tags default
 // @Summary　当前节点状态:记录数,钱包地址
