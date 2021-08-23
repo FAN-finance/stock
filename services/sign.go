@@ -369,3 +369,21 @@ func InitNodeKey() {
 	log.Println("WalletAddre:", WalletAddre)
 	Uptime = time.Now()
 }
+
+var AdminWallets=map[string]bool{}
+func SetAList(list []string) {
+	if WalletAddre==""{
+		log.Fatalln("WalletAddre not init")
+	}
+	AdminWallets[WalletAddre]=true
+
+	for _, value := range list {
+		AdminWallets[value]= true
+	}
+}
+func IsAdmin(addr string)bool{
+	if WalletAddre==""{
+		log.Fatalln("WalletAddre not init")
+	}
+	return AdminWallets[addr]
+}

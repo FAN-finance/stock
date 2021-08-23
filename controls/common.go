@@ -234,7 +234,7 @@ func InitJwt(routeGroup *gin.RouterGroup) {
 				return nil,err
 			}else{
 				 lres:=loginRes{userID,false}
-				if userID==services.WalletAddre{
+				if services.IsAdmin(userID){
 					lres.IsAdmin=true
 				}
 				c.Set("loginres",lres)
