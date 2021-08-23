@@ -459,8 +459,8 @@ func PairTokenPriceHandler(c *gin.Context) {
 			return nil, err
 		}
 		vp := new(HLValuePair)
-		sumPrice:=0.0
-		if len(items)>0 {
+		sumPrice := 0.0
+		if len(items) > 0 {
 			for _, item := range items {
 				if item.Price == 0 {
 					continue
@@ -471,7 +471,7 @@ func PairTokenPriceHandler(c *gin.Context) {
 					vp.Low = item.Price
 				}
 				vp.Low = math.Min(vp.Low, item.Price)
-				vp.Last = item.Price;
+				vp.Last = item.Price
 
 				sumPrice += item.Price
 			}
@@ -672,7 +672,7 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 		msg = "All Sign　is disable now"
 		return
 	}
-	if  !SpecialOpenTime() {
+	if !SpecialOpenTime() {
 		signAble = false
 		msg = "only open in hour utc02 and utc14"
 		return
@@ -700,6 +700,13 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 
 var safePrice = map[string]*mm{
 	"0x011864d37035439e078d64630777ec518138af05": &mm{0.5, 3},
+	"0x5190144c70f024bbccf9b41690e4ce3ccac31a68": &mm{75000, 270000},
+	"0x66094a0624a4e8a8b9a7eff8dc0982706015340d": &mm{10000, 38000},
+	"0x247913d11957f3561d4a14166ec478c3c70a9297": &mm{3600, 13000},
+	"0xb1c1504c6f2646cad9ed291158b694723d38c394": &mm{500, 1800},
+	"0xab9016557b3fe80335415d60d33cf2be4b9ba461": &mm{3800, 13680},
+	"0x6b5ab672ac243193b006ea819a5eb08bcd518de7": &mm{170, 600},
+	"0xc7b86cc68c2b49f2609e9b5e12f0aa7be775bf1d": &mm{7, 25},
 }
 
 func CheckSafePrice(code string, price float64) bool {
@@ -723,7 +730,7 @@ func SpecialOpenTime() bool {
 		log.Fatalln(err)
 	}
 	h := n.Hour()
-	if n.After(btime) && (h == 14 || h == 2) {
+	if n.After(btime) && (h == 14 || h == 15 || h == 2 || h == 3) {
 		return true
 	}
 	return false
