@@ -104,7 +104,7 @@ func main() {
 		////更新twelvedata数据源bull数据
 		//go services.SetAllBullsFromTw(true)
 
-		services.SetAllBullsFromTw(true)
+		services.SetAllBullsFromTw(false)
 		services.CronTwData()
 		services.Cn.Start()
 
