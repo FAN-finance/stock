@@ -226,7 +226,9 @@
                             "btc3x",
                             "eth3x",
                             "vix3x",
-                            "gold10x",
+                            "gold3x",
+                            "gold3s",
+                            "gold3x",
                             "eur20x",
                             "ndx10x",
                             "govt20x",
@@ -325,7 +327,9 @@
                             "eth3x",
                             "vix3x",
                             "govt20x",
-                            "gold10x",
+                            "gold3x",
+                            "gold3s",
+                            "",
                             "eur20x",
                             "ndx10x",
                             "mvi2s",
@@ -1289,7 +1293,8 @@
                             "btc3x",
                             "eth3x",
                             "vix3x",
-                            "gold10x",
+                            "gold3x",
+                            "gold3s",
                             "eur20x",
                             "ndx10x",
                             "govt20x",
@@ -1501,11 +1506,13 @@
                     {
                         "enum": [
                             1,
-                            2
+                            2,
+                            3,
+                            4
                         ],
                         "type": "integer",
                         "default": 1,
-                        "description": "最高最低价１最高　２最低价",
+                        "description": "最高最低价１最高　２最低价 3平均价 4最后价",
                         "name": "data_type",
                         "in": "query",
                         "required": true
@@ -2470,7 +2477,7 @@
                     "description": "所有节点签名列表",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/services.StockNode"
+                        "$ref": "#/definitions/services.StockNodeRaw"
                     }
                 },
                 "stockCode": {
@@ -2497,6 +2504,58 @@
                 "dataType": {
                     "description": "最高最低价１最高　２最低价",
                     "type": "integer"
+                },
+                "msg": {
+                    "description": "debug",
+                    "type": "string"
+                },
+                "node": {
+                    "description": "节点名字",
+                    "type": "string"
+                },
+                "nodeAddress": {
+                    "description": "节点地址",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "新价",
+                    "type": "number"
+                },
+                "sign": {
+                    "description": "Sign_Hash值由 Timestamp　DataType BigPrice Code计算",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "stockCode": {
+                    "description": "股票代码",
+                    "type": "string"
+                }
+            }
+        },
+        "services.StockNodeRaw": {
+            "type": "object",
+            "properties": {
+                "Timestamp": {
+                    "description": "unix 秒数",
+                    "type": "integer"
+                },
+                "bigPrice": {
+                    "description": "Multiply the Price by 1000000000000000000 to remove decimals",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "合约代码",
+                    "type": "string"
+                },
+                "dataType": {
+                    "description": "最高最低价１最高　２最低价",
+                    "type": "integer"
+                },
+                "msg": {
+                    "description": "debug",
+                    "type": "string"
                 },
                 "node": {
                     "description": "节点名字",

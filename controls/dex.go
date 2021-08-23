@@ -686,6 +686,11 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 				signAble = false
 				msg = "none stockTime"
 			}
+		}else if isGoldFtx(code) { //gold ftx签名
+			if !IsGoldSignTime(0) {
+				signAble = false
+				msg = "none gold marKetTime"
+			}
 		}
 	} else {
 		log.Println("sign for none ftx", code)
@@ -696,6 +701,33 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 		msg = fmt.Sprintf("safe price check fail %f", price)
 	}
 	return
+}
+func IsGoldSignTime(timestamp int64) bool {
+	if timestamp == 0 {
+		timestamp = time.Now().Unix()
+	}
+	ttime := time.Unix(timestamp, 0).UTC()
+	wd := ttime.Weekday()
+	if wd == time.Saturday {
+		return false
+	}
+	switch wd {
+	case time.Friday:
+		//marketTime endTime 22:00
+		eTime := time.Date(ttime.Year(), ttime.Month(), ttime.Day(), 21, 0, 0, 0, time.UTC)
+		if ttime.After(eTime) {
+			return false
+		}
+	case time.Sunday:
+		//marketTime begin 22:00,sign begin at 23
+		bTime := time.Date(ttime.Year(), ttime.Month(), ttime.Day(), 23, 0, 0, 0, time.UTC)
+		if ttime.Before(bTime) {
+			return false
+		}
+	case time.Monday, time.Tuesday, time.Wednesday, time.Thursday:
+		return true
+	}
+	return true
 }
 
 var safePrice = map[string]*mm{

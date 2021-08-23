@@ -79,7 +79,7 @@ func main() {
 	//	//time.Sleep(time.Second*63)
 	//}
 	//return
-	//services.SetAllBullsFromTw(true)
+	//services.SetAllBullsFromTw(false)
 	//return
 	if job {
 		//sync coingecko数据

@@ -19,7 +19,7 @@ import (
 // @ID FtxPriceSignHandler
 // @Accept  json
 // @Produce  json
-// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,usd, btc3x, eth3x, vix3x, govt20x, gold10x, eur20x,ndx10x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
+// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,usd, btc3x, eth3x, vix3x, govt20x, gold3x,gold3s,, eur20x,ndx10x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
 // @Param     data_type   path    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 //@Param     debug   query    int     false    "调试" default(0)
@@ -181,7 +181,8 @@ var ftxAddres = map[string]string{
 	"eth3s":   "0xb1c1504c6f2646cad9ed291158b694723d38c394",
 	"vix3x":   "0x25CfA4eB34FE87794372c2Fac25fE1cEB1958183",
 	"govt20x": "0xab9016557b3fe80335415d60d33cf2be4b9ba461",
-	"gold10x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
+	"gold3x": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
+	"gold3s": "0x34d97B5F814Ca6E3230429DCfF42d169800cA697",
 	"eur20x":  "0x2Be088a27150fc122233356dFBF3a0C01684329C",
 	"ndx10x":  "0x9578BF55c12C66E222344c3244Db6eA8b2498aca",
 	"usd":     "0x76417e660df3e5c90c0361674c192da152a806e4",
@@ -193,7 +194,7 @@ var ftxAddres = map[string]string{
 // @ID FtxPriceHandler
 // @Accept  json
 // @Produce  json
-// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,usd, btc3x, eth3x, vix3x, gold10x, eur20x,ndx10x,govt20x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
+// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,usd, btc3x, eth3x, vix3x, gold3x,gold3s, eur20x,ndx10x,govt20x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
 // @Param     data_type   query    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
@@ -332,6 +333,16 @@ func isStockFtx(code string) bool {
 	return false
 }
 
+func isGoldFtx(code string) bool {
+	if code == "gold3x" || code == "gold3s" {
+		return true
+	}
+	if code == ftxAddres["gold3x"] || code == ftxAddres["gold3s"]{
+		return true
+	}
+	return false
+}
+
 
 // @Tags default
 // @Summary　获取杠杆btc代币不同时间区间的价格图表信息
@@ -339,7 +350,7 @@ func isStockFtx(code string) bool {
 // @ID FtxChartPricesHandler
 // @Accept  json
 // @Produce  json
-// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,btc3x, eth3x, vix3x, gold10x, eur20x,ndx10x,govt20x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
+// @Param     coin_type   path    string     true        "ftx类型" default(btc3x)  Enums(mvi2x,btc3x, eth3x, vix3x, gold3x,gold3s,gold3x, eur20x,ndx10x,govt20x,mvi2s, btc3s, eth3s, vix3s, gold10s, eur20s,ndx10s,govt20s)
 // @Param     count   path    int     true    "获取多少个数据点" default(10)
 // @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；" default(1) Enums(1,2,3,4,96)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
