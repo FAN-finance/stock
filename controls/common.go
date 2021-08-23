@@ -20,14 +20,14 @@ type ResBody struct {
 	Code int    `example:"200" json:"code"`
 	Msg  string `example:"ok" json:"msg"`
 	//Data interface{} `json:"data"`
-	Data interface{} `json:"data"`
+	Data interface{} `json:"data" swaggertype:"object"`
 	Time time.Time
 }
 type ResPager struct {
 	Page  int         `example:"1" json:"page"`
 	PageSize int         `example:"10" json:"page_size"`
 	Total    int         `example:"100" json:"total"`
-	Result   interface{} `json:"result"`
+	Result   interface{} `json:"result" swaggertype:"object"`
 }
 func NewResBody(c *gin.Context, data interface{}) {
 	resb:=new(ResBody)
@@ -51,7 +51,7 @@ func NewResListBody(c *gin.Context, pageNum,pageSize,total int, listData interfa
 	c.JSON(200, resb)
 }
 
-func ResErrMsgWithCode(c *gin.Context, err string ) {
+func ResErrMsg(c *gin.Context, err string ) {
 	//msg:=GetCCErrorStr(err)
 	resb:=new(ResBody)
 	resb.Msg=err
@@ -307,4 +307,12 @@ func HelloJwtHandler(c *gin.Context) {
 		"text":     "Hello World.",
 		"claims":claims,
 	})
+}
+func IsAdmin(c *gin.Context)bool{
+	claims := jwtgin.ExtractClaims(c)
+	isadmin,ok:=claims["isAdmin"]
+	if ok && isadmin.(bool){
+		return true
+	}
+	return false
 }
