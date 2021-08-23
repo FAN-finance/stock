@@ -568,7 +568,9 @@ paths:
         - btc3x
         - eth3x
         - vix3x
-        - gold10x
+        - gold3x
+        - gold3s
+        - gold3x
         - eur20x
         - ndx10x
         - govt20x
@@ -643,7 +645,9 @@ paths:
         - eth3x
         - vix3x
         - govt20x
-        - gold10x
+        - gold3x
+        - gold3s
+        - ""
         - eur20x
         - ndx10x
         - mvi2s
@@ -1359,7 +1363,8 @@ paths:
         - btc3x
         - eth3x
         - vix3x
-        - gold10x
+        - gold3x
+        - gold3s
         - eur20x
         - ndx10x
         - govt20x

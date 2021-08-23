@@ -35,7 +35,7 @@ var ftxMultipleMap = map[string]int{
 	"eth": 3,
 	"vix": 3,
 	//"ust":  20,
-	"gold": 10,
+	"gold": 3,
 	"eur":  20,
 	"ndx":  10,
 	"govt": 20,
@@ -56,21 +56,14 @@ var ftxAJInitValueMap = map[string]float64{
 	//"eth3x": 6411,
 	"vix3x": 53.7,
 	//"ust":  20,
-	"gold10x": 19022.8,
+	"gold3x": 5300,
+	"gold3s": 5300,
 	"eur20x":  244.66,
 	"ndx10x":  136488,
 	"govt20x": 5268,
 	"mvi2s":   112.0,
 	"btc3s":   98265.0,
 	"eth3s":   6205.8,
-	//"mvi2s":1626825600,
-	//"btc3s":1626825600,
-	//"eth3s":1626825600,
-	//"vix3s":1626825600,
-	//"gold10s":1626825600,
-	//"eur20s":1626825600,
-	//"ndx10s":1626825600,
-	//"govt20s":1626825600,
 }
 
 var ftxXMap = map[int]float64{
@@ -210,14 +203,14 @@ var cointTypeInitTime = map[string]int{
 	"eth3x":   0,
 	"vix3x":   0,
 	"govt20x": 0,
-	"gold10x": 0,
+	"gold3x": 1629698400,
 	"eur20x":  0,
 	"ndx10x":  0,
 	"mvi2s":   1627005600,
 	"btc3s":   1627005600,
 	"eth3s":   1627005600,
 	"vix3s":   3626825600,
-	"gold10s": 2626825600,
+	"gold3s": 1629698400,
 	"eur20s":  2626825600,
 	"ndx10s":  2626825600,
 	"govt20s": 2626825600,
@@ -611,7 +604,7 @@ type CoinBull struct {
 	ID uint `gorm:"primarykey"`
 	//原币价格抓取时对应的时间秒数
 	Timestamp int64
-	//杠杆币的类型：btc3x eth3x vix3x ust20x gold10x eur20x ndx10x　govt20x
+	//杠杆币的类型：btc3x eth3x vix3x ust20x gold3x gold3s eur20x ndx10x　govt20x
 	CoinType string
 	//bull价格
 	Bull float64
