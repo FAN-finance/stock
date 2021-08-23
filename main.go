@@ -144,7 +144,6 @@ func main() {
 	go controls.SaveStat()
 	//controls.InitDicConfig()
 
-	api.GET("/system/config", controls.ConfigHandler)
 	api.GET("/stock/info/:code/:data_type/:timestamp", controls.StockInfoHandler)
 	api.GET("/stock/market_status/:timestamp", controls.UsaMarketStatusHandler)
 	api.POST("/internal/stock_avgprice", controls.StockAvgPriceHandler)
@@ -191,6 +190,7 @@ func main() {
 	api.GET("/alert/btc_sign_check", controls.BtcSignCheckHandler)
 	api.GET("/db.sql.gz", controls.DbExportHandler)
 
+
 	api.GET("dic_config", controls.ConfigHandler)
 	api.POST("dic_config", controls.ConfigUpdateHandler)
 	sys := router.Group("/sys")
@@ -199,6 +199,7 @@ func main() {
 	api.GET("/pre_login", controls.ChallengeHandler)
 	sys.GET("/hello", controls.HelloJwtHandler)
 	sys.POST("dic_config", controls.ConfigUpdateHandler)
+
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context) {
