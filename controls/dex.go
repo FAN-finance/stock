@@ -718,12 +718,12 @@ func IsGoldSignTime(timestamp int64) bool {
 		if ttime.After(eTime) {
 			return false
 		}
-	case time.Sunday:
-		//marketTime begin 22:00,sign begin at 23
-		bTime := time.Date(ttime.Year(), ttime.Month(), ttime.Day(), 23, 0, 0, 0, time.UTC)
-		if ttime.Before(bTime) {
-			return false
-		}
+	//case time.Sunday:
+	//	//marketTime begin 22:00,sign begin  at tow hour later 23
+	//	bTime := time.Date(ttime.Year(), ttime.Month(), ttime.Day(), 23, 0, 0, 0, time.UTC)
+	//	if ttime.Before(bTime) {
+	//		return false
+	//	}
 	case time.Monday, time.Tuesday, time.Wednesday, time.Thursday:
 		return true
 	}

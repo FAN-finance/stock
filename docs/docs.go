@@ -345,7 +345,6 @@ var doc = `{
                             "govt20x",
                             "gold3x",
                             "gold3s",
-                            "",
                             "eur20x",
                             "ndx10x",
                             "mvi2s",

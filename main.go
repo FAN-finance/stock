@@ -144,7 +144,6 @@ func main() {
 	go controls.SaveStat()
 	controls.InitConfig()
 
-	api.GET("/system/config", controls.ConfigHandler)
 	api.GET("/stock/info/:code/:data_type/:timestamp", controls.StockInfoHandler)
 	api.GET("/stock/market_status/:timestamp", controls.UsaMarketStatusHandler)
 	api.POST("/internal/stock_avgprice", controls.StockAvgPriceHandler)
@@ -192,11 +191,13 @@ func main() {
 	api.GET("/db.sql.gz", controls.DbExportHandler)
 
 
+	api.GET("dic_config", controls.ConfigHandler)
 	sys := router.Group("/sys")
 	controls.InitJwt(sys)
 	api.POST("/login", controls.AuthMiddleware.LoginHandler)
 	api.GET("/pre_login", controls.ChallengeHandler)
 	sys.GET("/hello", controls.HelloJwtHandler)
+	sys.POST("/dic_config", controls.ConfigHandler)
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context) {
