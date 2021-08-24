@@ -13,10 +13,11 @@ import (
 	"errors"
 )
 
-//jwt
+
 type loginModel struct {
 	//Username string `form:"username" json:"username" binding:"required"`
 	//Password string `form:"password" json:"password" binding:"required"`
+
 	Address string `form:"address" json:"address" binding:"required"`
 	Signature string `form:"signature" json:"signature" binding:"required"`
 

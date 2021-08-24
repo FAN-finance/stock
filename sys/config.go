@@ -12,7 +12,7 @@ import (
 	"stock/controls"
 )
 
-// @Tags default
+// @Tags sys
 // @Summary　获取字典配制信息
 // @Description 字典配制信息
 // @ID ConfigHandler
@@ -30,7 +30,7 @@ func ConfigHandler(c *gin.Context) {
 	}
 }
 
-// @Tags default
+// @Tags sys
 // @Summary　修改字典配制信息
 // @Description 修改字典配制信息
 // @ID ConfigHandler

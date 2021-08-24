@@ -2301,7 +2301,7 @@ var doc = `{
                     "200": {
                         "description": "node stat",
                         "schema": {
-                            "$ref": "#/definitions/main.NodeStat"
+                            "$ref": "#/definitions/controls.NodeStat"
                         },
                         "headers": {
                             "sign": {
@@ -2339,7 +2339,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.NodeStat"
+                                "$ref": "#/definitions/controls.NodeStat"
                             }
                         }
                     },
@@ -2468,18 +2468,7 @@ var doc = `{
                 }
             }
         },
-        "controls.resMarketStatus": {
-            "type": "object",
-            "properties": {
-                "isOpening": {
-                    "type": "boolean"
-                },
-                "openTime": {
-                    "type": "integer"
-                }
-            }
-        },
-        "main.NodeStat": {
+        "controls.NodeStat": {
             "type": "object",
             "properties": {
                 "blockPricesUpdateAt": {
@@ -2508,6 +2497,17 @@ var doc = `{
                 "walletAddre": {
                     "description": "钱包地址",
                     "type": "string"
+                }
+            }
+        },
+        "controls.resMarketStatus": {
+            "type": "object",
+            "properties": {
+                "isOpening": {
+                    "type": "boolean"
+                },
+                "openTime": {
+                    "type": "integer"
                 }
             }
         },
@@ -2948,7 +2948,6 @@ var doc = `{
             ],
             "properties": {
                 "address": {
-                    "description": "Username string ` + "`" + `form:\"username\" json:\"username\" binding:\"required\"` + "`" + `\nPassword string ` + "`" + `form:\"password\" json:\"password\" binding:\"required\"` + "`" + `",
                     "type": "string"
                 },
                 "signature": {
