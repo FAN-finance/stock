@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 	"net/url"
+	"stock/common"
 	"stock/utils"
 	"log"
 	"fmt"
@@ -31,7 +32,7 @@ type AnyApiRes struct {
 // @Param     req   query    string     true        "数据url" default(https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD)
 // @Param     path   query    string     false    "指向数据字段的json path" default(RAW.ETH.USD.VOLUME24HOUR)
 // @Success 200 {object} AnyApiRes	"data"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/any_api [get]
 func NodeAnyApiHandler(c *gin.Context) {
 	reqUrl:=c.Query("req")
@@ -46,7 +47,7 @@ func NodeAnyApiHandler(c *gin.Context) {
 		c.JSON(200,ares)
 		return
 	}
-	ErrJson(c,err.Error())
+	common.ErrJson(c,err.Error())
 }
 // @Tags default
 // @Summary　所有节点any-api
@@ -57,7 +58,7 @@ func NodeAnyApiHandler(c *gin.Context) {
 // @Param     req   query    string     true        "数据url" default(https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD)
 // @Param     path   query    string     false    "指向数据字段的json path" default(RAW.ETH.USD.VOLUME24HOUR)
 // @Success 200 {array} AnyApiRes	"any api data"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/any_apis [get]
 func NodeAnyApisHandler(c *gin.Context) {
 	reqUrl:=c.Query("req")
@@ -92,7 +93,7 @@ func NodeAnyApisHandler(c *gin.Context) {
 	return
 
 	if err != nil {
-		ErrJson(c,err.Error())
+		common.ErrJson(c,err.Error())
 		return
 	}
 }

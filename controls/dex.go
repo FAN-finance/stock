@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	"log"
 	"math"
+	"stock/common"
 	"stock/services"
 	"stock/utils"
 	"strconv"
@@ -28,7 +29,7 @@ import (
 //@Param     debug   query    int     false    "调试" default(0)
 // @Success 200 {object} services.HLDataPriceView	"token price info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_chain_price/{token}/{data_type}/{timestamp} [get]
 func TokenChainPriceSignHandler(c *gin.Context) {
 	tokenPriceSignProces(c, "/pub/internal/dex/token_chain_price/%s/%d?data_type=%d")
@@ -46,7 +47,7 @@ func TokenChainPriceSignHandler(c *gin.Context) {
 //@Param     debug   query    int     false    "调试" default(0)
 // @Success 200 {object} services.HLDataPriceView	"token price info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_price/{token}/{data_type}/{timestamp} [get]
 func TokenPriceSignHandler(c *gin.Context) {
 	tokenPriceSignProces(c, "/pub/internal/dex/token_price/%s/%d?data_type=%d")
@@ -64,7 +65,7 @@ func TokenPriceSignHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Param     debug   query    int     false    "调试" default(0)
 // @Success 200 {object} services.HLDataPriceView	"token price info"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/pair/token_price/{pair}/{token}/{data_type}/{timestamp} [get]
 func PairTokenPriceSignHandler(c *gin.Context) {
 	pair := c.Param("pair")
@@ -163,7 +164,7 @@ func PairTokenPriceSignHandler(c *gin.Context) {
 
 END:
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 	}
 }
 
@@ -177,7 +178,7 @@ func tokenPriceSignProces(c *gin.Context, providerUrl string) {
 	//ckey:=fmt.Sprintf("TokenPriceSignHandler-%s",code)
 	//var addres []*services.PriceView
 	//proc:= func()(interface{},error) {}
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 
 	resTokenView := new(services.HLDataPriceView)
 	avgNodesPrice := []*services.HLPriceView{}
@@ -259,7 +260,7 @@ func tokenPriceSignProces(c *gin.Context, providerUrl string) {
 	return
 END:
 	if err == nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 	}
 }
 
@@ -281,7 +282,7 @@ type HLValuePair struct {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_chain_price/{token}/{timestamp} [get]
 func TokenChainPriceHandler(c *gin.Context) {
 	dataProc := func(code string) (interface{}, error) {
@@ -328,7 +329,7 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 	dataTypeStr := c.Query("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf(processName+"-%s", code)
 
 	proc := func() (interface{}, error) {
@@ -358,7 +359,7 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 		}
 		if vmsg != "" {
 			log.Println(vmsg, *vp)
-			ErrJson(c, vmsg)
+			common.ErrJson(c, vmsg)
 			return
 		}
 
@@ -397,7 +398,7 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 		return
 	}
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }
@@ -413,7 +414,7 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_price/{token}/{timestamp} [get]
 func TokenPriceHandler(c *gin.Context) {
 	dataProc := func(code string) (interface{}, error) {
@@ -448,7 +449,7 @@ func TokenPriceHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/pair/token_price/{pair}/{token}/{timestamp} [get]
 func PairTokenPriceHandler(c *gin.Context) {
 	dataProc := func(pair, token string) (interface{}, error) {
@@ -492,7 +493,7 @@ func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token st
 	dataTypeStr := c.Query("data_type")
 	dataType, _ := strconv.Atoi(dataTypeStr)
 
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf(processName+"%s-%s", pair, token)
 
 	proc := func() (interface{}, error) {
@@ -544,7 +545,7 @@ func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token st
 		return
 	}
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }
@@ -558,7 +559,7 @@ func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token st
 // @Param   nodePrices  body   []services.HLPriceView true       "节点价格列表"
 // @Success 200 {object} services.HLPriceView	"stock info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/token_avgprice [post]
 func TokenAvgHlPriceHandler(c *gin.Context) {
 	nodePrices := []*services.HLPriceViewRaw{}
@@ -566,12 +567,12 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 	if err == nil {
 		if len(nodePrices) == 0 {
 			err = errors.New("数据不可用")
-			ErrJson(c, err.Error())
+			common.ErrJson(c, err.Error())
 			return
 		}
 		if len(nodePrices) < len(utils.Nodes)/2+1 {
 			err = errors.New("节点不够用")
-			ErrJson(c, err.Error())
+			common.ErrJson(c, err.Error())
 			return
 		}
 
@@ -612,11 +613,11 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		}
 		if err != nil {
 			log.Println("avgprice err", err)
-			ErrJson(c, err.Error())
+			common.ErrJson(c, err.Error())
 			return
 		}
 		if currNode == nil || currNode.PriceUsd == 0 {
-			ErrJson(c, "miss currNode Price")
+			common.ErrJson(c, "miss currNode Price")
 			return
 		}
 
@@ -649,7 +650,7 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }
@@ -780,14 +781,14 @@ var PriceChangeMax = 0.001
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.TokenInfo	"stock info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_info/{token}/{timestamp} [get]
 func TokenInfoHandler(c *gin.Context) {
 	code := c.Param("token")
 	//timestampstr:=c.Param("timestamp")
 	//timestamp,_:=strconv.Atoi(timestampstr)
 
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf("TokenInfoHandler-%s", code)
 	proc := func() (interface{}, error) {
 		res, err := services.GetTokenInfo(code)
@@ -805,7 +806,7 @@ func TokenInfoHandler(c *gin.Context) {
 		}
 		return res, err
 	}
-	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
+	common.SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 
 	//
 	//res,err:=services.GetTokenInfo(code)
@@ -823,7 +824,7 @@ func TokenInfoHandler(c *gin.Context) {
 	//	return
 	//}
 	//if err != nil {
-	//	ErrJson(c,err.Error())
+	//	common.ErrJson(c,err.Error())
 	//	return
 	//}
 }
@@ -839,7 +840,7 @@ func TokenInfoHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.TokenInfo	"stock info"
 // @Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/pair/token_info/{pair}/{token}/{timestamp} [get]
 func PairTokenInfoHandler(c *gin.Context) {
 	pair := c.Param("pair")
@@ -854,7 +855,7 @@ func PairTokenInfoHandler(c *gin.Context) {
 		}
 		return res, err
 	}
-	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
+	common.SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 }
 
 // @Tags default
@@ -869,7 +870,7 @@ func PairTokenInfoHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {array} services.BlockPrice	"stock info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_chart_prices/{token}/{count}/{interval}/{timestamp} [get]
 func TokenDayPricesHandler(c *gin.Context) {
 	code := c.Param("token")
@@ -877,7 +878,7 @@ func TokenDayPricesHandler(c *gin.Context) {
 	day_str := c.Param("count")
 	count, _ := strconv.Atoi(day_str)
 
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf("TokenDayPricesHandler-%s-%s-%s", code, interval, day_str)
 	proc := func() (interface{}, error) {
 		items, err := services.GetTokenTimesPrice(code, interval, count)
@@ -886,7 +887,7 @@ func TokenDayPricesHandler(c *gin.Context) {
 		}
 		return items, err
 	}
-	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
+	common.SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 
 	//
 	////timestampstr:=c.Param("timestamp")
@@ -897,7 +898,7 @@ func TokenDayPricesHandler(c *gin.Context) {
 	//	return
 	//}
 	//if err != nil {
-	//	ErrJson(c,err.Error())
+	//	common.ErrJson(c,err.Error())
 	//	return
 	//}
 }
@@ -914,7 +915,7 @@ func TokenDayPricesHandler(c *gin.Context) {
 // @Param     interval   path    string     true    "数据间隔 15minite hour day 1w(1周) 1m (1月) " default(day) Enums(15minite,hour,day,1w,1m)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {array} services.BlockPrice	"stock info"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/pair/token_chart_prices/{pair}/{token}/{count}/{interval}/{timestamp} [get]
 func PairTokenDayPricesHandler(c *gin.Context) {
 	pair := c.Param("pair")
@@ -935,7 +936,7 @@ func PairTokenDayPricesHandler(c *gin.Context) {
 		}
 		return items, err
 	}
-	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
+	common.SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 }
 
 // @Tags default
@@ -949,13 +950,13 @@ func PairTokenDayPricesHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {array} services.TokenDayData	"stock info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_day_datas/{token}/{days}/{timestamp} [get]
 func TokenDayDatasHandler(c *gin.Context) {
 	code := c.Param("token")
 	day_str := c.Param("days")
 
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf("TokenDayDatasHandler-%s-%s", code, day_str)
 	proc := func() (interface{}, error) {
 		days, _ := strconv.Atoi(day_str)
@@ -967,7 +968,7 @@ func TokenDayDatasHandler(c *gin.Context) {
 		}
 		return nil, err
 	}
-	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
+	common.SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 
 	//
 	//days,_:=strconv.Atoi(day_str)
@@ -979,7 +980,7 @@ func TokenDayDatasHandler(c *gin.Context) {
 	//	return
 	//}
 	//if err != nil {
-	//	ErrJson(c,err.Error())
+	//	common.ErrJson(c,err.Error())
 	//	return
 	//}
 }
@@ -994,14 +995,14 @@ func TokenDayDatasHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {array} services.PriceView	"pair price view list"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/lp_price/{pair}/{timestamp} [get]
 func PairLpPriceSignHandler(c *gin.Context) {
 	code := c.Param("pair")
 	timestampstr := c.Param("timestamp")
 	timestamp, _ := strconv.Atoi(timestampstr)
 
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf("PairLpPriceSignHandler-%s", code)
 	proc := func() (interface{}, error) {
 		resTokenView := new(services.DataPriceView)
@@ -1053,13 +1054,13 @@ func PairLpPriceSignHandler(c *gin.Context) {
 		resTokenView.Sign = services.SignMsg(resTokenView.GetHash())
 		return resTokenView, nil
 	}
-	SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
+	common.SetCacheRes(c, ckey, false, proc, c.Query("debug") == "1")
 
 	//	c.JSON(200, resTokenView)
 	//	return
 	//END:
 	//	if err == nil {
-	//		ErrJson(c, err.Error())
+	//		common.ErrJson(c, err.Error())
 	//	}
 }
 
@@ -1073,7 +1074,7 @@ func PairLpPriceSignHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.PriceView	"price vew"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/lp_price/{pair}/{timestamp} [get]
 func PairLpPriceHandler(c *gin.Context) {
 	code := c.Param("pair")
@@ -1095,7 +1096,7 @@ func PairLpPriceHandler(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }
@@ -1110,12 +1111,12 @@ func PairLpPriceHandler(c *gin.Context) {
 // @Param     amount   path    int     true        	 "请求数量" default(10)
 // @Param     timestamp   path    int     false      "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.TokenTotalSupply	"totalSupply"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token/token_chart_supply/{token}/{amount}/{timestamp} [get]
 func TokenChartSupplyHandler(c *gin.Context) {
 	token := c.Param("token")
 	if token == "" {
-		ErrJson(c, "wrong token address")
+		common.ErrJson(c, "wrong token address")
 		return
 	}
 	amount := c.Param("amount")
@@ -1129,7 +1130,7 @@ func TokenChartSupplyHandler(c *gin.Context) {
 		c.JSON(200, res)
 		return
 	} else {
-		ErrJson(c, "empty data")
+		common.ErrJson(c, "empty data")
 	}
 }
 
@@ -1142,12 +1143,12 @@ func TokenChartSupplyHandler(c *gin.Context) {
 // @Param     token   path    string     true        "token" default(0x011864d37035439e078d64630777ec518138af05)
 // @Param     timestamp   path    int     false      "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.TokenTotalSupply	"totalSupply"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token/token_total_supply/{token}/{timestamp} [get]
 func GetTokenSupplyHandler(c *gin.Context) {
 	token := c.Param("token")
 	if token == "" {
-		ErrJson(c, "wrong token address")
+		common.ErrJson(c, "wrong token address")
 		return
 	}
 	res := services.GetTokenTotalSupply(token)

@@ -18,7 +18,7 @@ var doc = `{
     "info": {
         "description": "{{.Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "https://rrl360.com/index.html",
+        "termsOfService": "https://test.com/index.html",
         "contact": {
             "name": "伍晓飞",
             "email": "wuxiaofei@rechaintech.com"
@@ -215,7 +215,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -314,7 +314,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -408,7 +408,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -464,7 +464,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -545,7 +545,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -621,7 +621,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -702,7 +702,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -757,7 +757,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -804,7 +804,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -878,7 +878,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -957,7 +957,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1021,7 +1021,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1093,7 +1093,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1125,13 +1125,13 @@ var doc = `{
                     "200": {
                         "description": "config json",
                         "schema": {
-                            "$ref": "#/definitions/controls.rawDicConfig"
+                            "$ref": "#/definitions/common.RawDicConfig"
                         }
                     },
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ResBody"
+                            "$ref": "#/definitions/common.ResBody"
                         }
                     }
                 }
@@ -1156,7 +1156,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controls.rawDicConfig"
+                            "$ref": "#/definitions/common.RawDicConfig"
                         }
                     }
                 ],
@@ -1164,13 +1164,13 @@ var doc = `{
                     "200": {
                         "description": "config json",
                         "schema": {
-                            "$ref": "#/definitions/controls.rawDicConfig"
+                            "$ref": "#/definitions/common.RawDicConfig"
                         }
                     },
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ResBody"
+                            "$ref": "#/definitions/common.ResBody"
                         }
                     }
                 }
@@ -1359,7 +1359,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1446,7 +1446,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1499,7 +1499,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1560,7 +1560,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1635,7 +1635,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1702,7 +1702,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1755,7 +1755,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1820,7 +1820,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1870,7 +1870,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1920,7 +1920,88 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/login": {
+            "post": {
+                "description": "钱包登陆",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sys"
+                ],
+                "summary": "钱包登陆",
+                "operationId": "LoginHandler",
+                "parameters": [
+                    {
+                        "description": "钱包登陆对象",
+                        "name": "logreq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/sys.loginModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "登陆结果",
+                        "schema": {
+                            "$ref": "#/definitions/sys.loginRes"
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/common.ResBody"
+                        }
+                    }
+                }
+            }
+        },
+        "/pub/pre_login": {
+            "get": {
+                "description": "钱包登陆Challenge",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sys"
+                ],
+                "summary": "钱包登陆Challenge",
+                "operationId": "ChallengeHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "0x24C93Aaec52539a60240BCd2E972AB672D33eD79",
+                        "description": "钱包地址",
+                        "name": "address",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Challenge　code",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ChallengeOutput"
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/common.ResBody"
                         }
                     }
                 }
@@ -1990,7 +2071,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -2037,7 +2118,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -2087,7 +2168,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -2157,7 +2238,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -2196,7 +2277,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -2232,7 +2313,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -2265,7 +2346,7 @@ var doc = `{
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/controls.ApiErr"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -2273,6 +2354,96 @@ var doc = `{
         }
     },
     "definitions": {
+        "auth.ChallengeOutput": {
+            "type": "object",
+            "properties": {
+                "challenge": {
+                    "type": "string"
+                }
+            }
+        },
+        "common.ApiErr": {
+            "type": "object",
+            "properties": {
+                "Error": {
+                    "type": "string"
+                }
+            }
+        },
+        "common.RawDicConfig": {
+            "type": "object",
+            "properties": {
+                "ftxTokenAddres": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/common.fa"
+                    }
+                },
+                "isDisableAllSign": {
+                    "description": "禁用所有签名",
+                    "type": "boolean"
+                },
+                "isDisableFtxSign": {
+                    "description": "禁用ftx签名",
+                    "type": "boolean"
+                },
+                "safePrices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/common.sp"
+                    }
+                }
+            }
+        },
+        "common.ResBody": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "data": {
+                    "description": "Data interface{} ` + "`" + `json:\"data\"` + "`" + `",
+                    "type": "object"
+                },
+                "msg": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "common.fa": {
+            "type": "object",
+            "properties": {
+                "ftxName": {
+                    "type": "string"
+                },
+                "tokenAddre": {
+                    "type": "string"
+                }
+            }
+        },
+        "common.sp": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "description": "备注　可选项，可输入名字",
+                    "type": "string"
+                },
+                "max": {
+                    "type": "number"
+                },
+                "min": {
+                    "type": "number"
+                },
+                "tokenAddre": {
+                    "type": "string"
+                }
+            }
+        },
         "controls.AnyApiRes": {
             "type": "object",
             "properties": {
@@ -2297,70 +2468,6 @@ var doc = `{
                 }
             }
         },
-        "controls.ApiErr": {
-            "type": "object",
-            "properties": {
-                "Error": {
-                    "type": "string"
-                }
-            }
-        },
-        "controls.ResBody": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 200
-                },
-                "data": {
-                    "description": "Data interface{} ` + "`" + `json:\"data\"` + "`" + `",
-                    "type": "object"
-                },
-                "msg": {
-                    "type": "string",
-                    "example": "ok"
-                },
-                "time": {
-                    "type": "string"
-                }
-            }
-        },
-        "controls.fa": {
-            "type": "object",
-            "properties": {
-                "ftxName": {
-                    "type": "string"
-                },
-                "tokenAddre": {
-                    "type": "string"
-                }
-            }
-        },
-        "controls.rawDicConfig": {
-            "type": "object",
-            "properties": {
-                "ftxTokenAddres": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/controls.fa"
-                    }
-                },
-                "isDisableAllSign": {
-                    "description": "禁用所有签名",
-                    "type": "boolean"
-                },
-                "isDisableFtxSign": {
-                    "description": "禁用ftx签名",
-                    "type": "boolean"
-                },
-                "safePrices": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/controls.sp"
-                    }
-                }
-            }
-        },
         "controls.resMarketStatus": {
             "type": "object",
             "properties": {
@@ -2369,24 +2476,6 @@ var doc = `{
                 },
                 "openTime": {
                     "type": "integer"
-                }
-            }
-        },
-        "controls.sp": {
-            "type": "object",
-            "properties": {
-                "comment": {
-                    "description": "备注　可选项，可输入名字",
-                    "type": "string"
-                },
-                "max": {
-                    "type": "number"
-                },
-                "min": {
-                    "type": "number"
-                },
-                "tokenAddre": {
-                    "type": "string"
                 }
             }
         },
@@ -2850,6 +2939,37 @@ var doc = `{
                     "type": "string"
                 }
             }
+        },
+        "sys.loginModel": {
+            "type": "object",
+            "required": [
+                "address",
+                "signature"
+            ],
+            "properties": {
+                "address": {
+                    "description": "Username string ` + "`" + `form:\"username\" json:\"username\" binding:\"required\"` + "`" + `\nPassword string ` + "`" + `form:\"password\" json:\"password\" binding:\"required\"` + "`" + `",
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        },
+        "sys.loginRes": {
+            "type": "object",
+            "required": [
+                "address",
+                "isAdmin"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "isAdmin": {
+                    "type": "boolean"
+                }
+            }
         }
     }
 }`
@@ -2869,8 +2989,8 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "",
 	BasePath:    "/",
 	Schemes:     []string{},
-	Title:       "stock-info-api",
-	Description: "stock-info-api接口文档.",
+	Title:       "oracle-api",
+	Description: "oracle-api接口文档.",
 }
 
 type s struct{}

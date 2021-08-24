@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"stock/common"
 	"stock/utils"
 	"strconv"
 	"sync"
@@ -49,7 +50,7 @@ func DbExportHandler(c *gin.Context) {
 		log.Println("DbExportHandler Output: " + string(out))
 		if err != nil {
 			log.Println("DbExportHandler mysqldump err",err.Error())
-			ErrJson(c,err.Error())
+			common.ErrJson(c,err.Error())
 			return
 		}
 		c.FileAttachment(fileName, path.Base(fileName))
@@ -59,7 +60,7 @@ func DbExportHandler(c *gin.Context) {
 func BtcSignCheckHandler(c *gin.Context) {
 	res,err:=ftxPriceSignHandler("btc3x",1,238299929)
 	if err != nil {
-		ErrJson(c,err.Error())
+		common.ErrJson(c,err.Error())
 		return
 	}
 	//res.Sign=nil
@@ -82,7 +83,7 @@ select count(1) cc from  market_prices t where
 t.item_type in('btc','eth') and timestamp >unix_timestamp()-?;
 `,d).Scan(&counter).Error
 	if err != nil {
-		ErrJson(c,err.Error())
+		common.ErrJson(c,err.Error())
 		return
 	}
 	if counter==0{

@@ -1,13 +1,10 @@
-package controls
+package common
 
 import (
 	jwtgin "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"log"
-	"net/http"
-	"stock/mmlogin"
-	"stock/mmlogin/application/auth"
 	"stock/services"
 	"stock/utils"
 	"strconv"
@@ -56,6 +53,7 @@ func ResErrMsg(c *gin.Context, err string ) {
 	resb:=new(ResBody)
 	resb.Msg=err
 	resb.Code=500
+	resb.Time=time.Now()
 	c.JSON(200, resb)
 }
 func ResErrWithCode(c *gin.Context, err error, code int ) {
@@ -66,6 +64,7 @@ func ResErrWithCode(c *gin.Context, err error, code int ) {
 		code=500
 	}
 	resb.Code=code
+	resb.Time=time.Now()
 	c.JSON(200, resb)
 }
 
@@ -189,125 +188,6 @@ func SaveStat() {
 	}
 	utils.IntervalSync("saveStat", 600, proc)
 }
-
-//jwt
-type loginModel struct {
-	//Username string `form:"username" json:"username" binding:"required"`
-	//Password string `form:"password" json:"password" binding:"required"`
-	Address string `form:"address" json:"address" binding:"required"`
-	Signature string `form:"signature" json:"signature" binding:"required"`
-
-}
-type loginRes struct {
-	Address string `form:"address" json:"address" binding:"required"`
-	IsAdmin bool `form:"isAdmin" json:"isAdmin" binding:"required"`
-}
-var AuthMiddleware *jwtgin.GinJWTMiddleware
-func InitJwt(routeGroup *gin.RouterGroup) {
-	mmlogin.InitMMLogin()
-	var identityKey = "id"
-	var signKeyJwt = []byte(utils.RandStr(32))
-	authMiddleware1, err := jwtgin.New(&jwtgin.GinJWTMiddleware{
-		Realm: "test zone",
-		Key:   signKeyJwt,
-		IdentityKey:identityKey,
-		PayloadFunc: func(data interface{}) jwtgin.MapClaims {
-			// Set custom claim, to be checked in Authorizator method
-			if v, ok := data.(*loginRes); ok {
-				return jwtgin.MapClaims{
-					identityKey: v.Address,
-					"isAdmin": v.IsAdmin,
-				}
-			}
-			return jwtgin.MapClaims{}
-		},
-		Authenticator: func(c *gin.Context) (interface{}, error) {
-			var loginVals loginModel
-			if binderr := c.ShouldBind(&loginVals); binderr != nil {
-				return "", jwtgin.ErrMissingLoginValues
-			}
-			userID := loginVals.Address
-			password := loginVals.Signature
-			in := auth.NewAuthorizeInput(userID, password)
-			 err:= mmlogin.Apps.Auth.AuthorizeOnly(nil,in);
-			 if err!=nil{
-				return nil,err
-			}else{
-				 lres:=loginRes{userID,false}
-				if services.IsAdmin(userID){
-					lres.IsAdmin=true
-				}
-				c.Set("loginres",lres)
-				return &lres,nil
-			 }
-			//if userID == "admin" && password == "admin" {
-			//	return userID, nil
-			//}
-			//return "", jwtgin.ErrFailedAuthentication
-		},
-		Authorizator: func(user interface{}, c *gin.Context) bool {
-			//recover claims instance
-			lres:=new(loginRes)
-			claims:=jwtgin.ExtractClaims(c)
-			lres.IsAdmin=claims["isAdmin"].(bool)
-			lres.Address=claims["id"].(string)
-			c.Set("loginres",lres)
-			return true
-		},
-		LoginResponse: func(c *gin.Context, code int, token string, t time.Time) {
-			lres,_:=c.Get("loginres")
-			NewResBody(c,gin.H{
-				"code":    http.StatusOK,
-				"token":   token,
-				"expire":  t.Format(time.RFC3339),
-				"message": "login successfully",
-				"userInfo":lres,
-			})
-			//c.JSON(http.StatusOK, gin.H{
-			//	"code":    http.StatusOK,
-			//	"token":   token,
-			//	"expire":  t.Format(time.RFC3339),
-			//	"message": "login successfully",
-			//	"cookie":  cookie,
-			//})
-		},
-		SendCookie: false,
-		//CookieName:   cookieName,
-		//CookieDomain: cookieDomain,
-		TimeFunc: func() time.Time { return time.Now().Add(time.Duration(5) * time.Minute) },
-		Timeout:  time.Hour * 24,
-		Unauthorized:func(c *gin.Context, code int, msg string){
-			ErrJson(c,msg+" jwt")
-		},
-	})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	AuthMiddleware = authMiddleware1
-	routeGroup.Use(AuthMiddleware.MiddlewareFunc())
-}
- func ChallengeHandler(c *gin.Context)  {
-	addressHex := c.Query("address")
-	in := auth.NewChallengeInput(addressHex)
-
-	out, err := mmlogin.Apps.Auth.Challenge(nil, in)
-	if err != nil {
-		OkJson(c,err)
-		return
-	}
-	NewResBody(c,out)
-}
-
-func HelloJwtHandler(c *gin.Context) {
-	claims := jwtgin.ExtractClaims(c)
-	user, _ := c.Get("id")
-	c.JSON(200, gin.H{
-		"userID": user,
-		//"userName": user.(*User).UserName,
-		"text":     "Hello World.",
-		"claims":claims,
-	})
-}
 func IsAdmin(c *gin.Context)bool{
 	claims := jwtgin.ExtractClaims(c)
 	isadmin,ok:=claims["isAdmin"]
@@ -316,3 +196,40 @@ func IsAdmin(c *gin.Context)bool{
 	}
 	return false
 }
+
+
+//对外配制编辑项
+//区别于controls系统正在使用的map-config结构（ 如SafePrices　ftxAddres）; 在web-ui上编辑时,map项不能按添加顺序显示，操作上很不方便
+//SafePrices　FtxTokenAddres换用数组方式的配制．
+type RawDicConfig struct{
+	//禁用所有签名
+	IsDisableAllSign bool
+	//禁用ftx签名
+	IsDisableFtxSign bool
+	SafePrices []sp
+	FtxTokenAddres []fa
+}
+//ftxAddres
+type fa struct {
+	FtxName string
+	TokenAddre string
+}
+//SafePrices
+type sp struct {
+	Min float64
+	Max float64
+	TokenAddre string
+	//备注　可选项，可输入名字　
+	Comment string
+}
+
+func (conig *RawDicConfig)BasicVerify(){
+	//basic verify
+	if len(conig.SafePrices)==0{
+		log.Fatal("dic_config SafePrices err")
+	}
+	if len(conig.FtxTokenAddres)==0{
+		log.Fatal("dic_config FtxTokenAddres err")
+	}
+}
+

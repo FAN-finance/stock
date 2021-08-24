@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	"log"
 	"math"
+	"stock/common"
 	"stock/services"
 	"stock/utils"
 	"strconv"
@@ -36,7 +37,7 @@ func (cs coinvs) TableName() string {
 // @Param     timestamp   query    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.CoinPriceView	"Coin Price"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/coin_price/{coin}/{vs_coin} [get]
 func CoinPriceHandler(c *gin.Context) {
 	coin := c.Param("coin")
@@ -73,7 +74,7 @@ func CoinPriceHandler(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }
@@ -89,7 +90,7 @@ func CoinPriceHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.CoinPriceView	"CoinPriceView"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/coin_price/{coin}/{vs_coin}/{timestamp} [get]
 func CoinPriceSignHandler(c *gin.Context) {
 	coin := c.Param("coin")
@@ -147,7 +148,7 @@ func CoinPriceSignHandler(c *gin.Context) {
 	return
 END:
 	if err == nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 	}
 }
 
@@ -162,7 +163,7 @@ END:
 // @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockNode	"stock info"
 // @Header 200 {string} sign "签名信息"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/info/{code}/{data_type}/{timestamp}  [get]
 func StockInfoHandler(c *gin.Context) {
 	//info := &services.ViewStock{}
@@ -233,7 +234,7 @@ func StockInfoHandler(c *gin.Context) {
 	//}
 
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }
@@ -268,7 +269,7 @@ type resMarketStatus struct {
 // @Produce  json
 // @Param     timestamp   path    int     false    "unix 秒数； 0表示当前时间" default(0)
 // @Success 200 {object} resMarketStatus	"status"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/market_status/{timestamp} [get]
 func UsaMarketStatusHandler(c *gin.Context) {
 	timestampstr := c.Param("timestamp")
@@ -305,7 +306,7 @@ func getAvgPrice(code string, timestamp int) (avgPrice float64, err error) {
 // @Param     timestamp   path    int     false    "unix 秒数" default(1620383144)
 // @Success 200 {object} services.StockData	"stock info list"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/aggre_info/{code}/{data_type}/{timestamp} [get]
 func StockAggreHandler(c *gin.Context) {
 	code := c.Param("code")
@@ -439,7 +440,7 @@ func StockAggreHandler(c *gin.Context) {
 
 END:
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }
@@ -453,7 +454,7 @@ END:
 // @Param   nodePrices  body   []services.StockNode true       "节点价格列表"
 // @Success 200 {object} services.StockNode	"stock info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/stock_avgprice [post]
 func StockAvgPriceHandler(c *gin.Context) {
 	nodePrices := []*services.StockNodeRaw{}
@@ -461,12 +462,12 @@ func StockAvgPriceHandler(c *gin.Context) {
 	if err == nil {
 		if len(nodePrices) == 0 {
 			err = errors.New("数据不可用")
-			ErrJson(c, err.Error())
+			common.ErrJson(c, err.Error())
 			return
 		}
 		if len(nodePrices) < len(utils.Nodes)/2+1 {
 			err = errors.New("节点不够用")
-			ErrJson(c, err.Error())
+			common.ErrJson(c, err.Error())
 			return
 		}
 
@@ -511,7 +512,7 @@ func StockAvgPriceHandler(c *gin.Context) {
 		}
 		if err != nil {
 			log.Println( "StockAvgPriceHandler check",err)
-			ErrJson(c, err.Error())
+			common.ErrJson(c, err.Error())
 			return
 		}
 		sdata := new(services.StockNode)
@@ -535,7 +536,7 @@ func StockAvgPriceHandler(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }

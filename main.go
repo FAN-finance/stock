@@ -9,26 +9,27 @@ import (
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"log"
 	"os"
+	"stock/common"
 	"stock/controls"
 	_ "stock/docs"
 	"stock/services"
+	"stock/sys"
 	"stock/utils"
 	"strings"
 	"sync"
 	"time"
 )
 
-// @title stock-info-api
+// @title oracle-api
 // @version 1.0
-// @description stock-info-api接口文档.
-//@termsOfService https://rrl360.com/index.html
+// @description oracle-api接口文档.
+//@termsOfService https://test.com/index.html
 
 // @contact.name 伍晓飞
 // @contact.email wuxiaofei@rechaintech.com
 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
 //host 192.168.122.1:8080
 // @BasePath /
 func main() {
@@ -141,9 +142,9 @@ func main() {
 	//domainDir:=router.Group("/nft")
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := router.Group("/pub")
-	api.Use(controls.MiddleWareStat())
-	go controls.SaveStat()
-	//controls.InitDicConfig()
+	api.Use(common.MiddleWareStat())
+	go common.SaveStat()
+	//sys.InitDicConfig()
 
 	api.GET("/stock/info/:code/:data_type/:timestamp", controls.StockInfoHandler)
 	api.GET("/stock/market_status/:timestamp", controls.UsaMarketStatusHandler)
@@ -192,19 +193,19 @@ func main() {
 	api.GET("/db.sql.gz", controls.DbExportHandler)
 
 
-	api.GET("dic_config", controls.ConfigHandler)
-	api.POST("dic_config", controls.ConfigUpdateHandler)
-	sys := router.Group("/sys")
-	controls.InitJwt(sys)
-	api.POST("/login", controls.AuthMiddleware.LoginHandler)
-	api.GET("/pre_login", controls.ChallengeHandler)
-	sys.GET("/hello", controls.HelloJwtHandler)
-	sys.POST("dic_config", controls.ConfigUpdateHandler)
+	api.GET("dic_config", sys.ConfigHandler)
+	api.POST("dic_config", sys.ConfigUpdateHandler)
+	admin := router.Group("/sys")
+	sys.InitJwt(admin)
+	api.POST("/login", sys.AuthMiddleware.LoginHandler)
+	api.GET("/pre_login", sys.ChallengeHandler)
+	admin.GET("/hello", sys.HelloJwtHandler)
+	admin.POST("dic_config", sys.ConfigUpdateHandler)
 
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)
 
 	router.NoRoute(func(c *gin.Context) {
-		controls.ErrJson(c, "none api router")
+		common.ErrJson(c, "none api router")
 		//c.JSON(404,controls.ApiErr{Error:"none api router"})
 	})
 	go router.RunTLS(":8002", "./asset/tls.pem", "./asset/tls.pem")
@@ -220,7 +221,7 @@ func main() {
 // @Produce  json
 // @Success 200 {object} NodeStat	"node stat"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/stat [get]
 func NodeStatHandler(c *gin.Context) {
 	stat := NodeStat{}
@@ -261,7 +262,7 @@ type NodeStat struct {
 // @Accept  json
 // @Produce  json
 // @Success 200 {array} NodeStat	"Node Stat list"
-// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/stock/stats [get]
 func NodeStatsHandler(c *gin.Context) {
 	var err error
@@ -294,7 +295,7 @@ func NodeStatsHandler(c *gin.Context) {
 	return
 
 	if err != nil {
-		controls.ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 }
@@ -313,7 +314,7 @@ type VerObj struct {
 //// @Produce  json
 //// @Param     verObj   body    VerObj     true        "需要验证的对象" default(AAPL)
 //// @Success 200 {object} ApiOk	"ok info"
-//// @Failure 500 {object} controls.ApiErr "失败时，有相应测试日志输出"
+//// @Failure 500 {object}common.ApiErr "失败时，有相应测试日志输出"
 //// @Router /pub/stock/sign_verify [post]
 //func VerifyInfoHandler(c *gin.Context) {
 //	vobj:=new(VerObj)

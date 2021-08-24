@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 	"log"
+	"stock/common"
 	"stock/services"
 	"stock/utils"
 	"strconv"
@@ -25,7 +26,7 @@ import (
 //@Param     debug   query    int     false    "调试" default(0)
 // @Success 200 {object} services.HLDataPriceView	"token price info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/ftx_price/{coin_type}/{data_type}/{timestamp} [get]
 func FtxPriceSignHandler(c *gin.Context) {
 	coin_type := c.Param("coin_type")
@@ -36,7 +37,7 @@ func FtxPriceSignHandler(c *gin.Context) {
 
 	res, err := ftxPriceSignHandler(coin_type, dataType, timestamp)
 	if err != nil {
-		ErrJson(c, err.Error())
+		common.ErrJson(c, err.Error())
 		return
 	}
 	c.JSON(200, res)
@@ -53,7 +54,7 @@ func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenVie
 	//ckey:=fmt.Sprintf("TokenPriceSignHandler-%s",code)
 	//var addres []*services.PriceView
 	//proc:= func()(interface{},error) {}
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	resTokenView = new(services.HLDataPriceView)
 	avgNodesPrice := []*services.HLPriceView{}
 	sc := sync.RWMutex{}
@@ -161,7 +162,7 @@ func ftxPriceSignHandler(coin_type string, dataType, timestamp int) (resTokenVie
 	return
 	//END:
 	//	if err != nil {
-	//		ErrJson(c, err.Error())
+	//		common.ErrJson(c, err.Error())
 	//	}
 }
 
@@ -199,7 +200,7 @@ var ftxAddres = map[string]string{
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/ftx_price/{coin_type}/{timestamp} [get]
 func FtxPriceHandler(c *gin.Context) {
 	coin_type := c.Param("coin_type")
@@ -225,7 +226,7 @@ func FtxPriceHandler(c *gin.Context) {
 		count := 60
 		//intreval:="hour"
 		//count:=20
-		//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+		//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 		ckey := fmt.Sprintf("FtxPriceHandler-%s-%s-%d", coin_type, intreval, count)
 		proc := func() (interface{}, error) {
 			lastPrice := 0.0
@@ -263,7 +264,7 @@ WHERE
 			vp = res.(*HLValuePair)
 		}
 		if err != nil {
-			ErrJson(c, err.Error())
+			common.ErrJson(c, err.Error())
 			return
 		}
 	}
@@ -282,7 +283,7 @@ WHERE
 	}
 	if vmsg!=""{
 		log.Println(vmsg)
-		ErrJson(c,vmsg)
+		common.ErrJson(c,vmsg)
 		return
 	}
 
@@ -356,7 +357,7 @@ func isGoldFtx(code string) bool {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {array} services.BlockPrice	"stock info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/ftx_chart_prices/{coin_type}/{count}/{interval}/{timestamp} [get]
 func FtxChartPricesHandler(c *gin.Context) {
 	coin_type := c.Param("coin_type")
@@ -366,7 +367,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 	count_str := c.Param("count")
 	count, _ := strconv.Atoi(count_str)
 
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s-%s", coin_type, interval_str, count_str)
 	proc := func() (interface{}, error) {
 		items, err := services.GetFtxTimesPrice(coin_type, interval, count)
@@ -375,7 +376,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 		}
 		return items, err
 	}
-	SetCacheResExpire(c, ckey, false, 200, proc, c.Query("debug") == "1")
+	common.SetCacheResExpire(c, ckey, false, 200, proc, c.Query("debug") == "1")
 	//
 	////timestampstr:=c.Param("timestamp")
 	////timestamp,_:=strconv.Atoi(timestampstr)
@@ -385,7 +386,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 	//	return
 	//}
 	//if err != nil {
-	//	ErrJson(c,err.Error())
+	//	common.ErrJson(c,err.Error())
 	//	return
 	//}
 }
@@ -402,7 +403,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {array} services.BlockPrice	"stock info"
 //@Header 200 {string} sign "签名信息"
-// @Failure 500 {object} ApiErr "失败时，有相应测试日志输出"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/stock_chart_prices/{coin_type}/{count}/{interval}/{timestamp} [get]
 func StockChartPricesHandler(c *gin.Context) {
 	coin_type := c.Param("coin_type")
@@ -412,7 +413,7 @@ func StockChartPricesHandler(c *gin.Context) {
 	count_str := c.Param("count")
 	count, _ := strconv.Atoi(count_str)
 
-	//SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
 	ckey := fmt.Sprintf("FtxChartPricesHandler-%s-%s-%s", coin_type, interval_str, count_str)
 	proc := func() (interface{}, error) {
 		items, err := services.GetStockTimesPrice(coin_type, interval, count)
@@ -421,7 +422,7 @@ func StockChartPricesHandler(c *gin.Context) {
 		}
 		return items, err
 	}
-	SetCacheResExpire(c, ckey, false, 200, proc, c.Query("debug") == "1")
+	common.SetCacheResExpire(c, ckey, false, 200, proc, c.Query("debug") == "1")
 	//
 	////timestampstr:=c.Param("timestamp")
 	////timestamp,_:=strconv.Atoi(timestampstr)
@@ -431,7 +432,7 @@ func StockChartPricesHandler(c *gin.Context) {
 	//	return
 	//}
 	//if err != nil {
-	//	ErrJson(c,err.Error())
+	//	common.ErrJson(c,err.Error())
 	//	return
 	//}
 }

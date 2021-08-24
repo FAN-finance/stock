@@ -1,5 +1,65 @@
 basePath: /
 definitions:
+  auth.ChallengeOutput:
+    properties:
+      challenge:
+        type: string
+    type: object
+  common.ApiErr:
+    properties:
+      Error:
+        type: string
+    type: object
+  common.RawDicConfig:
+    properties:
+      ftxTokenAddres:
+        items:
+          $ref: '#/definitions/common.fa'
+        type: array
+      isDisableAllSign:
+        description: 禁用所有签名
+        type: boolean
+      isDisableFtxSign:
+        description: 禁用ftx签名
+        type: boolean
+      safePrices:
+        items:
+          $ref: '#/definitions/common.sp'
+        type: array
+    type: object
+  common.ResBody:
+    properties:
+      code:
+        example: 200
+        type: integer
+      data:
+        description: Data interface{} `json:"data"`
+        type: object
+      msg:
+        example: ok
+        type: string
+      time:
+        type: string
+    type: object
+  common.fa:
+    properties:
+      ftxName:
+        type: string
+      tokenAddre:
+        type: string
+    type: object
+  common.sp:
+    properties:
+      comment:
+        description: 备注　可选项，可输入名字
+        type: string
+      max:
+        type: number
+      min:
+        type: number
+      tokenAddre:
+        type: string
+    type: object
   controls.AnyApiRes:
     properties:
       data:
@@ -17,67 +77,12 @@ definitions:
           type: integer
         type: array
     type: object
-  controls.ApiErr:
-    properties:
-      Error:
-        type: string
-    type: object
-  controls.ResBody:
-    properties:
-      code:
-        example: 200
-        type: integer
-      data:
-        description: Data interface{} `json:"data"`
-        type: object
-      msg:
-        example: ok
-        type: string
-      time:
-        type: string
-    type: object
-  controls.fa:
-    properties:
-      ftxName:
-        type: string
-      tokenAddre:
-        type: string
-    type: object
-  controls.rawDicConfig:
-    properties:
-      ftxTokenAddres:
-        items:
-          $ref: '#/definitions/controls.fa'
-        type: array
-      isDisableAllSign:
-        description: 禁用所有签名
-        type: boolean
-      isDisableFtxSign:
-        description: 禁用ftx签名
-        type: boolean
-      safePrices:
-        items:
-          $ref: '#/definitions/controls.sp'
-        type: array
-    type: object
   controls.resMarketStatus:
     properties:
       isOpening:
         type: boolean
       openTime:
         type: integer
-    type: object
-  controls.sp:
-    properties:
-      comment:
-        description: 备注　可选项，可输入名字
-        type: string
-      max:
-        type: number
-      min:
-        type: number
-      tokenAddre:
-        type: string
     type: object
   main.NodeStat:
     properties:
@@ -400,16 +405,39 @@ definitions:
       totalSupply:
         type: string
     type: object
+  sys.loginModel:
+    properties:
+      address:
+        description: |-
+          Username string `form:"username" json:"username" binding:"required"`
+          Password string `form:"password" json:"password" binding:"required"`
+        type: string
+      signature:
+        type: string
+    required:
+    - address
+    - signature
+    type: object
+  sys.loginRes:
+    properties:
+      address:
+        type: string
+      isAdmin:
+        type: boolean
+    required:
+    - address
+    - isAdmin
+    type: object
 info:
   contact:
     email: wuxiaofei@rechaintech.com
     name: 伍晓飞
-  description: stock-info-api接口文档.
+  description: oracle-api接口文档.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: https://rrl360.com/index.html
-  title: stock-info-api
+  termsOfService: https://test.com/index.html
+  title: oracle-api
   version: "1.0"
 paths:
   /pub/coin_price/{coin}/{vs_coin}/{timestamp}:
@@ -576,7 +604,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取币价换算，多节点签名版
       tags:
       - default
@@ -651,7 +679,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取杠杆btc代币不同时间区间的价格图表信息
       tags:
       - default
@@ -722,7 +750,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取ftx token价格信息
       tags:
       - default
@@ -760,7 +788,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取lp价格信息
       tags:
       - default
@@ -818,7 +846,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 从Pair获取token不同时间区间的价格图表信息
       tags:
       - Pair
@@ -872,7 +900,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 从Pair获取token价格信息
       tags:
       - Pair
@@ -929,7 +957,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取股票不同时间区间的价格图表信息
       tags:
       - default
@@ -967,7 +995,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取某个token的totalSupply的变化量
       tags:
       - Token
@@ -999,7 +1027,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取某个token的totalSupply的变化量
       tags:
       - Token
@@ -1051,7 +1079,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取token链上价格信息
       tags:
       - default
@@ -1107,7 +1135,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取token不同时间区间的价格图表信息
       tags:
       - default
@@ -1151,7 +1179,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取token相应天数的统计图表信息
       tags:
       - default
@@ -1201,7 +1229,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取token价格信息
       tags:
       - default
@@ -1222,11 +1250,11 @@ paths:
         "200":
           description: config json
           schema:
-            $ref: '#/definitions/controls.rawDicConfig'
+            $ref: '#/definitions/common.RawDicConfig'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ResBody'
+            $ref: '#/definitions/common.ResBody'
       summary: 获取字典配制信息
       tags:
       - default
@@ -1241,18 +1269,18 @@ paths:
         name: dic
         required: true
         schema:
-          $ref: '#/definitions/controls.rawDicConfig'
+          $ref: '#/definitions/common.RawDicConfig'
       produces:
       - application/json
       responses:
         "200":
           description: config json
           schema:
-            $ref: '#/definitions/controls.rawDicConfig'
+            $ref: '#/definitions/common.RawDicConfig'
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ResBody'
+            $ref: '#/definitions/common.ResBody'
       summary: 修改字典配制信息
       tags:
       - default
@@ -1420,7 +1448,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取币价换算，内部单节点
       tags:
       - default
@@ -1486,7 +1514,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取ftx coin最近一小时最高最低价格信息,内部单节点
       tags:
       - default
@@ -1522,7 +1550,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: '获取lp价格信息,内部单节点:'
       tags:
       - default
@@ -1564,7 +1592,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 从pair获取token信息,内部单节点
       tags:
       - Pair
@@ -1617,7 +1645,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 从Pair获取token最近一小时最高最低价格信息,内部单节点
       tags:
       - Pair
@@ -1664,7 +1692,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取token最近一小时最高最低价格信息,内部单节点模式
       tags:
       - default
@@ -1700,7 +1728,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取token信息,内部单节点
       tags:
       - default
@@ -1745,7 +1773,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 获取token最近一小时最高最低价格信息,内部单节点
       tags:
       - default
@@ -1778,7 +1806,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: '获取股票平均价格共识:'
       tags:
       - default
@@ -1811,10 +1839,64 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: '获取token平均价格共识:'
       tags:
       - default
+  /pub/login:
+    post:
+      consumes:
+      - application/json
+      description: 钱包登陆
+      operationId: LoginHandler
+      parameters:
+      - description: 钱包登陆对象
+        in: body
+        name: logreq
+        required: true
+        schema:
+          $ref: '#/definitions/sys.loginModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登陆结果
+          schema:
+            $ref: '#/definitions/sys.loginRes'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/common.ResBody'
+      summary: 钱包登陆
+      tags:
+      - sys
+  /pub/pre_login:
+    get:
+      consumes:
+      - application/json
+      description: 钱包登陆Challenge
+      operationId: ChallengeHandler
+      parameters:
+      - default: 0x24C93Aaec52539a60240BCd2E972AB672D33eD79
+        description: 钱包地址
+        in: query
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge　code
+          schema:
+            $ref: '#/definitions/auth.ChallengeOutput'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/common.ResBody'
+      summary: 钱包登陆Challenge
+      tags:
+      - sys
   /pub/stock/aggre_info/{code}/{data_type}/{timestamp}:
     get:
       consumes:
@@ -1860,7 +1942,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: '获取共识美股价格:'
       tags:
       - default
@@ -1892,7 +1974,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 当前节点any-api
       tags:
       - default
@@ -1926,7 +2008,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 所有节点any-api
       tags:
       - default
@@ -1975,7 +2057,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: '获取美股价格:'
       tags:
       - default
@@ -2001,7 +2083,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: '获取美股市场开盘状态:'
       tags:
       - default
@@ -2025,7 +2107,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 当前节点状态:记录数,钱包地址
       tags:
       - default
@@ -2047,7 +2129,7 @@ paths:
         "500":
           description: 失败时，有相应测试日志输出
           schema:
-            $ref: '#/definitions/controls.ApiErr'
+            $ref: '#/definitions/common.ApiErr'
       summary: 所有节点状态:记录数,钱包地址
       tags:
       - default

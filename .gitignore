@@ -31,3 +31,4 @@ bin/
 main_test.go
 services/rsa_noUse.go
 pid.stock
+*.bak
