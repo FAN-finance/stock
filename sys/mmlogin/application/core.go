@@ -1,8 +1,8 @@
 package application
 
 import (
-	"stock/mmlogin/domain/auth"
-	"stock/mmlogin/domain/user"
+	"stock/sys/mmlogin/domain/auth"
+	"stock/sys/mmlogin/domain/user"
 )
 
 type Core struct {

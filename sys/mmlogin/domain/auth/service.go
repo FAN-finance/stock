@@ -1,6 +1,6 @@
 package auth
 
-import "stock/mmlogin/domain"
+import "stock/sys/mmlogin/domain"
 
 type Service interface {
 	SetUpChallenge(u *domain.User) error

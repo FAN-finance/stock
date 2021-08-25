@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"stock/common"
-	"stock/mmlogin"
-	"stock/mmlogin/application/auth"
+	"stock/sys/mmlogin"
+	"stock/sys/mmlogin/application/auth"
 	"stock/services"
 	"stock/utils"
 	"time"
@@ -25,6 +25,7 @@ type loginModel struct {
 type loginRes struct {
 	Address string `form:"address" json:"address" binding:"required"`
 	IsAdmin bool `form:"isAdmin" json:"isAdmin" binding:"required"`
+	Token string `form:"token" json:"token" binding:"false"`
 }
 var AuthMiddleware *jwtgin.GinJWTMiddleware
 func InitJwt(routeGroup *gin.RouterGroup) {
@@ -57,7 +58,7 @@ func InitJwt(routeGroup *gin.RouterGroup) {
 			if err!=nil{
 				return nil,err
 			}else{
-				lres:=loginRes{userID,false}
+				lres:=loginRes{userID,false,""}
 				if services.IsAdmin(userID){
 					lres.IsAdmin=true
 				}
@@ -79,7 +80,9 @@ func InitJwt(routeGroup *gin.RouterGroup) {
 			return true
 		},
 		LoginResponse: func(c *gin.Context, code int, token string, t time.Time) {
-			lres,_:=c.Get("loginres")
+			res,_:=c.Get("loginres")
+			lres:=res.(loginRes)
+			lres.Token=token
 			common.NewResBody(c,lres)
 			//c.JSON(http.StatusOK, gin.H{
 			//	"code":    http.StatusOK,
@@ -122,7 +125,7 @@ func ChallengeHandler(c *gin.Context)  {
 
 	out, err := mmlogin.Apps.Auth.Challenge(nil, in)
 	if err != nil {
-		common.OkJson(c,err)
+		common.ResErrMsg(c,err.Error())
 		return
 	}
 	common.NewResBody(c,out)

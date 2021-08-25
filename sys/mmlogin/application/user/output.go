@@ -1,6 +1,6 @@
 package user
 
-import "stock/mmlogin/domain"
+import "stock/sys/mmlogin/domain"
 
 type GetUserOutput struct {
 	Name       string `json:"name"`

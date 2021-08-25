@@ -4,7 +4,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"stock/mmlogin/domain"
+	"stock/sys/mmlogin/domain"
 )
 
 type Claims struct {

@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"stock/mmlogin/application"
+	"stock/sys/mmlogin/application"
 )
 
 type Application interface {

@@ -2,7 +2,7 @@ package domain
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"stock/mmlogin/library/strutil"
+	"stock/sys/mmlogin/library/strutil"
 )
 
 type Signature [SignatureSize]byte

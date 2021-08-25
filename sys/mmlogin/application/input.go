@@ -1,6 +1,6 @@
 package application
 
-import "stock/mmlogin/domain"
+import "stock/sys/mmlogin/domain"
 
 type AddressHexInput struct {
 	AddressHex string

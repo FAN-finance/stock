@@ -3,9 +3,9 @@ package user
 import (
 	"context"
 
-	"stock/mmlogin/domain"
-	"stock/mmlogin/domain/user"
-	"stock/mmlogin/library/kvs"
+	"stock/sys/mmlogin/domain"
+	"stock/sys/mmlogin/domain/user"
+	"stock/sys/mmlogin/library/kvs"
 )
 
 type repository struct{}

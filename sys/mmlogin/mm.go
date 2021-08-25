@@ -1,11 +1,11 @@
 package mmlogin
 
 import (
-	"stock/mmlogin/application"
-	"stock/mmlogin/infrastructure/auth/metamask"
-	cacheUser "stock/mmlogin/infrastructure/cache/user"
-	appAuth "stock/mmlogin/application/auth"
-	appUser "stock/mmlogin/application/user"
+	"stock/sys/mmlogin/application"
+	"stock/sys/mmlogin/infrastructure/auth/metamask"
+	cacheUser "stock/sys/mmlogin/infrastructure/cache/user"
+	appAuth "stock/sys/mmlogin/application/auth"
+	appUser "stock/sys/mmlogin/application/user"
 )
 
 func newAppCore(conf *application.Config) *application.Core {

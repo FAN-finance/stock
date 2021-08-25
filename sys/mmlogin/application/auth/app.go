@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 
-	"stock/mmlogin/application"
-	"stock/mmlogin/domain"
+	"stock/sys/mmlogin/application"
+	"stock/sys/mmlogin/domain"
 )
 
 type Application interface {

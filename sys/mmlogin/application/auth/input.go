@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"stock/mmlogin/application"
-	"stock/mmlogin/domain"
+	"stock/sys/mmlogin/application"
+	"stock/sys/mmlogin/domain"
 )
 
 type ChallengeInput struct {

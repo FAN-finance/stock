@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"stock/mmlogin/domain"
+	"stock/sys/mmlogin/domain"
 )
 
 type Repository interface {
