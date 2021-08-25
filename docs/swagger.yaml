@@ -421,6 +421,8 @@ definitions:
         type: string
       isAdmin:
         type: boolean
+      token:
+        type: string
     required:
     - address
     - isAdmin
@@ -1254,33 +1256,7 @@ paths:
             $ref: '#/definitions/common.ResBody'
       summary: 获取字典配制信息
       tags:
-      - default
-    post:
-      consumes:
-      - application/json
-      description: 修改字典配制信息
-      operationId: ConfigHandler
-      parameters:
-      - description: 配制json
-        in: body
-        name: dic
-        required: true
-        schema:
-          $ref: '#/definitions/common.RawDicConfig'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: config json
-          schema:
-            $ref: '#/definitions/common.RawDicConfig'
-        "500":
-          description: 失败时，有相应测试日志输出
-          schema:
-            $ref: '#/definitions/common.ResBody'
-      summary: 修改字典配制信息
-      tags:
-      - default
+      - sys
   /pub/internal/coin_price/{coin}/{vs_coin}:
     get:
       consumes:
@@ -2130,4 +2106,36 @@ paths:
       summary: 所有节点状态:记录数,钱包地址
       tags:
       - default
+  /sys/dic_config:
+    post:
+      consumes:
+      - application/json
+      description: 修改字典配制信息
+      operationId: ConfigUpdateHandler
+      parameters:
+      - description: token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 配制json
+        in: body
+        name: dic
+        required: true
+        schema:
+          $ref: '#/definitions/common.RawDicConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: data
+          schema:
+            $ref: '#/definitions/common.RawDicConfig'
+        "500":
+          description: 失败时，有相应测试日志输出
+          schema:
+            $ref: '#/definitions/common.ResBody'
+      summary: 修改字典配制信息
+      tags:
+      - sys
 swagger: "2.0"

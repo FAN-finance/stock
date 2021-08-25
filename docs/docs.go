@@ -1109,7 +1109,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "default"
+                    "sys"
                 ],
                 "summary": "获取字典配制信息",
                 "operationId": "ConfigHandler",
@@ -1119,45 +1119,6 @@ var doc = `{
                         "description": "配制json",
                         "name": "is_using",
                         "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "config json",
-                        "schema": {
-                            "$ref": "#/definitions/common.RawDicConfig"
-                        }
-                    },
-                    "500": {
-                        "description": "失败时，有相应测试日志输出",
-                        "schema": {
-                            "$ref": "#/definitions/common.ResBody"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "修改字典配制信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "default"
-                ],
-                "summary": "修改字典配制信息",
-                "operationId": "ConfigHandler",
-                "parameters": [
-                    {
-                        "description": "配制json",
-                        "name": "dic",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/common.RawDicConfig"
-                        }
                     }
                 ],
                 "responses": {
@@ -2351,6 +2312,54 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/sys/dic_config": {
+            "post": {
+                "description": "修改字典配制信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sys"
+                ],
+                "summary": "修改字典配制信息",
+                "operationId": "ConfigUpdateHandler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "配制json",
+                        "name": "dic",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/common.RawDicConfig"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data",
+                        "schema": {
+                            "$ref": "#/definitions/common.RawDicConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "失败时，有相应测试日志输出",
+                        "schema": {
+                            "$ref": "#/definitions/common.ResBody"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2967,6 +2976,9 @@ var doc = `{
                 },
                 "isAdmin": {
                     "type": "boolean"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         }

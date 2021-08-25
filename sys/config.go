@@ -33,14 +33,14 @@ func ConfigHandler(c *gin.Context) {
 // @Tags sys
 // @Summary　修改字典配制信息
 // @Description 修改字典配制信息
-// @ID ConfigHandler
+// @ID ConfigUpdateHandler
 // @Accept  json
 // @Produce  json
+// @Param     Authorization   header    string     true    "token"
 // @Param     dic   body    common.RawDicConfig     true    "配制json"
 // @Success 200 {object} common.RawDicConfig	"data"
-// @Success 200 {object} common.RawDicConfig	"config json"
 // @Failure 500 {object} common.ResBody "失败时，有相应测试日志输出"
-// @Router /pub/dic_config [post]
+// @Router /sys/dic_config [post]
 func ConfigUpdateHandler(c *gin.Context) {
 	if !IsAdmin(c){
 		common.ResErrMsg(c,"you are not administrator")
