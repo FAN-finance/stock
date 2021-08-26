@@ -4,13 +4,13 @@ import (
 	jwtgin "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 	"stock/common"
+	"stock/services"
 	"stock/sys/mmlogin"
 	"stock/sys/mmlogin/application/auth"
-	"stock/services"
 	"stock/utils"
 	"time"
-	"errors"
 )
 
 
@@ -83,7 +83,8 @@ func InitJwt(routeGroup *gin.RouterGroup) {
 			res,_:=c.Get("loginres")
 			lres:=res.(loginRes)
 			lres.Token=token
-			common.NewResBody(c,lres)
+			c.JSON(200,lres)
+			//common.NewResBody(c,lres)
 			//c.JSON(http.StatusOK, gin.H{
 			//	"code":    http.StatusOK,
 			//	"token":   token,
@@ -98,7 +99,7 @@ func InitJwt(routeGroup *gin.RouterGroup) {
 		TimeFunc: func() time.Time { return time.Now().Add(time.Duration(5) * time.Minute) },
 		Timeout:  time.Hour * 24,
 		Unauthorized:func(c *gin.Context, code int, msg string){
-			common.ResErrWithCode(c,errors.New(msg+" jwt"),code,)
+			common.ErrJsonWithCode(c,msg+" jwt",http.StatusUnauthorized)
 		},
 	})
 	if err != nil {
@@ -128,7 +129,12 @@ func ChallengeHandler(c *gin.Context)  {
 		common.ResErrMsg(c,err.Error())
 		return
 	}
-	common.NewResBody(c,out)
+	//common.ResErrMsg(c,"test 400 json")
+	//common.ErrJson(c,"test 400 json")
+	//c.JSON(400,"400 test")
+	//return
+	c.JSON(200,out)
+	//common.NewResBody(c,out)
 }
 
 // @Tags sys

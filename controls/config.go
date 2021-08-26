@@ -13,8 +13,6 @@ type config struct{
 	FtxTokenAddres map[string]string
 }
 
-var Config =new(config)
-
 func BeginUseRawDicConfig(dicCfg *common.RawDicConfig){
 	IsDisableAllSign=dicCfg.IsDisableAllSign
 	IsDisableFtxSign=dicCfg.IsDisableFtxSign
@@ -27,8 +25,12 @@ func BeginUseRawDicConfig(dicCfg *common.RawDicConfig){
 		addresFtx[item.TokenAddre]=item.FtxName
 	}
 
+}
+func GetControlConfig() *config{
+	var Config =new(config)
 	Config.IsDisableAllSign=IsDisableAllSign
 	Config.IsDisableFtxSign=IsDisableFtxSign
 	Config.SafePrice=safePrice
 	Config.FtxTokenAddres=ftxAddres
+	return Config
 }

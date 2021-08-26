@@ -82,6 +82,10 @@ func ErrJson(c *gin.Context, msg string) {
 	}
 	c.JSON(500, ApiErr{msg})
 }
+
+func ErrJsonWithCode(c *gin.Context, msg string,code int) {
+	c.JSON(code, ApiErr{msg})
+}
 func OkJson(c *gin.Context, err error) {
 	if err != nil {
 		ErrJson(c, err.Error())
