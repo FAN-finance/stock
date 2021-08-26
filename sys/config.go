@@ -24,9 +24,9 @@ import (
 // @Router /pub/dic_config [get]
 func ConfigHandler(c *gin.Context) {
 	if c.Query("is_using")==""{
-		common.NewResBody(c,RawDic)
+		c.JSON(200,RawDic)
 	}else{
-		common.NewResBody(c,controls.Config)
+		c.JSON(200,controls.GetControlConfig())
 	}
 }
 
