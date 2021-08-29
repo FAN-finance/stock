@@ -734,7 +734,7 @@ func IsGoldSignTime(timestamp int64) bool {
 }
 
 var safePrice = map[string]*mm{
-	"0x011864d37035439e078d64630777ec518138af05": &mm{0.5, 3},
+	"0x011864d37035439e078d64630777ec518138af05": &mm{0.3, 3},
 	"0x5190144c70f024bbccf9b41690e4ce3ccac31a68": &mm{75000, 270000},
 	"0x66094a0624a4e8a8b9a7eff8dc0982706015340d": &mm{10000, 38000},
 	"0x247913d11957f3561d4a14166ec478c3c70a9297": &mm{3600, 13000},
@@ -742,6 +742,8 @@ var safePrice = map[string]*mm{
 	"0xab9016557b3fe80335415d60d33cf2be4b9ba461": &mm{3800, 13680},
 	"0x6b5ab672ac243193b006ea819a5eb08bcd518de7": &mm{170, 600},
 	"0xc7b86cc68c2b49f2609e9b5e12f0aa7be775bf1d": &mm{7, 25},
+	"0x9ec53838dfce4f23adb68987f8b284534c8c2629": {2500,9000},
+	"0x15c8fe923fa05ca5495857d4958d621a1747a1e8": {2500,9000},
 }
 
 func CheckSafePrice(code string, price float64) bool {
@@ -764,7 +766,7 @@ func SpecialOpenTime() bool {
 		log.Fatalln(err)
 	}
 	h := n.Hour()
-	if n.After(btime) && (h == 14 || h == 15 || h == 2 || h == 3) {
+	if n.After(btime) && (h == 14 || h == 15|| h == 16|| h == 17 || h == 2 || h == 3|| h == 4|| h == 5) {
 		return true
 	}
 	return false
