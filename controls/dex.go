@@ -727,6 +727,8 @@ func IsGoldSignTime(timestamp int64) bool {
 	//	}
 	case time.Monday, time.Tuesday, time.Wednesday, time.Thursday:
 		return true
+	default:
+		return false
 	}
 	return true
 }
