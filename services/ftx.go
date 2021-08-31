@@ -11,6 +11,22 @@ import (
 	"time"
 )
 
+func IsFtxDataNew(coin_type string,sec int) bool{
+	counter := int64(0)
+	err:=utils.Orm.Model(CoinBull{}).Where("coin_type=? and timestamp >unix_timestamp()-?",coin_type,sec).Count(&counter).Error
+	if err == nil && counter > 0{
+		return true
+	}
+	return false
+}
+func IsGraphEthPriceDataNew(sec int) bool{
+	counter := int64(0)
+	err:=utils.Orm.Model(BlockPrice{}).Where("block_time >unix_timestamp()-?",sec).Count(&counter).Error
+	if err == nil && counter > 0{
+		return true
+	}
+	return false
+}
 func CacuBullPrice(lastAjustPriceBull, lastAjustPric, curPric float64, item_type string) float64 {
 	//return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric*3 + 1)
 	return lastAjustPriceBull * ((curPric-lastAjustPric)/lastAjustPric*float64(ftxMultipleMap[item_type]) + 1)
@@ -127,7 +143,7 @@ func setLastBullAJ(coinType string) {
 	if lastAj.Rebalance == 0 {
 		lastAj.Rebalance = lastAj.Bull
 	}
-	log.Println("lastaj %v", lastAj)
+	//log.Println("lastaj %v", lastAj)
 	LastBullAJ[coinType] = lastAj
 	//return lastAj
 }
@@ -138,7 +154,7 @@ func LastBullTimeStamp(coinType string) int64 {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("lastbullTime %v", cb)
+	//log.Println("lastbullTime %v", cb)
 	return cb.Timestamp
 }
 func LastBullPriceID() int {
@@ -147,7 +163,7 @@ func LastBullPriceID() int {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("LastBullPriceID %v", cb)
+	log.Printf("LastBullPriceID %v \n", cb.PriceID)
 	return cb.PriceID
 }
 
