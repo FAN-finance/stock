@@ -135,6 +135,10 @@ func PairTokenPriceSignHandler(c *gin.Context) {
 				resTokenView.Sign = snode.Sign
 			}
 			sc.Lock()
+			if !services.IsGraphEthPriceDataNew(180){
+				snode.Sign=nil
+				snode.Msg="GraphEthPrice is not new"
+			}
 			avgNodesPrice = append(avgNodesPrice, snode)
 			sc.Unlock()
 		} else {
@@ -696,10 +700,17 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 	} else {
 		log.Println("sign for none ftx", code)
 	}
-
 	if signAble && !CheckSafePrice(code, price) {
 		signAble = false
 		msg = fmt.Sprintf("safe price check fail %f", price)
+	}
+	//新价格判断
+	if isFtx(code) {
+		coinType:=addresFtx[code]
+		if !services.IsFtxDataNew(coinType,180){
+			signAble = false
+			msg = "price data is not new "
+		}
 	}
 	return
 }
