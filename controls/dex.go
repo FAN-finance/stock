@@ -707,6 +707,9 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 	//新价格判断
 	if isFtx(code) {
 		coinType:=addresFtx[code]
+		if coinType=="usd"{
+			return
+		}
 		if !services.IsFtxDataNew(coinType,180){
 			signAble = false
 			msg = "price data is not new "
