@@ -61,19 +61,19 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 		resp, err = hclient.Do(request)
 		err = err1
 		if err == nil {
-			if resp == nil {
-				log.Println("retry resp nil")
-				retry += 1
-				if retry < 2 {
-					time.Sleep(time.Millisecond * 100)
-					goto RETRY
-				}
+			if resp == nil {//may be another network err
+				//log.Println("retry resp nil")
+				//retry += 1
+				//if retry < 2 {
+				//	time.Sleep(time.Millisecond * 100)
+				//	goto RETRY
+				//}
 				err = errors.New("err resp nil")
 				log.Println("ReqRes", err.Error(),url,reqTime.Unix())
 			} else if resp.StatusCode != 200 && resp.StatusCode != 206 {
 				err = errors.New("err status:" + resp.Status)
 			}
-		} else {
+		} else {//network err
 			//net error
 			//log.Printf("net err set retryMax %d to %d", retryMaxDefault, retryMax)
 			//retryMax = 1
