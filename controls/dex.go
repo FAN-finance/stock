@@ -326,6 +326,20 @@ where a.high is not null`, code).First(vp).Error
 	TokenChainPriceProcess(c, dataProc, "TokenChainPriceHandler")
 
 }
+var KovanAddreMap=map[string]string{"0x011864d37035439e078d64630777ec518138af05":"0x9207cb63b450af0d0930501b78f1a1b63b9cdb22",
+	"0x76417e660df3e5c90c0361674c192da152a806e4":"0x5e6dacf79473f3f0a8eb3f9cb569dd9bfdf091dd"}
+
+//测试平台的地址转衡换：测试平台使用main网合约地址查询数据，返回数据时合约要转换回测试网地址
+func GetKovanAddreMap(addr string) string {
+	if !IsKovan{
+		return addr
+	}
+	addr1, ok := KovanAddreMap[addr]
+	if ok {
+		return addr1
+	}
+	return addr
+}
 func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interface{}, error), processName string) {
 	code := c.Param("token")
 	timestampstr := c.Param("timestamp")
@@ -369,10 +383,11 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 
 		//log.Println(*vp)
 		tPriceView := new(services.HLPriceViewRaw)
-		tPriceView.Code = code
-		if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
-			tPriceView.Code = "0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
-		}
+		tPriceView.Code = GetKovanAddreMap(code)
+		//tPriceView.Code = code
+		//if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
+		//	tPriceView.Code = "0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
+		//}
 		tPriceView.Timestamp = int64(timestamp)
 		tPriceView.DataType = dataType
 		if dataType == 1 {
@@ -520,7 +535,8 @@ func TokenChainPriceFromPairProcess(c *gin.Context, dataProc func(pair, token st
 		vp := res.(*HLValuePair)
 		log.Println(*vp)
 		tPriceView := new(services.HLPriceViewRaw)
-		tPriceView.Code = token
+		//tPriceView.Code = token
+		tPriceView.Code = GetKovanAddreMap(token)
 		tPriceView.Timestamp = int64(timestamp)
 		tPriceView.DataType = dataType
 		if dataType == 1 {
@@ -664,6 +680,10 @@ var IsDisableAllSign = false
 
 //禁用ftx签名
 var IsDisableFtxSign = false
+//新数据检查
+var IsDisableSpecialOpenTime=false
+//新数据检查
+var IsDisableCheckFtxDataNewCheck=false
 
 func IsSignAble(code string, price float64) (signAble bool, msg string) {
 	signAble = true
@@ -677,7 +697,7 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 		msg = "All Sign　is disable now"
 		return
 	}
-	if !SpecialOpenTime() {
+	if !IsDisableSpecialOpenTime && !SpecialOpenTime() {
 		signAble = false
 		msg = "only open in hour utc02 and utc14"
 		return
@@ -710,7 +730,7 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 		if coinType=="usd"{
 			return
 		}
-		if !services.IsFtxDataNew(coinType,180){
+		if !IsDisableCheckFtxDataNewCheck && !services.IsFtxDataNew(coinType,180){
 			signAble = false
 			msg = "price data is not new "
 		}

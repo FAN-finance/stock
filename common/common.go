@@ -206,20 +206,32 @@ func IsAdmin(c *gin.Context)bool{
 //区别于controls系统正在使用的map-config结构（ 如SafePrices　ftxAddres）; 在web-ui上编辑时,map项不能按添加顺序显示，操作上很不方便
 //SafePrices　FtxTokenAddres换用数组方式的配制．
 type RawDicConfig struct{
+	//开启测试环境地址转换
+	IsKovan bool
 	//禁用所有签名
 	IsDisableAllSign bool
 	//禁用ftx签名
 	IsDisableFtxSign bool
-	SafePrices []sp
-	FtxTokenAddres []fa
+	SafePrices []SP
+	FtxTokenAddres []FA
+	KovanAddreMap []AM
+	//是否禁用两时段签名功能
+	IsDisableSpecialOpenTime bool
+	//是否禁用新数据检查　
+	IsDisableCheckFtxDataNewCheck bool
 }
 //ftxAddres
-type fa struct {
+type FA struct {
 	FtxName string
 	TokenAddre string
 }
+//AddresMap
+type AM struct {
+	Main string
+	Kovan string
+}
 //SafePrices
-type sp struct {
+type SP struct {
 	Min float64
 	Max float64
 	TokenAddre string

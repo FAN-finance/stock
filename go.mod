@@ -12,7 +12,6 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-openapi/spec v0.20.3 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/itsjamie/gin-cors v0.0.0-20160420130702-97b4a9da7933
@@ -26,9 +25,8 @@ require (
 	github.com/swaggo/swag v1.7.0
 	github.com/tidwall/gjson v1.7.5
 	go.etcd.io/etcd/client/v3 v3.5.0
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
 	golang.org/x/text v0.3.6 // indirect
-	gopkg.in/go-playground/validator.v9 v9.29.1 // indirect
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/gorm v1.21.6
+	github.com/fsnotify/fsnotify v1.4.9
 )

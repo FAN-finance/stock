@@ -2,6 +2,7 @@ package sys
 
 import (
 	"encoding/json"
+	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"io/ioutil"
@@ -24,7 +25,8 @@ import (
 // @Router /pub/dic_config [get]
 func ConfigHandler(c *gin.Context) {
 	if c.Query("is_using")==""{
-		c.JSON(200,RawDic)
+		//c.JSON(200,RawDic)
+		c.JSON(200,controls.GetRawDicConfig())
 	}else{
 		c.JSON(200,controls.GetControlConfig())
 	}
@@ -77,33 +79,67 @@ func ConfigUpdateHandler(c *gin.Context) {
 	}else{
 		log.Println("not exist  sync-dic sh")
 	}
-	RawDic=tDicConf
-	controls.BeginUseRawDicConfig(RawDic)
-	c.JSON(200, RawDic)
+	//RawDic=tDicConf
+	//controls.BeginUseRawDicConfig(RawDic)
+	c.JSON(200, tDicConf)
 }
 
 
 
-var RawDic =new(common.RawDicConfig)
+
+var dicFile="./asset/dic_config.json"
 func InitDicConfig(){
-	bs,err:=ioutil.ReadFile("./asset/dic_config.json")
+	var rawDic =new(common.RawDicConfig)
+	bs,err:=ioutil.ReadFile(dicFile)
 	if err != nil {
 		log.Fatal(err,"dic_config err")
 	}
-	err=json.Unmarshal(bs, RawDic)
+	err=json.Unmarshal(bs, rawDic)
 	if err != nil {
 		log.Fatal("dic_config err")
 	}
-	RawDic.BasicVerify()
-	controls.BeginUseRawDicConfig(RawDic)
+	rawDic.BasicVerify()
+	controls.BeginUseRawDicConfig(rawDic)
 
-	//RawDic.IsDisableAllSign=IsDisableAllSign
-	//RawDic.IsDisableFtxSign=IsDisableFtxSign
-	//for key, value := range safePrice {
-	//	RawDic.SafePrices=append(RawDic.SafePrices,sp{mm{value.Min,value.Max},key ,""} )
-	//}
-	//for key, value := range ftxAddres {
-	//	RawDic.FtxTokenAddres=append(RawDic.FtxTokenAddres,fa{key,value})
-	//}
+}
+func InitDicConfigWatch(){
+	go WatchDicFile(dicFile)
+}
+func WatchDicFile(fpath string){
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	done := make(chan bool)
+	go func() {
+		defer close(done)
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					log.Println("WatchDicFile exit",event)
+					return
+				}
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					log.Println("modified file:", event)
+					InitDicConfig()
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					log.Println("error exit:", err)
+					return
+				}
+				log.Println("error:", err)
+			}
+		}
+	}()
+	log.Println("add watch file ",fpath)
+
+	err = watcher.Add(fpath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-done
 }
 
