@@ -705,12 +705,16 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 		msg = fmt.Sprintf("safe price check fail %f", price)
 	}
 	//新价格判断
-	if isFtx(code) {
+	if signAble && isFtx(code) {
 		coinType:=addresFtx[code]
 		if coinType=="usd"{
 			return
 		}
-		if !services.IsFtxDataNew(coinType,180){
+		delay:=180
+		if strings.HasPrefix(coinType,"govt"){
+			delay=600
+		}
+		if !services.IsFtxDataNew(coinType,delay){
 			signAble = false
 			msg = "price data is not new "
 		}
