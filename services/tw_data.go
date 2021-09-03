@@ -34,6 +34,18 @@ var twSymbolMap = map[string]string{
 	"AAPL":    "AAPL",
 	"TSLA":    "TSLA",
 }
+var twSymbolLocalMap = map[string]*time.Location{
+	"vix": locUsaStock,
+	//"ust": locUsaStock,
+	"ndx":     locUsaStock,
+	"govt":    locUsaStock,
+	"AAPL":    locUsaStock,
+	"TSLA":   locUsaStock,
+	"eth/usd": time.UTC,
+	"btc/usd": time.UTC,
+	"xau/usd": time.UTC,
+	"eur/usd": time.UTC,
+}
 
 //subcribe twelvedata data
 func SyncCoinGeckoData() {
@@ -142,7 +154,7 @@ func GetTwData(start_date, end_date string, limit int) error {
 						mprice := new(MarketPrice)
 						mprice.ItemType = twSymbolMap[key]
 						mprice.Price, _ = strconv.ParseFloat(value.Close, 64)
-						ts, _ := time.ParseInLocation("2006-01-02 15:04:05", value.Datetime, time.UTC)
+						ts, _ := time.ParseInLocation("2006-01-02 15:04:05", value.Datetime, twSymbolLocalMap[key])
 						mprice.Timestamp = int(ts.Unix())
 						dberr := utils.Orm.Save(mprice).Error
 						if dberr != nil {
