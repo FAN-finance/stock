@@ -289,6 +289,7 @@ WHERE
 
 	tPriceView := new(services.HLPriceViewRaw)
 	tPriceView.Code = ftxAddres[coin_type]
+	tPriceView.Code = GetKovanAddreMap(tPriceView.Code)
 	//if code == "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f" {
 	//	tPriceView.Code = "0x6EBFD2E7678cFA9c8dA11b9dF00DB24a35ec7dD4"
 	//}
