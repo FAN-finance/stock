@@ -1,6 +1,7 @@
 package controls
 
 import (
+	"log"
 	"stock/common"
 )
 
@@ -28,17 +29,28 @@ func BeginUseRawDicConfig(dicCfg *common.RawDicConfig){
 	IsDisableFtxSign=dicCfg.IsDisableFtxSign
 	IsDisableSpecialOpenTime=dicCfg.IsDisableSpecialOpenTime
 	IsDisableCheckFtxDataNewCheck=dicCfg.IsDisableCheckFtxDataNewCheck
+
+	tmp_KovanAddreMap:=map[string]string{}
 	for _, item := range dicCfg.KovanAddreMap {
-		KovanAddreMap[item.Main]=item.Kovan
+		tmp_KovanAddreMap[item.Main]=item.Kovan
 	}
+	KovanAddreMap=tmp_KovanAddreMap
+
+	tmp_sp := map[string]*mm{}
 	for _, item := range dicCfg.SafePrices {
-		safePrice[item.TokenAddre].Max=item.Max
-		safePrice[item.TokenAddre].Min=item.Min
+		tmpMm:=&mm{item.Min,item.Max}
+		tmp_sp[item.TokenAddre]=tmpMm
 	}
+	safePrice=tmp_sp
+
+	tmp_ftxAddres := map[string]string{}
+	tmp_addresFtx := map[string]string{}
 	for _, item := range dicCfg.FtxTokenAddres {
-		ftxAddres[item.FtxName]=item.TokenAddre
-		addresFtx[item.TokenAddre]=item.FtxName
+		tmp_ftxAddres[item.FtxName]=item.TokenAddre
+		tmp_addresFtx[item.TokenAddre]=item.FtxName
 	}
+	ftxAddres=tmp_ftxAddres
+	addresFtx=tmp_addresFtx
 }
 
 func GetRawDicConfig()(dicCfg *common.RawDicConfig){
@@ -73,6 +85,7 @@ func GetControlConfig() *config{
 	Config.FtxTokenAddres=ftxAddres
 	Config.IsKovan=IsKovan
 	Config.KovanAddreMap=KovanAddreMap
+	log.Println(KovanAddreMap)
 	Config.IsDisableSpecialOpenTime=IsDisableSpecialOpenTime
 	Config.IsDisableCheckFtxDataNewCheck=IsDisableCheckFtxDataNewCheck
 	return Config
