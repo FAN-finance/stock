@@ -307,7 +307,7 @@ from (
         select avg(prices.token_price) avg,max(prices.token_price) high, min(prices.token_price) low
         from token_prices prices
         where prices.token_addre=? and prices.block_number >
-              (select t.id from block_prices t where t.block_time > unix_timestamp() - 7200 limit 1)
+              (select t.id from block_prices t where t.block_time > unix_timestamp() - 240*60 limit 1)
     ) a
 where a.high is not null`, code).First(vp).Error
 		if err != nil {
@@ -423,7 +423,7 @@ func TokenChainPriceProcess(c *gin.Context, dataProc func(code string) (interfac
 func TokenPriceHandler(c *gin.Context) {
 	dataProc := func(code string) (interface{}, error) {
 		intreval := "60s"
-		count := 60
+		count := 240
 		items, err := services.GetTokenTimesPrice(code, intreval, count)
 		if err != nil {
 			return nil, err
@@ -457,7 +457,7 @@ func TokenPriceHandler(c *gin.Context) {
 // @Router /pub/internal/dex/pair/token_price/{pair}/{token}/{timestamp} [get]
 func PairTokenPriceHandler(c *gin.Context) {
 	dataProc := func(pair, token string) (interface{}, error) {
-		count := 120
+		count := 240
 		intreval := "60s"
 		items, err := services.GetTokenTimesPriceFromPair(pair, token, intreval, count)
 		if err != nil {
