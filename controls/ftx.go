@@ -204,7 +204,7 @@ var ftxAddres = map[string]string{
 // @Router /pub/internal/dex/ftx_price/{coin_type}/{timestamp} [get]
 func FtxPriceHandler(c *gin.Context) {
 	coin_type := c.Param("coin_type")
-	duration := 7200
+	duration := 7200*2
 	if isStockFtx(coin_type) {
 		duration = 3600
 	}
