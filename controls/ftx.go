@@ -278,7 +278,7 @@ WHERE
 	if vp.Low==0{
 		vmsg="最低价错误"
 	}
-	if vp.High/vp.Low>2{
+	if vp.High/vp.Low>2 && dataType<4{
 		vmsg="最高最低价变化太大"
 	}
 	if vmsg!=""{
