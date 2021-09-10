@@ -3,8 +3,10 @@ package sys
 import (
 	jwtgin "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"stock/common"
 	"stock/services"
 	"stock/sys/mmlogin"
@@ -27,11 +29,39 @@ type loginRes struct {
 	IsAdmin bool `form:"isAdmin" json:"isAdmin" binding:"required"`
 	Token string `form:"token" json:"token" binding:"false"`
 }
+
+func SetJwtSecretFile()[]byte{
+	//secretKey
+	var signKeyJwt []byte
+	sfile:="asset/jwt_secret"
+	fi, err := os.Stat(sfile)
+	if err == nil && !fi.IsDir() {
+		signKeyJwt,err=ioutil.ReadFile(sfile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Println("loaded jwt_secret")
+	}else if err!=nil && os.IsNotExist(err){
+		signKeyJwt =[]byte(utils.RandStr(32))
+		err1:=ioutil.WriteFile(sfile,signKeyJwt,0644)
+		if err1 != nil {
+			log.Println("WriteFile err",err1)
+		}
+	}else{
+		log.Println("SetJwtSecretFile stat",err)
+	}
+	if signKeyJwt==nil{
+		signKeyJwt =[]byte(utils.RandStr(32))
+	}
+	log.Println("signKeyJwt:",string(signKeyJwt))
+	return signKeyJwt
+}
+
 var AuthMiddleware *jwtgin.GinJWTMiddleware
 func InitJwt(routeGroup *gin.RouterGroup) {
 	mmlogin.InitMMLogin()
 	var identityKey = "id"
-	var signKeyJwt = []byte(utils.RandStr(32))
+	var signKeyJwt =SetJwtSecretFile()
 	authMiddleware1, err := jwtgin.New(&jwtgin.GinJWTMiddleware{
 		Realm: "test zone",
 		Key:   signKeyJwt,
@@ -168,4 +198,34 @@ func IsAdmin(c *gin.Context)bool{
 		return true
 	}
 	return false
+}
+
+// @Tags sys
+// @Summary　 用户信息
+// @Description 用户信息
+// @ID UserInfoHandler
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} userInfo	"用户信息"
+// @Failure 500 {object} common.ResBody "失败时，有相应测试日志输出"
+// @Router /sys/user_info [get]
+func UserInfoHandler(c *gin.Context){
+	uinfo:=new(userInfo)
+	uinfo.Name="wallet"
+	uinfo.Avatar="https://price.btcfans.com/assets/price/coin-logo/bitcoin.png?big"
+	uinfo.Address=AuthMiddleware.IdentityHandler(c).(string)
+	uinfo.IsAdmin=services.IsAdmin(uinfo.Address)
+	if uinfo.IsAdmin{
+		uinfo.Access= "admin"
+	}else{
+		uinfo.Access= "guest"
+	}
+	c.JSON(200,uinfo)
+}
+
+type userInfo struct {
+	loginRes
+	Name   string `json:"name"`
+	Avatar string `json:"avatar"`
+	Access string `json:"access"`
 }

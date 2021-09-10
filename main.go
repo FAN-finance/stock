@@ -200,6 +200,8 @@ func main() {
 	api.POST("/login", sys.AuthMiddleware.LoginHandler)
 	api.GET("/pre_login", sys.ChallengeHandler)
 	admin.GET("/hello", sys.HelloJwtHandler)
+	admin.GET("/user_info", sys.UserInfoHandler)
+	api.GET("/ftxs", sys.FtxListHandler)
 	admin.POST("dic_config", sys.ConfigUpdateHandler)
 
 	//api.POST("/stock/sign_verify", VerifyInfoHandler)

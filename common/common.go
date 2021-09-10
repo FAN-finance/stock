@@ -21,10 +21,11 @@ type ResBody struct {
 	Time time.Time
 }
 type ResPager struct {
+	ResBody
 	Page  int         `example:"1" json:"page"`
 	PageSize int         `example:"10" json:"page_size"`
-	Total    int         `example:"100" json:"total"`
-	Result   interface{} `json:"result" swaggertype:"object"`
+	Total    int64         `example:"100" json:"total"`
+	//Result   interface{} `json:"result" swaggertype:"object"`
 }
 func NewResBody(c *gin.Context, data interface{}) {
 	resb:=new(ResBody)
@@ -34,18 +35,19 @@ func NewResBody(c *gin.Context, data interface{}) {
 	resb.Time=time.Now()
 	c.JSON(200, resb)
 }
-func NewResListBody(c *gin.Context, pageNum,pageSize,total int, listData interface{}) {
-	resb:=new(ResBody)
+func NewResListBody(c *gin.Context, pageNum,pageSize int,total int64, listData interface{}) {
+	//resb:=new(ResBody)
 	resPager:=new(ResPager)
 	resPager.Page=pageNum
 	resPager.PageSize=pageSize
-	resPager.Result=listData
+	//resPager.Result=listData
+	resPager.Data=listData
 	resPager.Total=total
-	resb.Data=resPager
-	resb.Time=time.Now()
-	resb.Code=200
-	resb.Msg="success"
-	c.JSON(200, resb)
+	//resPager.Data=resPager
+	resPager.Time=time.Now()
+	resPager.Code=200
+	resPager.Msg="success"
+	c.JSON(200, resPager)
 }
 
 func ResErrMsg(c *gin.Context, err string ) {

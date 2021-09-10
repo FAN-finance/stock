@@ -13,6 +13,7 @@ type config struct{
 	IsDisableAllSign bool
 	//禁用ftx签名
 	IsDisableFtxSign bool
+	//合约安全范围
 	SafePrice map[string]*mm
 	FtxTokenAddres map[string]string
 	//kovan地址转换
