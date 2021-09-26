@@ -14,6 +14,7 @@ import (
 	"path"
 	"stock/common"
 	"stock/services"
+	"stock/services/uni"
 	"stock/utils"
 	"strconv"
 	"strings"
@@ -159,7 +160,7 @@ func NodeStatHandler(c *gin.Context) {
 	utils.Orm.Model(services.Coin{}).Select("max(id)").Scan(&coinMaxid)
 	stat.CionPricesUpdateAt = time.Unix(int64(coinMaxid), 0)
 
-	utils.Orm.Model(services.BlockPrice{}).Select("max(created_at)").Scan(&stat.BlockPricesUpdateAt)
+	utils.Orm.Model(uni.BlockPrice{}).Select("max(created_at)").Scan(&stat.BlockPricesUpdateAt)
 
 	stat.WalletAddre = services.WalletAddre
 	stat.Uptime = services.Uptime

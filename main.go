@@ -12,6 +12,7 @@ import (
 	"stock/controls"
 	_ "stock/docs"
 	"stock/services"
+	"stock/services/uni"
 	"stock/sys"
 	"stock/utils"
 	"strings"
@@ -57,7 +58,7 @@ func main() {
 	utils.Nodes = nodes
 	utils.SetWList(wlist)
 	utils.InitDb(dbUrl)
-	services.InitEConn(infura)
+	utils.InitEConn(infura)
 	services.SwapGraphApi = swapGraphApi
 
 	//获取twelvedata最新数据
@@ -85,8 +86,9 @@ func main() {
 		//go services.SyncCoinGeckoData()
 
 		//go services.GetStocks()
-		go services.SubEthPrice(0)
-		//coingecko has stoped  since 2021-08-20
+
+		go uni.SubEthPrice(0,services.SwapGraphApi)
+
 		go services.SubCoinsPrice()
 		//coingecko bull
 		//go services.SetAllBulls("btc3x")
@@ -94,8 +96,8 @@ func main() {
 		go func() {
 			//监听eth uniswap pair's token价格
 			//tpc := services.TokenPairConf{PairAddre: "0x4d3c5db2c68f6859e0cd05d080979f597dd64bff", TokenAddre: "0x72e364f2abdc788b7e918bc238b21f109cd634d7", TokenDecimals: 18, ChainName: "eth"}
-			tpc := services.TokenPairConf{PairAddre: "0xdfb8824b094f56b9216a015ff77bdb056923aaf6", TokenAddre: "0x011864d37035439e078d64630777ec518138af05", TokenDecimals: 18, ChainName: "eth"}
-			services.SubPairlog(&tpc)
+			tpc := uni.TokenPairConf{PairAddre: "0xdfb8824b094f56b9216a015ff77bdb056923aaf6", TokenAddre: "0x011864d37035439e078d64630777ec518138af05", TokenDecimals: 18, ChainName: "eth"}
+			uni.SubPairlog(&tpc)
 		}()
 
 		////subcribe twelvedata data

@@ -2,24 +2,15 @@ package services
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 	"github.com/tidwall/gjson"
 	"log"
-	"math"
-	"math/big"
+	"stock/services/uni"
 	"stock/utils"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -115,8 +106,8 @@ func getTokenTimes(interval string, count int) []int64 {
 	return timeItems
 }
 
-func getBlockPrices(timeItems []int64, maxBlockHeight int64) ([]*BlockPrice, error) {
-	bps := []*BlockPrice{}
+func getBlockPrices(timeItems []int64, maxBlockHeight int64) ([]*uni.BlockPrice, error) {
+	bps := []*uni.BlockPrice{}
 
 	sql := ""
 	args := []interface{}{}
@@ -145,7 +136,7 @@ func getBlockPrices(timeItems []int64, maxBlockHeight int64) ([]*BlockPrice, err
 
 const getBlockHeight = `{"query":"{\n  _meta \n  \t{block\n      {number}\n  \t}\n}\n","variables":null}`
 
-func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*BlockPrice, error) {
+func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*uni.BlockPrice, error) {
 	//{"operationName":"blocks","variables":{},"query":"query blocks {
 	//	\nt1620871200: token(id: \"0xbc396689893d065f41bc2c6ecbee5e0085233447\", block: {number: 12423239}) {\n    derivedETH\n    __typename\n  }\n
 	//	\n}\n"}
@@ -193,7 +184,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 						log.Println(ethValue);*/
 						ethPrice, _ := decimal.NewFromString(resItem.DerivedETH)
 						if interval == "60s" && idx == (len(bps)-1) {
-							item.Price = BlockPrice{}.GetPrice()
+							item.Price = uni.BlockPrice{}.GetPrice()
 						}
 						price, _ := ethPrice.Mul(decimal.NewFromFloat(item.Price)).Float64()
 						item.Price = RoundPrice(price)
@@ -225,7 +216,7 @@ func GetTokenTimesPrice(tokenAddre string, interval string, count int) ([]*Block
 	return bps, err
 }
 
-func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, count int) ([]*BlockPrice, error) {
+func GetTokenTimesPriceFromPair(pairAddr, tokenAddr string, interval string, count int) ([]*uni.BlockPrice, error) {
 	times := getTokenTimes(interval, count)
 	//log.Println(times)
 	body, reqErr := ReqSwapGraph(getBlockHeight)
@@ -689,210 +680,4 @@ func GetPairInfo(pairAddre string) (pair *PairInfo, err error) {
 		}
 	}
 	return nil, err
-}
-
-type TokenPrice struct {
-	ID         uint
-	PairAddre  string
-	TokenAddre string `gorm:"index"`
-	//token0  0; token1 1
-	TokenIndex  int
-	Reserve0    float64
-	Reserve1    float64
-	TokenPrice  float64
-	BlockNumber uint64 `gorm:"index"`
-	BlockTime   int64
-	//eth or bsc
-	ChainName string
-	CreatedAt time.Time
-}
-
-//ethUsd 0xdac17f958d2ee523a2206206994597c13d831ec7
-var chainUsdtDecimal = map[string]int{"bsc": 18, "eth": 6}
-
-func getSyncLog(item types.Log, tpc *TokenPairConf) *TokenPrice {
-	transferEvent := new(FanswapV2PairSync)
-	err := pairAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
-	if err != nil {
-		log.Fatal(err)
-	}
-	//transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
-	//transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
-	//log.Printf("res0: %v\n", BintTrunc(transferEvent.Reserve0,18,2))
-	//log.Printf("res1: %v\n", BintTrunc(transferEvent.Reserve1,6,2))
-	tp := new(TokenPrice)
-	tp.PairAddre = tpc.PairAddre
-	tp.TokenAddre = tpc.TokenAddre
-	tp.TokenIndex = tpc.TokenIndex
-	tp.ChainName = tpc.ChainName
-
-	token0Decimal := chainUsdtDecimal[tpc.ChainName]
-	token1Decimal := chainUsdtDecimal[tpc.ChainName] // usdtDicimal
-	if tp.TokenIndex == 0 {
-		token0Decimal = tpc.TokenDecimals
-	} else {
-		token1Decimal = tpc.TokenDecimals
-	}
-	//log.Println(token0Decimal,token1Decimal,transferEvent.Reserve0,transferEvent.Reserve1)
-	tp.Reserve0 = BintTrunc(transferEvent.Reserve0, token0Decimal, 2)
-	tp.Reserve1 = BintTrunc(transferEvent.Reserve1, token1Decimal, 2)
-	if tp.TokenIndex == 0 {
-		tp.TokenPrice = tp.Reserve1 / tp.Reserve0
-	} else {
-		tp.TokenPrice = tp.Reserve0 / tp.Reserve1
-	}
-	tp.TokenPrice = RoundPrice(tp.TokenPrice)
-	tp.BlockNumber = item.BlockNumber
-	//log.Printf("%v",tp)
-	return tp
-}
-
-var pairAbi, _ = abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
-
-func initPairAbi() {
-	//pairAbi, err := abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-}
-
-type TokenPairConf struct {
-	//required
-	PairAddre string
-	//required
-	TokenAddre string
-	//required
-	TokenDecimals int
-	//eth or bsc
-	ChainName string
-	//token0  0; token1 1　由SubPairlog计算
-	TokenIndex int
-}
-
-func GetTokenPriceLastBlock(tokenAddre, ChainName string) (startBlock int64) {
-	err := utils.Orm.Raw(`	select t.block_number from token_prices t
-		where t.token_addre=?  order by t.id desc limit 1;`, tokenAddre).Scan(&startBlock).Error
-	if err != nil {
-		log.Fatal(err)
-	}
-	if startBlock == 0 {
-		err = utils.Orm.Raw(`select t.id from block_prices t
-where t.block_time>unix_timestamp('2021-06-01') order by t.id limit 1`).Scan(&startBlock).Error
-		if startBlock == 0 {
-			log.Fatal(err)
-		}
-	}
-	return
-}
-func SubPairlog(tpc *TokenPairConf) {
-	fromBlock := int64(0)
-	if tpc.ChainName == "bsc" {
-		fromBlock = 8540473
-	} else {
-		fromBlock = GetTokenPriceLastBlock(tpc.TokenAddre, tpc.ChainName)
-	}
-	pairAddressHex, tokenAddreHex := tpc.PairAddre, tpc.TokenAddre
-	pairAddre := common.HexToAddress(pairAddressHex)
-	tokenAddre := common.HexToAddress(tokenAddreHex)
-	tokenIndex := 100
-	fw, err := NewFanswapV2Pair(common.HexToAddress(pairAddressHex), EthConn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var token0, token1 common.Address
-	token0, err = fw.Token0(&bind.CallOpts{Pending: true})
-	if err != nil {
-		log.Fatal(err)
-	}
-	token1, err = fw.Token1(&bind.CallOpts{Pending: true})
-	if err != nil {
-		log.Fatal(err)
-	}
-	if token1 == tokenAddre {
-		tokenIndex = 1
-	}
-	if token0 == tokenAddre {
-		tokenIndex = 0
-	}
-	if tokenIndex == 100 {
-		log.Fatal("token配制错误")
-	}
-	tpc.TokenIndex = tokenIndex
-	log.Println("get tokenIndex:", tokenIndex)
-
-	//log.Println(tokenIndex)
-	logTransferSig := []byte("Sync(uint112,uint112)")
-	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
-
-	fromBlockNum := new(big.Int)
-	//toBlockNum:=new(big.Int)
-	query := ethereum.FilterQuery{
-		Addresses: []common.Address{pairAddre},
-		FromBlock: fromBlockNum.SetInt64(fromBlock),
-		//ToBlock: toBlockNum.SetInt64(12676762),
-		Topics: [][]common.Hash{[]common.Hash{logTransferSigHash}},
-	}
-	log.Println("getlog", fromBlock, pairAddressHex)
-	logs1, err := EthConn.FilterLogs(context.Background(), query)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println("getlog len(logs)", len(logs1))
-	tps := []*TokenPrice{}
-	for _, item := range logs1 {
-		//log.Println(item) // pointer to event log
-		if item.Topics[0].Hex() == logTransferSigHash.Hex() {
-			//log.Printf("Log Name: Sync\n")
-			tps = append(tps, getSyncLog(item, tpc))
-			fromBlock = int64(item.BlockNumber)
-		}
-	}
-	if len(tps) > 0 {
-		utils.Orm.CreateInBatches(tps, 2000)
-	}
-
-	log.Println("begin sublog fromBlock", fromBlock)
-	logs := make(chan types.Log)
-	query.FromBlock = fromBlockNum.SetInt64(fromBlock)
-RETRY:
-	sub, err := EthConn.SubscribeFilterLogs(context.Background(), query, logs)
-	defer sub.Unsubscribe()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("sublog", fromBlock, pairAddressHex)
-	//count:=0
-	for {
-		//count++;
-		//if count>3{
-		//	return
-		//}
-		select {
-		case err := <-sub.Err():
-			time.Sleep(1 * time.Second)
-			log.Println("subLogERR", err)
-			goto RETRY
-		case vLog := <-logs:
-			//log.Println(vLog) // pointer to event log
-			tps := []*TokenPrice{}
-
-			if vLog.Topics[0].Hex() == logTransferSigHash.Hex() {
-				tps = append(tps, getSyncLog(vLog, tpc))
-			}
-			if len(tps) > 0 {
-				utils.Orm.CreateInBatches(tps, 2000)
-			}
-			fromBlock = int64(vLog.BlockNumber)
-		}
-	}
-}
-
-func BintTrunc(bigInt *big.Int, decimal int, point int) float64 {
-	bint := big.NewInt(0)
-	bint.Set(bigInt)
-	bint.Quo(bint, big.NewInt(int64(math.Pow10(decimal-point))))
-	bf := new(big.Float)
-	bf.SetInt(bint).Quo(bf, big.NewFloat(math.Pow10(point)))
-	tmpfloat, _ := bf.Float64()
-	return tmpfloat
 }

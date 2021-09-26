@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"regexp"
+	"stock/services/uni"
 	"stock/utils"
 	"strconv"
 	"time"
@@ -21,7 +22,7 @@ func IsFtxDataNew(coin_type string,sec int) bool{
 }
 func IsGraphEthPriceDataNew(sec int) bool{
 	counter := int64(0)
-	err:=utils.Orm.Model(BlockPrice{}).Where("block_time >unix_timestamp()-?",sec).Count(&counter).Error
+	err:=utils.Orm.Model(uni.BlockPrice{}).Where("block_time >unix_timestamp()-?",sec).Count(&counter).Error
 	if err == nil && counter > 0{
 		return true
 	}

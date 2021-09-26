@@ -10,6 +10,7 @@ import (
 	"math"
 	"stock/common"
 	"stock/services"
+	"stock/services/uni"
 	"stock/utils"
 	"strconv"
 	"strings"
@@ -836,7 +837,7 @@ func TokenInfoHandler(c *gin.Context) {
 	proc := func() (interface{}, error) {
 		res, err := services.GetTokenInfo(code)
 		if err == nil {
-			price := services.BlockPrice{}.GetPrice()
+			price := uni.BlockPrice{}.GetPrice()
 			fprice, _ := decimal.NewFromString(res.DerivedETH)
 			res.PriceUsd, _ = fprice.Mul(decimal.NewFromFloat(price)).Round(18).Float64()
 
