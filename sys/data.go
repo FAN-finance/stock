@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// @Tags ftx数据查看
+// @Tags data
 // @Summary　ftx数据查看
 // @Description ftx数据查看
 // @ID FtxListHandler
