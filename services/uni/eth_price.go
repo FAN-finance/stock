@@ -20,7 +20,6 @@ func SubEthPrice(lastBlock int64,swapGraphApi string) {
 	//log.Println("subNewHeader from block", lastBlock)
 
 	payloadFmt := `{"query":"{\n  bundles(block:{number: %d}) {\n    id\n    ethPrice\n  }\n}\n","variables":null}`
-
 	chanLog := make(chan *types.Header, 1000)
 RETRYSUB:
 	subcribe, err := utils.EthConn.SubscribeNewHead(context.Background(), chanLog)

@@ -1,6 +1,7 @@
 package uni
 
 import (
+	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -12,10 +13,9 @@ import (
 	"log"
 	"math"
 	"math/big"
+	"stock/utils"
 	"strings"
 	"time"
-	"stock/utils"
-	"context"
 )
 
 type TokenPairConf struct {
@@ -88,13 +88,13 @@ func getSyncLog(item types.Log, tpc *TokenPairConf) *TokenPrice {
 }
 
 var pairAbi, _ = abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
+
 func initPairAbi() {
 	//pairAbi, err := abi.JSON(strings.NewReader(string(FanswapV2PairABI)))
 	//if err != nil {
 	//	log.Fatal(err)
 	//}
 }
-
 
 func getStartBlockForSubTokenPrice(tokenAddre, chainName string) (startBlock int64) {
 	err := utils.Orm.Raw(`	select t.block_number from token_prices t
@@ -228,8 +228,6 @@ func RoundPrice(price float64) float64 {
 	return res
 }
 
-
-
 //func getStartBlockSubPair(tokenAddre, chainName string) (startBlock int64) {
 //	err := utils.Orm.Raw(`	select t.block_number from token_prices t
 //		where t.token_addre=?  order by t.id desc limit 1;`, tokenAddre).Scan(&startBlock).Error
@@ -245,26 +243,82 @@ func RoundPrice(price float64) float64 {
 //	}
 //	return
 //}
+
+type TokenInfo struct {
+	ID    int
+	ChainName string
+	Addre string
+	//decimal
+	Point       uint8
+	Name        string
+	Symbol      string
+	TotalSupply int
+}
+
+func (TokenInfo) CreateOrInit(chainName, infuraID, addre string) *TokenInfo {
+	ti := new(TokenInfo)
+	err := utils.Orm.Order("id desc").First(ti, "addre=?", addre).Error
+	if err != nil {
+		ti = GetTokenInfoFromChain(chainName, infuraID, addre)
+		err = utils.Orm.Save(ti).Error
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	return ti
+}
+func GetTokenInfoFromChain(chainName, infuraID, addre string) *TokenInfo {
+	addre = strings.ToLower(addre)
+	ethConn := utils.GetEthConn(chainName, infuraID)
+	defer ethConn.Close()
+	token, err := NewFanswapV2ERC20(common.HexToAddress(addre), ethConn)
+	if err != nil {
+		log.Fatal("new erc20 token err:", err)
+	}
+	ti := new(TokenInfo)
+	ti.ChainName= chainName
+	ti.Addre = addre
+	ti.Name, err = token.Name(nil)
+	if err != nil {
+		log.Fatal("get token Name err:", err)
+	}
+	ti.Symbol, _ = token.Symbol(nil)
+	ti.Point, _ = token.Decimals(nil)
+	ts, _ := token.TotalSupply(nil)
+	ti.TotalSupply = int(bintTrunc(ts, int(ti.Point)))
+	log.Println(ti)
+	return ti
+}
+
 type PairInfo struct {
 	Id uint
+	//bsc eth polygon
 	ChainName string
-	Pair string
-	Token0 string
-	Token1 string
-	Reserve0 int64
-	Reserve1 int64
+	//uniswap pancake xxSwap
+	ProjName  string
+	Pair      string
+	Token0    string
+	Token1    string
+	Point0    uint8 `gorm:"-"`
+	Point1    uint8 `gorm:"-"`
+	Reserve0  int64
+	Reserve1  int64
+	Price0    float64
+	Price1    float64
 	UpdatedAt time.Time
-	BlockNum int64
+	BlockNum  int64
+	BlockTime  uint32
 }
 
 //sub chainName's all uni-pair
-func SubPair(chainName,projId string,pairAddressStrs []string,init bool) {
+func SubPair(chainName, infuraID, projName string, pairAddressStrs []string, init bool) {
 	utils.Orm.AutoMigrate(PairInfo{})
-	pinfos:=map[string]*PairInfo{}
-	pairAddres:=[]common.Address{}
-	ethConn:=utils.GetEthConn(chainName,projId)
+	utils.Orm.AutoMigrate(TokenInfo{})
+	pinfos := map[string]*PairInfo{}
+	pairAddres := []common.Address{}
+	ethConn := utils.GetEthConn(chainName, infuraID)
 	for _, pairAddressStr := range pairAddressStrs {
-		pairAddressStr=strings.ToLower(pairAddressStr)
+		pairAddressStr = strings.ToLower(pairAddressStr)
 		pairAddre := common.HexToAddress(pairAddressStr)
 		fw, err := NewFanswapV2Pair(pairAddre, ethConn)
 		if err != nil {
@@ -279,28 +333,43 @@ func SubPair(chainName,projId string,pairAddressStrs []string,init bool) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		pinfo:=new(PairInfo)
-		pinfo.ChainName=chainName
-		pinfo.Pair=pairAddressStr
-		pinfo.Token0=hexAddres(token0)
-		pinfo.Token1=hexAddres(token1)
-		pinfos[pairAddressStr]=pinfo
-		pairAddres=append(pairAddres,common.HexToAddress(pairAddressStr))
+		pinfo := new(PairInfo)
+		pinfo.ChainName = chainName
+		pinfo.ProjName = projName
+		pinfo.Pair = pairAddressStr
+		pinfo.Token0 = hexAddres(token0)
+		pinfo.Token1 = hexAddres(token1)
+
+		pinfos[pairAddressStr] = pinfo
+		pairAddres = append(pairAddres, common.HexToAddress(pairAddressStr))
+
+		//init token info
+		ti := TokenInfo{}.CreateOrInit(chainName, infuraID, pinfo.Token0)
+		pinfo.Point0 = ti.Point
+		ti = TokenInfo{}.CreateOrInit(chainName, infuraID, pinfo.Token1)
+		pinfo.Point1 = ti.Point
+
+		//当前价
+		reservs,_:=fw.GetReserves(nil)
+		log.Println(reservs)
+		pinfo.Reserve0= bintTrunc6( reservs.Reserve0)
+		pinfo.Reserve1= bintTrunc6( reservs.Reserve1)
+		pinfo.caculateReservePrice()
+		pinfo.BlockTime=reservs.BlockTimestampLast
 	}
 
-	//log.Println(tokenIndex)
 	logTransferSig := []byte("Sync(uint112,uint112)")
 	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
 
 	fromBlock := int64(0)
-	if !init{
-		pinfo:=new(PairInfo)
-		err:=utils.Orm.Order("id desc").Where("chain_name=?",chainName).First(pinfo).Error
-		if err==nil{
-			fromBlock=pinfo.BlockNum
+	if !init {
+		pinfo := new(PairInfo)
+		err := utils.Orm.Order("id desc").Where("chain_name=?", chainName).First(pinfo).Error
+		if err == nil {
+			fromBlock = pinfo.BlockNum
 		}
 	}
-	if fromBlock==0 {
+	if fromBlock == 0 {
 		//bsc maximum block range: 5000
 		lastBlock, err := ethConn.BlockNumber(context.Background())
 		if err != nil {
@@ -333,7 +402,18 @@ func SubPair(chainName,projId string,pairAddressStrs []string,init bool) {
 		}
 	}
 	if len(tps) > 0 {
+		//历史数据获取blockTime
+		for _, tp := range tps {
+			header,_:=ethConn.HeaderByNumber(context.Background(),big.NewInt(tp.BlockNum))
+			tp.BlockTime=uint32(header.Time)
+		}
 		utils.Orm.CreateInBatches(tps, 2000)
+	}else{
+		//没有新日志数据时，存储当前价格
+		for _, pi := range pinfos {
+			pinfo:=*pi
+			utils.Orm.Save(&pinfo)
+		}
 	}
 
 	log.Println("begin sublog fromBlock", fromBlock)
@@ -368,7 +448,7 @@ RETRY:
 			if len(tps) > 0 {
 				utils.Orm.CreateInBatches(tps, 2000)
 			}
-			fromBlock = int64(vLog.BlockNumber)
+			fromBlock = int64(vLog.BlockNumber)+1
 		}
 	}
 }
@@ -378,20 +458,42 @@ func getPairSyncLog(item types.Log, pInfos map[string]*PairInfo) *PairInfo {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(hexAddres(item.Address),transferEvent.Raw.BlockNumber)
-	chainPinfo :=*(pInfos[hexAddres(item.Address)])
-	chainPinfo.Reserve0= bintTrunc6(transferEvent.Reserve0)
-	chainPinfo.Reserve1=bintTrunc6(transferEvent.Reserve1)
-	chainPinfo.BlockNum=int64(item.BlockNumber)
+	//log.Println(hexAddres(item.Address), transferEvent.Raw.BlockNumber)
+	chainPinfo := *(pInfos[hexAddres(item.Address)])
+	chainPinfo.Reserve0 = bintTrunc6(transferEvent.Reserve0)
+	chainPinfo.Reserve1 = bintTrunc6(transferEvent.Reserve1)
+	chainPinfo.caculateReservePrice()
+	//chainPinfo.Price0,chainPinfo.Price1=caculateReservePrice(transferEvent.Reserve0,transferEvent.Reserve1,chainPinfo.Point0,chainPinfo.Point1)
+	//resv0 := bintTrunc(transferEvent.Reserve0, int(chainPinfo.Point0))
+	//resv1 := bintTrunc(transferEvent.Reserve1, int(chainPinfo.Point1))
+	//chainPinfo.Price0 = float64(resv1) / float64(resv0)
+	//chainPinfo.Price1 = float64(resv0) / float64(resv1)
+	chainPinfo.BlockNum = int64(item.BlockNumber)
+	chainPinfo.BlockTime=uint32(time.Now().Unix())
 	//log.Printf("%v",tp)
 	return &chainPinfo
 }
+func (pi *PairInfo)caculateReservePrice()(){
+	point0,point1:= pi.Point0-6,pi.Point1-6
+	reserv0:=pi.Reserve0* int64(math.Pow10(12-int(point0)))
+	reserv1:=pi.Reserve1* int64(math.Pow10(12-int(point1)))
+	pi.Price0,pi.Price1=float64(reserv1) / float64(reserv0),float64(reserv0) / float64(reserv1)
+}
+func caculateReservePrice(resv0,resv1 *big.Int,point0,point1 uint8)(price0,pirce1 float64){
+	reserv0 := bintTrunc(resv0, int(point0))
+	reserv1 := bintTrunc(resv1, int(point1))
+	return float64(reserv1) / float64(reserv0),float64(reserv0) / float64(reserv1)
+}
+
 //Trunc 6bit for store db
 func bintTrunc6(bigInt *big.Int) int64 {
+	return bintTrunc(bigInt, 6)
+}
+func bintTrunc(bigInt *big.Int, decimal int) int64 {
 	bint := big.NewInt(0)
 	bint.Set(bigInt)
-	return bint.Quo(bint, big.NewInt(int64(math.Pow10(6)))).Int64()
+	return bint.Quo(bint, big.NewInt(int64(math.Pow10(decimal)))).Int64()
 }
-func  hexAddres(address common.Address) string {
-	return fmt.Sprintf("0x%x",address)
+func hexAddres(address common.Address) string {
+	return fmt.Sprintf("0x%x", address)
 }
