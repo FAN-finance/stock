@@ -92,7 +92,7 @@ BEGIN:
 	wcHeader.Set( "Origin","https://coinmarketcap.com/")
 	c, _, err := websocket.DefaultDialer.Dial(urlstr, wcHeader)
 	if err != nil {
-		log.Println("dial:", err)
+		log.Println("dial SubCMPrice:", err)
 		time.Sleep(5*time.Second)
 		if c != nil {
 			c.Close()

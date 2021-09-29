@@ -2,8 +2,12 @@ package controls
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/emersion/go-sasl"
+	"github.com/emersion/go-smtp"
 	"github.com/gin-gonic/gin"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -12,6 +16,7 @@ import (
 	"stock/services"
 	"stock/utils"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -59,6 +64,32 @@ func DbExportHandler(c *gin.Context) {
 	}
 }
 
+func FtxPriceCheck(c *gin.Context) {
+	msg:=""
+	for coin_type, _ := range ftxAddres {
+		if coin_type=="usd"{continue}
+		cb:=new(services.CoinBull)
+		err:= utils.Orm.Order("id desc").First(cb,"coin_type=?",coin_type).Error
+		if err != nil {
+			msg=err.Error()
+			break
+		}
+		pr:=safePrice[ftxAddres[coin_type]]
+		if pr==nil{continue}
+		log.Println(cb.Bull,pr)
+		if (cb.Bull>pr.Max||cb.Bull<pr.Min){
+			msg+=fmt.Sprintf("important! %s currentPrice: %.2f  out of range %.2f-%.2f \n",coin_type,cb.Bull,pr.Min,pr.Max)
+		}else if (cb.Bull*1.1>pr.Max||cb.Bull*0.9<pr.Min) {
+			msg += fmt.Sprintf("%s currentPrice: %.2f will out of range %.2f-%.2f \n", coin_type, cb.Bull, pr.Min, pr.Max)
+		}
+	}
+	if msg!=""{
+		uname:=c.Query("uname")
+		pwd:=c.Query("pwd")
+		Mail("FtxPriceCheck",msg,uname,pwd)
+		c.Writer.Write([]byte(msg))
+	}
+}
 func BtcSignCheckHandler(c *gin.Context) {
 	res,err:=ftxPriceSignHandler("btc3x",1,238299929)
 	if err != nil {
@@ -187,6 +218,62 @@ func NodeStatsHandler(c *gin.Context) {
 	}
 }
 
+func Mail(title ,msgBody string,uname ,pwd string ) {
+	log.Println("begin send mail",title)
+	auth := sasl.NewPlainClient("", uname,pwd)
+	// Connect to the server, authenticate, set the sender and recipient,
+	// and send the email all in one step.
+	to := []string{"wxf4150@163.com","xiaofei.wu@rchaintech.com"}
+	msg := strings.NewReader("To: wxf4150@163.com\r\n" +
+		"Subject: "+title+"\r\n" +
+		"\r\n" +
+		msgBody+"\r\n")
+	//err := smtp.SendMail("smtp.exmail.qq.com:465", auth, "xiaofei.wu@rchaintech.com", to, msg)
+	err := sendMail("smtp.exmail.qq.com:465", auth, "xiaofei.wu@rchaintech.com", to, msg)
+	if err != nil {
+		log.Println("stmp send mail err",err)
+	}
+}
+func sendMail(addr string, a sasl.Client, from string, to []string, r io.Reader) error {
+	c, err := smtp.DialTLS(addr,nil)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	if err = c.Hello("test"); err != nil {
+		return err
+	}
+	if a != nil {
+		if ok, _ := c.Extension("AUTH"); !ok {
+			return errors.New("smtp: server doesn't support AUTH")
+		}
+		if err = c.Auth(a); err != nil {
+			return err
+		}
+	}
+	if err = c.Mail(from, nil); err != nil {
+		return err
+	}
+	for _, addr := range to {
+		if err = c.Rcpt(addr); err != nil {
+			return err
+		}
+	}
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(w, r)
+	if err != nil {
+		return err
+	}
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+	return c.Quit()
+}
+
 type VerObj struct {
 	//stockInfo json: {"code":"AAPL","price":128.1,"name":"苹果","timestamp":1620292445,"UpdatedAt":"2021-05-06T17:14:05.878+08:00"}
 	Data json.RawMessage `swaggertype:"object"`
@@ -219,3 +306,5 @@ type VerObj struct {
 //		return
 //	}
 //}
+
+

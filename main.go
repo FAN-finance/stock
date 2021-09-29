@@ -86,7 +86,8 @@ func main() {
 
 		//go services.GetStocks()
 		go services.SubEthPrice(0)
-		go services.SubCoinsPrice()
+		//coingecko has stoped  since 2021-08-20
+		//go services.SubCoinsPrice()
 		//coingecko bull
 		//go services.SetAllBulls("btc3x")
 		//go services.SetAllBulls("eth3x")
@@ -190,6 +191,7 @@ func main() {
 	api.GET("/alert/ok", controls.OkHandler)
 	api.GET("/alert/coindata", controls.CoinDataCheckHandler)
 	api.GET("/alert/btc_sign_check", controls.BtcSignCheckHandler)
+	api.GET("/alert/ftx_price_check", controls.FtxPriceCheck)
 	api.GET("/db.sql.gz", controls.DbExportHandler)
 
 
