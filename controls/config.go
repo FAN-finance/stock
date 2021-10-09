@@ -41,6 +41,11 @@ func BeginUseRawDicConfig(dicCfg *common.RawDicConfig){
 	for _, item := range dicCfg.SafePrices {
 		tmpMm:=&mm{item.Min,item.Max}
 		tmp_sp[item.TokenAddre]=tmpMm
+
+		kAddre:=GetKovanAddreMap(item.TokenAddre)
+		if item.TokenAddre!=kAddre{
+			tmp_sp[kAddre]=tmpMm
+		}
 	}
 	safePrice=tmp_sp
 
