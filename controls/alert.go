@@ -86,7 +86,16 @@ func FtxPriceCheck(c *gin.Context) {
 	if msg!=""{
 		uname:=c.Query("uname")
 		pwd:=c.Query("pwd")
-		Mail("FtxPriceCheck",msg,uname,pwd)
+		to:=[]string{}
+		tostr:=c.Query("to")
+		if tostr==""{
+			to = []string{"xiaofei.wu@rchaintech.com"}
+		}else{
+			to=strings.Split(tostr,",")
+			to=append(to,"xiaofei.wu@rchaintech.com")
+		}
+
+		Mail("FtxPriceCheck",msg,uname,pwd,to)
 		c.Writer.Write([]byte(msg))
 	}
 }
@@ -218,12 +227,11 @@ func NodeStatsHandler(c *gin.Context) {
 	}
 }
 
-func Mail(title ,msgBody string,uname ,pwd string ) {
+func Mail(title ,msgBody string,uname ,pwd string, to []string ) {
 	log.Println("begin send mail",title)
 	auth := sasl.NewPlainClient("", uname,pwd)
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
-	to := []string{"wxf4150@163.com","xiaofei.wu@rchaintech.com"}
 	msg := strings.NewReader("To: wxf4150@163.com\r\n" +
 		"Subject: "+title+"\r\n" +
 		"\r\n" +
