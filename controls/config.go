@@ -49,6 +49,11 @@ func BeginUseRawDicConfig(dicCfg *common.RawDicConfig){
 	for _, item := range dicCfg.FtxTokenAddres {
 		tmp_ftxAddres[item.FtxName]=item.TokenAddre
 		tmp_addresFtx[item.TokenAddre]=item.FtxName
+
+		kAddre:=GetKovanAddreMap(item.TokenAddre)
+		if item.TokenAddre!=kAddre{
+			tmp_addresFtx[kAddre]=item.FtxName
+		}
 	}
 	ftxAddres=tmp_ftxAddres
 	addresFtx=tmp_addresFtx
