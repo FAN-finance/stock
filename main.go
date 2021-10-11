@@ -167,7 +167,7 @@ func main() {
 	api.GET("/internal/dex/token_price/:token/:timestamp", controls.TokenPriceHandler)
 	api.GET("/internal/dex/pair/token_price/:pair/:token/:timestamp", controls.PairTokenPriceHandler)
 
-	api.GET("/internal/dex/token_chain_price/:token/:timestamp", controls.TokenChainPriceHandler)
+	api.GET("/internal/dex/token_chain_price/:token/:timestamp", controls.TokenChainPriceHandler2)
 
 	api.GET("/internal/dex/token_info/:token/:timestamp", controls.TokenInfoHandler)
 	api.GET("/internal/dex/pair/token_info/:pair/:token/:timestamp", controls.PairTokenInfoHandler)
