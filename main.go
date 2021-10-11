@@ -81,7 +81,23 @@ func main() {
 	//return
 	//services.SetAllBullsFromTw(false)
 	//return
+
 	if job {
+		chainPairConfs := map[string][]uni.SubPairConfig{
+			"eth": []uni.SubPairConfig{{"uniswap", "0xdfb8824b094f56b9216a015ff77bdb056923aaf6"},},
+			"bsc": []uni.SubPairConfig{
+				{"pancake", "0x8c83e7aef5116be215223d3688a2f5dc4c7f241b"},
+				{"pancake", "0x7C613ccf0656B509fEE51900d55b39308b1FC00d"},
+				{"wault", "0x4b31d95654300cbe8ce3fe2b2ec5c6d2929ae7a6"},
+				{"baby", "0xd02f44fa87f365cd160a033007ef80c311b7f5d9"},
+				{"baby", "0x659951a7f393496232a4e8c308bb4d1ad6400b59"},
+			},
+		}
+
+		for chainName, subPireConfs := range chainPairConfs {
+			go uni.SubPair(chainName, subPireConfs, true, "891eeaa3c7f945b880608e1cc9976284")
+		}
+
 		//sync coingecko数据
 		//go services.SyncCoinGeckoData()
 
@@ -93,12 +109,14 @@ func main() {
 		//coingecko bull
 		//go services.SetAllBulls("btc3x")
 		//go services.SetAllBulls("eth3x")
-		go func() {
-			//监听eth uniswap pair's token价格
-			//tpc := services.TokenPairConf{PairAddre: "0x4d3c5db2c68f6859e0cd05d080979f597dd64bff", TokenAddre: "0x72e364f2abdc788b7e918bc238b21f109cd634d7", TokenDecimals: 18, ChainName: "eth"}
-			tpc := uni.TokenPairConf{PairAddre: "0xdfb8824b094f56b9216a015ff77bdb056923aaf6", TokenAddre: "0x011864d37035439e078d64630777ec518138af05", TokenDecimals: 18, ChainName: "eth"}
-			uni.SubPairlog(&tpc)
-		}()
+
+		//go func() {
+		//	//监听eth uniswap pair's token价格
+		//	//tpc := services.TokenPairConf{PairAddre: "0x4d3c5db2c68f6859e0cd05d080979f597dd64bff", TokenAddre: "0x72e364f2abdc788b7e918bc238b21f109cd634d7", TokenDecimals: 18, ChainName: "eth"}
+		//	tpc := uni.TokenPairConf{PairAddre: "0xdfb8824b094f56b9216a015ff77bdb056923aaf6", TokenAddre: "0x011864d37035439e078d64630777ec518138af05", TokenDecimals: 18, ChainName: "eth"}
+		//	uni.SubPairlog(&tpc)
+		//}()
+
 
 		////subcribe twelvedata data
 		//go services.SubTwData()

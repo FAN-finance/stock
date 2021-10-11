@@ -455,7 +455,7 @@ func SubPair(chainName string, pairCfgs []SubPairConfig, init bool, infuraID str
 	}
 	log.Println("finish", msgId, "init logs")
 RETRY:
-	log.Println("begin sublog fromBlock", fromBlock)
+	log.Println("begin sublog ",msgId, "fromBlock", fromBlock)
 	logs := make(chan types.Log)
 	query.FromBlock = fromBlockNum.SetInt64(fromBlock)
 
@@ -464,7 +464,7 @@ RETRY:
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("sublog", fromBlock)
+	log.Println("watch pair log ",msgId, "fromBlock", fromBlock)
 	//count:=0
 	for {
 		//count++;
@@ -474,7 +474,7 @@ RETRY:
 		select {
 		case err := <-sub.Err():
 			time.Sleep(1 * time.Second)
-			log.Println("subLogERR", err)
+			log.Println(msgId,"subLogERR", err)
 			goto RETRY
 		case vLog := <-logs:
 			//log.Println(vLog) // pointer to event log
