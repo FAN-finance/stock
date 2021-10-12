@@ -57,7 +57,7 @@ func ReqRes(url, ref, method string, header http.Header, bodybs []byte) (resp *h
 		}
 	RETRY:
 		//hclient := HClient()
-		hclient.Timeout = 2 * time.Second
+		hclient.Timeout = 10 * time.Second
 		resp, err = hclient.Do(request)
 		err = err1
 		if err == nil {
