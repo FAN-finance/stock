@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -34,8 +35,8 @@ func InitEConn(infura string) {
 //https://docs.polygon.technology/docs/develop/network-details/network
 var EthUrlMap =map[string]string{
 	"eth":"wss://mainnet.infura.io/ws/v3/%s",
-	"bsc":"wss://bsc-ws-node.nariox.org:443",
-	"polygon":"wss://ws-matic-mainnet.chainstacklabs.com",
+	"bsc":"https://bsc-dataseed1.ninicoin.io/",
+	"polygon":"https://polygon-rpc.com",
 }
 func GetEthConn(chainName,infuraID string ) *ethclient.Client {
 	ethUrl:=EthUrlMap[chainName]
@@ -54,6 +55,10 @@ func GetEthConn(chainName,infuraID string ) *ethclient.Client {
 		}
 	}
 	//conn.SendTransaction()
+}
+func EthLastBlock( cli *ethclient.Client) (int,error){
+	lastBlock, err := cli.BlockNumber(context.Background())
+	return int(lastBlock),err
 }
 
 func InitEConnLocal() {

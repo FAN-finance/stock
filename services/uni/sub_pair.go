@@ -325,6 +325,7 @@ type PairEvent struct {
 type SubPairConfig struct {
 	ProjName string
 	Pair     string
+	Symbol	 string
 }
 
 //sub chainName's all uni-pair
