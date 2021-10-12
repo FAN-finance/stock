@@ -36,7 +36,7 @@ func InitEConn(infura string) {
 var EthUrlMap =map[string]string{
 	"eth":"wss://mainnet.infura.io/ws/v3/%s",
 	"bsc":"https://bsc-dataseed1.ninicoin.io/",
-	"polygon":"wss://rpc-mainnet.matic.network:443",
+	"polygon":"wss://rpc-mainnet.matic.network",
 }
 func GetEthConn(chainName,infuraID string ) *ethclient.Client {
 	ethUrl:=EthUrlMap[chainName]
