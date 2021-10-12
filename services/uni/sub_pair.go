@@ -463,7 +463,9 @@ RETRY:
 	sub, err := ethConn.SubscribeFilterLogs(context.Background(), query, logs)
 	defer sub.Unsubscribe()
 	if err != nil {
-		log.Fatal(err)
+		time.Sleep(1 * time.Second)
+		log.Println(msgId,err)
+		goto RETRY
 	}
 	log.Println("watch pair log ",msgId, "fromBlock", fromBlock)
 	//count:=0
