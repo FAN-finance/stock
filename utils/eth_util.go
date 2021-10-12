@@ -35,7 +35,7 @@ func InitEConn(infura string) {
 //https://docs.polygon.technology/docs/develop/network-details/network
 var EthUrlMap =map[string]string{
 	"eth":"wss://mainnet.infura.io/ws/v3/%s",
-	"bsc":"https://bsc-ws-node.nariox.org",
+	"bsc":"wss://bsc-ws-node.nariox.org",
 	"polygon":"wss://rpc-mainnet.matic.network",
 }
 func GetEthConn(chainName,infuraID string ) *ethclient.Client {
