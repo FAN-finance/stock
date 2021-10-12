@@ -382,7 +382,7 @@ where symbol0 = ?
             when symbol0 = ? then price0
             else price1
     end) price
-FROM stock_test.pair_events t
+FROM pair_events t
 WHERE pair = ?
   and (case
            when symbol0 = ? then vol0
@@ -413,7 +413,7 @@ from (
                                  when symbol0 = ? then price0
                                  else price1
                              end) price
-                  FROM stock_test.pair_events t
+                  FROM pair_events t
                   WHERE pair = ?
                     and t.block_time > (unix_timestamp() - 2240 * 60)
                     and (case
