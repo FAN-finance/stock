@@ -92,10 +92,13 @@ func main() {
 				{"baby", "0xd02f44fa87f365cd160a033007ef80c311b7f5d9"},
 				{"baby", "0x659951a7f393496232a4e8c308bb4d1ad6400b59"},
 			},
+			"polygon":[]uni.SubPairConfig{
+				{"wault","0xf7bc741b2086ca344e78225d06224ffdcd86d110"},
+			},
 		}
 
 		for chainName, subPireConfs := range chainPairConfs {
-			go uni.SubPair(chainName, subPireConfs, true, "891eeaa3c7f945b880608e1cc9976284")
+			go uni.SubPair(chainName, subPireConfs, false, "891eeaa3c7f945b880608e1cc9976284")
 		}
 
 		//sync coingecko数据

@@ -270,6 +270,7 @@ END:
 }
 
 type HLValuePair struct {
+	DataSource string `json:",omitempty"`
 	High float64
 	Low  float64
 	Avg  float64
@@ -342,7 +343,6 @@ type HLValuePair struct {
 // @Router /pub/internal/dex/token_chain_price/{token}/{timestamp} [get]
 func TokenChainPriceHandler2(c *gin.Context) {
 	dataProc := func(tokenCode string) (interface{}, error) {
-		pairs := []string{}
 
 		//get symbol name
 		symbol := ""
@@ -359,12 +359,13 @@ where token0 = ?
 		}
 
 		//get all pair
+		pairs := []*uni.PairInfo{}
 		err = utils.Orm.Model(uni.PairInfo{}).Raw(
 			`
-select pair
+select *
 from pair_infos t
 where symbol0 = ?
-   or symbol1 = ?;`, symbol, symbol).Pluck("pair", &pairs).Error
+   or symbol1 = ?;`, symbol, symbol).Find( &pairs).Error
 		if err != nil {
 			return nil, err
 		}
@@ -381,16 +382,20 @@ where symbol0 = ?
             when symbol0 = ? then price0
             else price1
     end) price
-FROM stock_test.pair_infos t
+FROM stock_test.pair_events t
 WHERE pair = ?
   and (case
            when symbol0 = ? then vol0
            else vol1
     end) > 40000
 order by id desc
-LIMIT 1;`, symbol, pair, symbol).Scan(&lastPrice).Error
+LIMIT 1;`, symbol, pair.Pair, symbol).Scan(&lastPrice).Error
 			if err != nil {
-				log.Println("get last price err", pair)
+				log.Println("get last price err", pair.Pair)
+				continue
+			}
+			if lastPrice==0{
+				log.Println("no last price err", pair.Pair)
 				continue
 			}
 			vp.Last = lastPrice
@@ -408,7 +413,7 @@ from (
                                  when symbol0 = ? then price0
                                  else price1
                              end) price
-                  FROM stock_test.pair_infos t
+                  FROM stock_test.pair_events t
                   WHERE pair = ?
                     and t.block_time > (unix_timestamp() - 2240 * 60)
                     and (case
@@ -416,7 +421,7 @@ from (
                              else vol1
                       end) > 40000
               ) a) b
-where b.high is not null`, symbol, pair, symbol).First(vp).Error
+where b.high is not null`, symbol, pair.Pair, symbol).First(vp).Error
 			if err != nil {
 				vp.Avg = vp.Last
 				vp.Low = vp.Last
@@ -424,12 +429,15 @@ where b.high is not null`, symbol, pair, symbol).First(vp).Error
 				err = nil
 			}
 			if err == nil {
+				vp.DataSource=pair.ChainName+" "+pair.ProjName
 				vps = append(vps, vp)
 			}
 		}
 		if len(vps) == 0 {
 			return nil, errors.New("no data")
 		}
+		debugmsg,_:=json.Marshal( vps)
+		log.Println("get vps",string(debugmsg))
 		vp := new(HLValuePair)
 		for _, value := range vps {
 			//反铸取最大
