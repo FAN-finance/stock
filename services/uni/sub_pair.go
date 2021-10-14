@@ -337,10 +337,10 @@ type PairInfo struct {
 	Price1    float64
 	Symbol0   string `gorm:"type:varchar(256);index:idx_symbol0"`
 	Symbol1   string `gorm:"type:varchar(256);index:idx_symbol1"`
-	IsUsd0 bool `gorm:"-"`
-	IsUsd1 bool `gorm:"-"`
-	LoadUsd0 bool `gorm:"-"`
-	LoadUsd1 bool `gorm:"-"`
+	IsUsd0    bool
+	IsUsd1    bool
+	LoadUsd0  bool
+	LoadUsd1  bool
 	Vol0      float64
 	Vol1      float64
 	UpdatedAt time.Time
@@ -477,6 +477,8 @@ func (pinfo *PairInfo)CreateOrInit(pcfg SubPairConfig,ethConn *ethclient.Client)
 	pinfo.Symbol1 = ti.Symbol
 	pinfo.IsUsd1=ti.IsUsd
 	pinfo.LoadUsd1=ti.LoadUsd
+
+	utils.Orm.Save(pinfo)
 }
 
 //sub chainName's all uni-pair
@@ -491,13 +493,12 @@ func SubPair(chainName string, pairCfgs []SubPairConfig, init bool, infuraID str
 	for _, paircf := range pairCfgs {
 		pinfo := new(PairInfo)
 		pinfo.CreateOrInit(paircf,ethConn)
-		log.Println(pinfo.IsUsd0,pinfo.IsUsd1)
 		pinfos[pinfo.Pair] = pinfo
 		pairAddres = append(pairAddres, common.HexToAddress(pinfo.Pair))
 	}
 
 	if init {
-		ps(pinfos).initHistoryLog(ethConn,2000)
+		ps(pinfos).initHistoryLog(ethConn,5000)
 	}
 	return
 
@@ -605,7 +606,19 @@ func parseSyncEvent(item types.Log) *syncEvent {
 	event.Reserve1 = transferEvent.Reserve1
 	return event
 }
-
+func getUsdPair(projName,symbol string, pInfos map[string]*PairInfo)(price float64 ){
+	for _, info := range pInfos {
+		if info.ProjName==projName && (info.IsUsd0 || info.IsUsd1) && (info.Symbol1==symbol || info.Symbol0==symbol ){
+			up:=new(UniPrice)
+			err:=utils.Orm.Order("id desc").Find(up,UniPrice{PairID: info.Id,Symbol: symbol}).Error
+			if err != nil {
+				log.Fatal("getUsdPair",err)
+			}
+			return up.Price
+		}
+	}
+	return 0
+}
 func syncEventHanlder(event *syncEvent, pInfos map[string]*PairInfo,useChainTime bool,ethConn *ethclient.Client) (*PairLog,[]*UniPrice) {
 	pinfo := pInfos[hexAddres(event.Address)]
 	if pinfo == nil {
@@ -639,10 +652,14 @@ func syncEventHanlder(event *syncEvent, pInfos map[string]*PairInfo,useChainTime
 
 	if !pinfo.IsUsd1 && !pinfo.IsUsd1 {
 		if  pinfo.LoadUsd1{
-			log.Println("loadUsd pirce",pinfo.Id ,pinfo.Symbol1)
+			tprice:=getUsdPair(pinfo.ProjName,pinfo.Symbol1,pInfos)
+			log.Println("loadUsd pirce for pair",pinfo.Id ,pinfo.Symbol1,tprice)
+			p0=p0*tprice
 		}
 		if pinfo.LoadUsd0{
-			log.Println("loadUsd pirce",pinfo.Id ,pinfo.Symbol0)
+			tprice:=getUsdPair(pinfo.ProjName,pinfo.Symbol0,pInfos)
+			log.Println("loadUsd pirce for pair",pinfo.Id ,pinfo.Symbol0,tprice)
+			p1=p1*tprice
 		}
 	}
 
