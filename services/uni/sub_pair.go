@@ -2,6 +2,7 @@ package uni
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -9,7 +10,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 	"log"
 	"math"
 	"math/big"
@@ -252,15 +255,17 @@ type TokenInfo struct {
 	Point       uint8
 	Name        string
 	Symbol      string
+	IsUsd bool
+	LoadUsd bool
 	TotalSupply int
 	UpdatedAt   time.Time
 }
 
-func (TokenInfo) CreateOrInit(chainName, infuraID, addre string) *TokenInfo {
+func (TokenInfo) CreateOrInit(chainName, addre string) *TokenInfo {
 	ti := new(TokenInfo)
 	err := utils.Orm.Order("id desc").First(ti, "addre=?", addre).Error
 	if err != nil {
-		ti = GetTokenInfoFromChain(chainName, infuraID, addre)
+		ti = GetTokenInfoFromChain(chainName, addre)
 		err = utils.Orm.Save(ti).Error
 		if err != nil {
 			log.Fatal(err)
@@ -268,9 +273,9 @@ func (TokenInfo) CreateOrInit(chainName, infuraID, addre string) *TokenInfo {
 	}
 	return ti
 }
-func GetTokenInfoFromChain(chainName, infuraID, addre string) *TokenInfo {
+func GetTokenInfoFromChain(chainName, addre string) *TokenInfo {
 	addre = strings.ToLower(addre)
-	ethConn := utils.GetEthConn(chainName, infuraID)
+	ethConn := utils.GetEthConn(chainName)
 	defer ethConn.Close()
 	token, err := NewFanswapV2ERC20(common.HexToAddress(addre), ethConn)
 	if err != nil {
@@ -291,26 +296,51 @@ func GetTokenInfoFromChain(chainName, infuraID, addre string) *TokenInfo {
 	return ti
 }
 
-type PairInfo struct {
-	PairEvent
+
+type PairLog struct {
+	Id uint
+	//bsc eth polygon
+	ChainName string `gorm:"type:varchar(256);index:idx_chain_name"`
+	PairID uint
+	Reserve0  string `gorm:"type:varchar(256);"`
+	Reserve1  string `gorm:"type:varchar(256);"`
+	Block uint64
+	BlockTime uint64
+	UpdatedAt time.Time
+	TxHash string  `gorm:"type:varchar(256);"`
 }
-type PairEvent struct {
+type UniPrice struct {
+	Id uint
+	Symbol    string `gorm:"type:varchar(50);index:idx_main,priority:1"`
+	PairID uint `gorm:"index:idx_main,priority:2"`
+	Price float64
+	BlockTime uint64  `gorm:"index:idx_main,priority:3"`
+	UpdatedAt time.Time
+	//6 decimal
+	Vol float64
+}
+type PairInfo struct {
 	Id uint
 	//bsc eth polygon
 	ChainName string `gorm:"type:varchar(256);"`
 	//uniswap pancake xxSwap
 	ProjName  string `gorm:"type:varchar(256);"`
 	Pair      string `gorm:"type:varchar(50);index:idx_main,priority:1"`
+	Symbol    string `gorm:"type:varchar(50);"`
 	Token0    string `gorm:"type:varchar(256);"`
 	Token1    string `gorm:"type:varchar(256);"`
-	Point0    uint8  `gorm:"-"`
-	Point1    uint8  `gorm:"-"`
+	Point0    uint8
+	Point1    uint8
 	Reserve0  string `gorm:"type:varchar(256);"`
 	Reserve1  string `gorm:"type:varchar(256);"`
 	Price0    float64
 	Price1    float64
 	Symbol0   string `gorm:"type:varchar(256);index:idx_symbol0"`
 	Symbol1   string `gorm:"type:varchar(256);index:idx_symbol1"`
+	IsUsd0 bool `gorm:"-"`
+	IsUsd1 bool `gorm:"-"`
+	LoadUsd0 bool `gorm:"-"`
+	LoadUsd1 bool `gorm:"-"`
 	Vol0      float64
 	Vol1      float64
 	UpdatedAt time.Time
@@ -326,152 +356,186 @@ type SubPairConfig struct {
 	ProjName string
 	Pair     string
 	Symbol	 string
+	ChainName	 string
+}
+func (pinfo *PairInfo)getPairInfo(pcfg SubPairConfig, ethConn *ethclient.Client){
+	log.Println("getPairInfo",pcfg)
+	pAddre:=strings.ToLower(pcfg.Pair)
+	pinfo.Pair = pAddre
+	fw:=pinfo.getConstractPair(ethConn)
+	var token0, token1 common.Address
+	var err error
+	token0, err = fw.Token0(&bind.CallOpts{Pending: true})
+	if err != nil {
+		log.Fatal(err)
+	}
+	token1, err = fw.Token1(&bind.CallOpts{Pending: true})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pinfo.ChainName = pcfg.ChainName
+	pinfo.ProjName = pcfg.ProjName
+	pinfo.Pair = pAddre
+	pinfo.Symbol = pcfg.Symbol
+	pinfo.Token0 = hexAddres(token0)
+	pinfo.Token1 = hexAddres(token1)
+
+	//当前价
+	reservs, _ := fw.GetReserves(nil)
+	//log.Println(reservs)
+	//pinfo.caculateReservePrice(reservs.Reserve0, reservs.Reserve1)
+	pinfo.BlockTime = reservs.BlockTimestampLast
+}
+type ps  map[string]*PairInfo
+
+func (pinfos ps)initHistoryLog( ethConn *ethclient.Client,counts int)(lcount int){
+
+	logTransferSig := []byte("Sync(uint112,uint112)")
+	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
+
+	lastBlock,err:= utils.EthLastBlock(ethConn)
+	if err != nil {
+		log.Fatal("lastBlock err",err)
+	}
+	pinfosMap := map[string]*PairInfo{}
+	pairAddres := []common.Address{}
+	chainName:=""
+	for _, pinfo := range pinfos {
+		pinfosMap[pinfo.Pair] = pinfo
+		pairAddres = append(pairAddres, common.HexToAddress(pinfo.Pair))
+
+		chainName=pinfo.ChainName
+	}
+	msgid:=fmt.Sprintf("initHistoryLog %s",chainName)
+	log.Println(msgid)
+
+	for i:=lastBlock-counts; i<lastBlock;i+=2000{
+		query := ethereum.FilterQuery{
+			Addresses:pairAddres,
+			FromBlock: big.NewInt(int64(i)),
+			ToBlock: big.NewInt(int64(i+2000)),
+			Topics: [][]common.Hash{[]common.Hash{logTransferSigHash}},
+		}
+
+		log.Println(msgid ," getlog fromBlock",i)
+		logs1, err := ethConn.FilterLogs(context.Background(), query)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Println(msgid ," getlog len(logs)", len(logs1))
+		if len(logs1)==0{
+			continue
+		}
+		plogs := []*PairLog{}
+		ups := []*UniPrice{}
+		for _, item := range logs1 {
+			//log.Println(item) // pointer to event log
+			if item.Topics[0].Hex() == logTransferSigHash.Hex() {
+				event:=parseSyncEvent(item)
+				plog,up:=syncEventHanlder(event,pinfos,true,ethConn)
+				plogs=append(plogs,plog)
+				ups=append(ups,up...)
+			}
+		}
+		utils.Orm.CreateInBatches(plogs,2000)
+		utils.Orm.CreateInBatches(ups,2000)
+		lcount+=len(plogs)
+	}
+
+	for _, pi := range pinfos {
+		utils.Orm.Save(&pi)
+	}
+	log.Println("finish init history logs", msgid, "saved:",lcount)
+	return lcount
+}
+func (pinfo *PairInfo)getConstractPair( ethConn *ethclient.Client)(conPair *FanswapV2Pair){
+	fw, err := NewFanswapV2Pair(common.HexToAddress(pinfo.Pair), ethConn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fw
+}
+
+func (pinfo *PairInfo)CreateOrInit(pcfg SubPairConfig,ethConn *ethclient.Client){
+	err:=utils.Orm.First(pinfo,"pair=?", strings.ToLower(pcfg.Pair)).Error
+	if err != nil {
+		pinfo.getPairInfo(pcfg,ethConn)
+		err=utils.Orm.Save(pinfo).Error
+		if err != nil {
+			log.Fatal("pairInfo save err",err,pcfg)
+		}
+	}
+	//init token info
+	ti := TokenInfo{}.CreateOrInit(pcfg.ChainName, pinfo.Token0)
+	pinfo.Point0 = ti.Point
+	pinfo.Symbol0 = ti.Symbol
+	pinfo.IsUsd0=ti.IsUsd
+	pinfo.LoadUsd0=ti.LoadUsd
+	ti = TokenInfo{}.CreateOrInit(pcfg.ChainName, pinfo.Token1)
+	pinfo.Point1 = ti.Point
+	pinfo.Symbol1 = ti.Symbol
+	pinfo.IsUsd1=ti.IsUsd
+	pinfo.LoadUsd1=ti.LoadUsd
 }
 
 //sub chainName's all uni-pair
 //param  init true加载最近的历史事件；从上次中断的块号处，开始加载事件
 func SubPair(chainName string, pairCfgs []SubPairConfig, init bool, infuraID string) {
+
 	msgId := fmt.Sprintf("%s %s", "SubPair", chainName)
-	log.Println("begin ", msgId, pairCfgs)
-
-	utils.Orm.AutoMigrate(PairEvent{})
-	utils.Orm.AutoMigrate(PairInfo{})
-	utils.Orm.AutoMigrate(TokenInfo{})
-	pinfos := map[string]*PairEvent{}
+	log.Println("begin ", msgId,"init",init, pairCfgs)
+	pinfos := map[string]*PairInfo{}
 	pairAddres := []common.Address{}
-	ethConn := utils.GetEthConn(chainName, infuraID)
+	ethConn := utils.GetEthConn(chainName)
 	for _, paircf := range pairCfgs {
-		pairAddressStr := strings.ToLower(paircf.Pair)
-		pairAddre := common.HexToAddress(pairAddressStr)
-		fw, err := NewFanswapV2Pair(pairAddre, ethConn)
-		if err != nil {
-			log.Fatal(err)
-		}
-		var token0, token1 common.Address
-		token0, err = fw.Token0(&bind.CallOpts{Pending: true})
-		if err != nil {
-			log.Fatal(err)
-		}
-		token1, err = fw.Token1(&bind.CallOpts{Pending: true})
-		if err != nil {
-			log.Fatal(err)
-		}
-		pinfo := new(PairEvent)
-		pinfo.ChainName = chainName
-		pinfo.ProjName = paircf.ProjName
-		pinfo.Pair = pairAddressStr
-		pinfo.Token0 = hexAddres(token0)
-		pinfo.Token1 = hexAddres(token1)
-
-		pinfos[pairAddressStr] = pinfo
-		pairAddres = append(pairAddres, common.HexToAddress(pairAddressStr))
-
-		//init token info
-		ti := TokenInfo{}.CreateOrInit(chainName, infuraID, pinfo.Token0)
-		pinfo.Point0 = ti.Point
-		pinfo.Symbol0 = ti.Symbol
-		ti = TokenInfo{}.CreateOrInit(chainName, infuraID, pinfo.Token1)
-		pinfo.Point1 = ti.Point
-		pinfo.Symbol1 = ti.Symbol
-
-		//当前价
-		reservs, _ := fw.GetReserves(nil)
-		//log.Println(reservs)
-		pinfo.caculateReservePrice(reservs.Reserve0, reservs.Reserve1)
-		pinfo.BlockTime = reservs.BlockTimestampLast
-
-		pairi := new(PairInfo)
-		pairi.PairEvent = *pinfo
-
-		err = utils.Orm.FirstOrCreate(pairi, "pair=?", pairi.Pair).Assign(pairi).Error
-		if err != nil {
-			log.Println("msgId  save pairInfo err:", err)
-		}
+		pinfo := new(PairInfo)
+		pinfo.CreateOrInit(paircf,ethConn)
+		log.Println(pinfo.IsUsd0,pinfo.IsUsd1)
+		pinfos[pinfo.Pair] = pinfo
+		pairAddres = append(pairAddres, common.HexToAddress(pinfo.Pair))
 	}
 
-	logTransferSig := []byte("Sync(uint112,uint112)")
-	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
+	if init {
+		ps(pinfos).initHistoryLog(ethConn,2000)
+	}
+	return
 
 	fromBlock := int64(0)
-	if !init {
-		pinfo := new(PairEvent)
-		err := utils.Orm.Order("id desc").Where("chain_name=?", chainName).First(pinfo).Error
-		if err == nil {
-			fromBlock = pinfo.BlockNum
-		}
+	pinfo := new(PairLog)
+	err := utils.Orm.Order("id desc").Where("chain_name=?", chainName).First(pinfo).Error
+	if err == nil {
+		fromBlock = int64(pinfo.Block)
+	}else if  !errors.Is(err,gorm.ErrRecordNotFound) {
+		log.Fatal(msgId, "get chain last block err", err)
 	}
-	lastBlockNum := uint64(0)
-	if fromBlock == 0 {
-		//bsc maximum block range: 5000
-		lastBlock, err := ethConn.BlockNumber(context.Background())
+
+	if fromBlock==0{
+		lastBlock,err:=utils.EthLastBlock(ethConn)
 		if err != nil {
 			log.Fatal(err)
 		}
-		lastBlockNum = lastBlock
-		fromBlock = int64(lastBlock - 4000)
+		fromBlock=int64(lastBlock)
 	}
-	fromBlockNum := new(big.Int)
-	//toBlockNum:=new(big.Int)
+	logTransferSig := []byte("Sync(uint112,uint112)")
+	logTransferSigHash := crypto.Keccak256Hash(logTransferSig)
 	query := ethereum.FilterQuery{
-		Addresses: pairAddres,
-		FromBlock: fromBlockNum.SetInt64(fromBlock),
-		//ToBlock: toBlockNum.SetInt64(12676762),
+		Addresses:pairAddres,
+		FromBlock: big.NewInt(fromBlock),
 		Topics: [][]common.Hash{[]common.Hash{logTransferSigHash}},
 	}
-
-	log.Println("getlog", fromBlock, pairAddres)
-	logs1, err := ethConn.FilterLogs(context.Background(), query)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println("getlog len(logs)", len(logs1))
-	tps := []*PairEvent{}
-	for _, item := range logs1 {
-		//log.Println(item) // pointer to event log
-		if item.Topics[0].Hex() == logTransferSigHash.Hex() {
-			//log.Printf("Log Name: Sync\n")
-			tps = append(tps, getPairSyncLog(item, pinfos))
-			fromBlock = int64(item.BlockNumber)
-		}
-	}
-	//save histrory event
-	historyStat := map[string]int{}
-	if len(tps) > 0 {
-		//历史数据获取blockTime
-		for _, tp := range tps {
-			historyStat[tp.Pair] += 1
-			header, _ := ethConn.HeaderByNumber(context.Background(), big.NewInt(tp.BlockNum))
-			tp.BlockTime = uint32(header.Time)
-		}
-		utils.Orm.CreateInBatches(tps, 2000)
-	}
-	//没有新日志数据时，存储当前价格
-	for _, pi := range pinfos {
-		if historyStat[pi.Pair] == 0 {
-			pinfo := *pi
-			pinfo.BlockNum = int64(lastBlockNum)
-			pinfo.BlockTime = uint32(time.Now().Unix())
-			utils.Orm.Save(&pinfo)
-		}
-	}
-	log.Println("finish", msgId, "init logs")
 RETRY:
-	log.Println("begin sublog ",msgId, "fromBlock", fromBlock)
+	query.FromBlock = big.NewInt(fromBlock)
 	logs := make(chan types.Log)
-	query.FromBlock = fromBlockNum.SetInt64(fromBlock)
 
+	log.Println("begin sublog ",msgId, "fromBlock", fromBlock)
 	sub, err := ethConn.SubscribeFilterLogs(context.Background(), query, logs)
 	defer sub.Unsubscribe()
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("watch pair log ",msgId, "fromBlock", fromBlock)
-	//count:=0
 	for {
-		//count++;
-		//if count>3{
-		//	return
-		//}
 		select {
 		case err := <-sub.Err():
 			time.Sleep(1 * time.Second)
@@ -479,53 +543,128 @@ RETRY:
 			goto RETRY
 		case vLog := <-logs:
 			//log.Println(vLog) // pointer to event log
-			tps := []*PairEvent{}
 
 			if vLog.Topics[0].Hex() == logTransferSigHash.Hex() {
-				tps = append(tps, getPairSyncLog(vLog, pinfos))
-			}
-			if len(tps) > 0 {
-				utils.Orm.CreateInBatches(tps, 2000)
+				event:=parseSyncEvent(vLog)
+				plog,up:=syncEventHanlder(event,pinfos,false,ethConn)
+
+				dbtx:=utils.Orm.Begin()
+				err=dbtx.Save(plog).Error
+				if err == nil {
+					err=dbtx.Save(up).Error
+					if err == nil {
+						dbtx.Commit()
+					}
+				}
+				if err != nil {
+					dbtx.Rollback()
+				}
 			}
 			fromBlock = int64(vLog.BlockNumber) + 1
 		}
 	}
 }
-func getPairSyncLog(item types.Log, pInfos map[string]*PairEvent) *PairEvent {
+
+
+func getPairSyncLog(item types.Log, pInfos map[string]*PairInfo) *PairLog {
+	plog:=new(PairLog)
+	pinfo := *(pInfos[hexAddres(item.Address)])
+	
+	plog.PairID=pinfo.Id
+	plog.Block = item.BlockNumber
+	plog.BlockTime = uint64(time.Now().Unix())
+	plog.TxHash=item.TxHash.String()
 	transferEvent := new(FanswapV2PairSync)
 	err := pairAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
 	if err != nil {
 		log.Fatal(err)
 	}
-	//log.Println(hexAddres(item.Address), transferEvent.Raw.BlockNumber)
-	chainPinfo := *(pInfos[hexAddres(item.Address)])
-	chainPinfo.caculateReservePrice(transferEvent.Reserve0, transferEvent.Reserve1)
-	//chainPinfo.Price0,chainPinfo.Price1=caculateReservePrice(transferEvent.Reserve0,transferEvent.Reserve1,chainPinfo.Point0,chainPinfo.Point1)
-	//resv0 := bintTrunc(transferEvent.Reserve0, int(chainPinfo.Point0))
-	//resv1 := bintTrunc(transferEvent.Reserve1, int(chainPinfo.Point1))
-	//chainPinfo.Price0 = float64(resv1) / float64(resv0)
-	//chainPinfo.Price1 = float64(resv0) / float64(resv1)
-	chainPinfo.BlockNum = int64(item.BlockNumber)
-	chainPinfo.BlockTime = uint32(time.Now().Unix())
-	//log.Printf("%v",tp)
-	return &chainPinfo
+	plog.Reserve0,plog.Reserve1=transferEvent.Reserve0.String(), transferEvent.Reserve1.String()
+	return plog
 }
-func (pi *PairEvent) caculateReservePrice(bint0, bint1 *big.Int) {
-	pi.Reserve0, pi.Reserve1 = bint0.String(), bint1.String()
-	point0, point1 := pi.Point0, pi.Point1
-	reserv0 := bint0.Mul(bint0, big.NewInt(int64(math.Pow10(18-int(point0)))))
-	reserv1 := bint1.Mul(bint1, big.NewInt(int64(math.Pow10(18-int(point1)))))
-	//reserv1:=pi.Reserve0* int64(math.Pow10(18-int(point1)))
+
+type syncEvent struct {
+	Address common.Address
+	BlockNumber uint64
+	// hash of the transaction
+	TxHash common.Hash
+	Reserve0 *big.Int
+	Reserve1 *big.Int
+}
+func parseSyncEvent(item types.Log) *syncEvent {
+	event := new(syncEvent)
+	transferEvent := new(FanswapV2PairSync)
+	err := pairAbi.UnpackIntoInterface(transferEvent, "Sync", item.Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	event.Address = item.Address
+	event.BlockNumber = item.BlockNumber
+	event.TxHash = item.TxHash
+	event.Reserve0 = transferEvent.Reserve0
+	event.Reserve1 = transferEvent.Reserve1
+	return event
+}
+
+func syncEventHanlder(event *syncEvent, pInfos map[string]*PairInfo,useChainTime bool,ethConn *ethclient.Client) (*PairLog,[]*UniPrice) {
+	pinfo := pInfos[hexAddres(event.Address)]
+	if pinfo == nil {
+		log.Fatalf("pair %x not int", event.Address)
+	}
+	plog := new(PairLog)
+	plog.PairID = pinfo.Id
+	plog.ChainName = pinfo.ChainName
+	plog.Block = event.BlockNumber
+	if useChainTime {
+		plog.BlockTime = utils.EthBlockTime(event.BlockNumber, ethConn)
+	} else {
+		plog.BlockTime = uint64(time.Now().Unix())
+	}
+
+	plog.TxHash = event.TxHash.String()
+	plog.Reserve0, plog.Reserve1 = event.Reserve0.String(), event.Reserve1.String()
+
+	reserv0, reserv1 := event.Reserve0, event.Reserve1
+	point0, point1 := pinfo.Point0, pinfo.Point1
+	reserv0 = reserv0.Mul(reserv0, big.NewInt(int64(math.Pow10(18-int(point0)))))
+	reserv1 = reserv1.Mul(reserv1, big.NewInt(int64(math.Pow10(18-int(point1)))))
 
 	price0 := big.NewFloat(0).SetInt(reserv1)
 	price0 = price0.Quo(price0, big.NewFloat(0).SetInt(reserv0))
 	price1 := big.NewFloat(1)
 	price1 = price1.Quo(price1, price0)
+	p0, _ := price0.SetPrec(10).Float64()
+	p1, _ := price1.SetPrec(10).Float64()
+	vol0, vol1 := BintTrunc2f(reserv0, 18, 6), BintTrunc2f(reserv1, 18, 6)
 
-	pi.Price0, _ = price0.SetPrec(10).Float64()
-	pi.Price1, _ = price1.SetPrec(10).Float64()
+	if !pinfo.IsUsd1 && !pinfo.IsUsd1 {
+		if  pinfo.LoadUsd1{
+			log.Println("loadUsd pirce",pinfo.Id ,pinfo.Symbol1)
+		}
+		if pinfo.LoadUsd0{
+			log.Println("loadUsd pirce",pinfo.Id ,pinfo.Symbol0)
+		}
+	}
 
-	pi.Vol0, pi.Vol1 = BintTrunc2f(reserv1, 18, 6), BintTrunc2f(reserv0, 18, 6)
+	up := new(UniPrice)
+	up.Symbol = pinfo.Symbol0
+	up.PairID = pinfo.Id
+	up.Price = p0
+	up.BlockTime = plog.BlockTime
+	up.Vol = vol0
+
+	up1 := *up
+	up1.Symbol = pinfo.Symbol1
+	up1.Price = p1
+	up.Vol = vol1
+
+	pinfo.Vol0=vol0
+	pinfo.Vol1=vol1
+	pinfo.Reserve0=plog.Reserve0
+	pinfo.Reserve1=plog.Reserve0
+	pinfo.Price0=p0
+	pinfo.Price1=p1
+	return plog, []*UniPrice{up, &up1}
 }
 
 //func caculateReservePrice(resv0,resv1 *big.Int,point0,point1 uint8)(price0,pirce1 float64){

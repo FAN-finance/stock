@@ -22,6 +22,7 @@ type PubConf struct {
  //管理节点地址
  AdminAddr string
 }
+var InfuraID string
 var NodeTwKeyMap=map[string]string{
 "node0":"4e8a6b8b4afe47be815d9e3b4d8cf163",
 "node1":"21cad25580b74ba3a0a2ba9be29057bb",

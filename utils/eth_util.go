@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"log"
+	"math/big"
 	"time"
 )
 
@@ -38,10 +39,10 @@ var EthUrlMap =map[string]string{
 	"bsc":"wss://bsc-ws-node.nariox.org",
 	"polygon":"wss://rpc-mainnet.matic.quiknode.pro",
 }
-func GetEthConn(chainName,infuraID string ) *ethclient.Client {
+func GetEthConn(chainName string ) *ethclient.Client {
 	ethUrl:=EthUrlMap[chainName]
 	if chainName=="eth"{
-		ethUrl=fmt.Sprintf(ethUrl,infuraID)
+		ethUrl=fmt.Sprintf(ethUrl,InfuraID)
 	}
 	log.Println("get ethconn",ethUrl)
 	for {
@@ -55,6 +56,14 @@ func GetEthConn(chainName,infuraID string ) *ethclient.Client {
 		}
 	}
 	//conn.SendTransaction()
+}
+func EthBlockTime( block uint64,cli *ethclient.Client) (uint64){
+	header, err := cli.HeaderByNumber(context.Background(), big.NewInt(int64(block)))
+	if err != nil {
+		log.Println("EthBlockTime",err)
+	}
+	return  header.Time
+
 }
 func EthLastBlock( cli *ethclient.Client) (int,error){
 	lastBlock, err := cli.BlockNumber(context.Background())
