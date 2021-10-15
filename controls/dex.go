@@ -277,19 +277,6 @@ type HLValuePair struct {
 	Last float64
 }
 
-//// @Tags default
-//// @Summary　获取token最近一小时最高最低价格信息,内部单节点模式
-//// @Description 获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．
-//// @ID TokenChainPriceHandler
-//// @Accept  json
-//// @Produce  json
-//// @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
-//// @Param     data_type   query    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
-//// @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-//// @Success 200 {object} services.HLPriceView	"Price View"
-////@Header 200 {string} sign "签名信息"
-//// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
-//// @Router /pub/internal/dex/token_chain_price/{token}/{timestamp} [get]
 //func TokenChainPriceHandler(c *gin.Context) {
 //	dataProc := func(code string) (interface{}, error) {
 //		vp := new(HLValuePair)
@@ -328,6 +315,126 @@ type HLValuePair struct {
 //	TokenChainPriceProcess(c, dataProc, "TokenChainPriceHandler")
 //}
 
+//func TokenChainPriceHandler2(c *gin.Context) {
+//	dataProc := func(tokenCode string) (interface{}, error) {
+//
+//		//get symbol name
+//		symbol := ""
+//		err := utils.Orm.Raw(`
+//select (case
+//            when token0 = ? then symbol0
+//            else symbol1
+//    end) symbol
+//from pair_infos t
+//where token0 = ?
+//   or token1 = ?`, tokenCode, tokenCode, tokenCode).Scan(&symbol).Error
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		//get all pair
+//		pairs := []*uni.PairInfo{}
+//		err = utils.Orm.Model(uni.PairInfo{}).Raw(
+//			`
+//select *
+//from pair_infos t
+//where symbol0 = ?
+//   or symbol1 = ?;`, symbol, symbol).Find( &pairs).Error
+//		if err != nil {
+//			return nil, err
+//		}
+//		if len(pairs) == 0 {
+//			return nil, errors.New("pairs not found")
+//		}
+//		vps := []*HLValuePair{}
+//		for _, pair := range pairs {
+//			vp := new(HLValuePair)
+//
+//			lastPrice := 0.0
+//			//todo test exists err
+//			err := utils.Orm.Raw(`SELECT (case
+//            when symbol0 = ? then price0
+//            else price1
+//    end) price
+//FROM pair_events t
+//WHERE pair = ?
+//  and (case
+//           when symbol0 = ? then vol0
+//           else vol1
+//    end) > 40000
+//order by id desc
+//LIMIT 1;`, symbol, pair.Pair, symbol).Scan(&lastPrice).Error
+//			if err != nil {
+//				log.Println("get last price err", pair.Pair)
+//				continue
+//			}
+//			if lastPrice==0{
+//				log.Println("no last price err", pair.Pair)
+//				continue
+//			}
+//			vp.Last = lastPrice
+//
+//			err = utils.Orm.Raw(`
+//select *
+//from (
+//         select avg(price) avg, max(price) high, min(price) low
+//         from (
+//                  SELECT t.id,
+//                         t.chain_name,
+//                         t.proj_name,
+//                         t.pair,
+//                         max(case
+//                                 when symbol0 = ? then price0
+//                                 else price1
+//                             end) price
+//                  FROM pair_events t
+//                  WHERE pair = ?
+//                    and t.block_time > (unix_timestamp() - 2240 * 60)
+//                    and (case
+//                             when symbol0 = ? then vol0
+//                             else vol1
+//                      end) > 40000
+//              ) a) b
+//where b.high is not null`, symbol, pair.Pair, symbol).First(vp).Error
+//			if err != nil {
+//				vp.Avg = vp.Last
+//				vp.Low = vp.Last
+//				vp.High = vp.Last
+//				err = nil
+//			}
+//			if err == nil {
+//				vp.DataSource=pair.ChainName+" "+pair.ProjName
+//				vps = append(vps, vp)
+//			}
+//		}
+//		if len(vps) == 0 {
+//			return nil, errors.New("no data")
+//		}
+//		debugmsg,_:=json.Marshal( vps)
+//		log.Println("get vps",string(debugmsg))
+//		vp := new(HLValuePair)
+//		for _, value := range vps {
+//			//反铸取最大
+//			if vp.Low == 0 || vp.Low < value.Low {
+//				vp.Low = value.Low
+//			}
+//
+//			if vp.Last == 0 || vp.Last > value.Last {
+//				vp.Last = value.Last
+//			}
+//			if vp.High == 0 || vp.High > value.High {
+//				vp.High = value.High
+//			}
+//			if vp.Avg == 0 || vp.Avg > value.Avg {
+//				vp.Avg = value.Avg
+//			}
+//		}
+//		log.Println("get vp",vp)
+//		return vp, err
+//	}
+//	TokenChainPriceProcess(c, dataProc, "TokenChainPriceHandler2")
+//}
+
 // @Tags default
 // @Summary　获取token最近一小时最高最低价格信息,内部单节点模式
 // @Description 获取token最近一小时最高最低价格信息；目前改为使用直接从链上监听的数据．
@@ -341,7 +448,7 @@ type HLValuePair struct {
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/internal/dex/token_chain_price/{token}/{timestamp} [get]
-func TokenChainPriceHandler2(c *gin.Context) {
+func TokenChainPriceHandler3(c *gin.Context) {
 	dataProc := func(tokenCode string) (interface{}, error) {
 
 		//get symbol name
@@ -364,64 +471,39 @@ where token0 = ?
 			`
 select *
 from pair_infos t
-where symbol0 = ?
-   or symbol1 = ?;`, symbol, symbol).Find( &pairs).Error
+where (symbol0 = ?
+   or symbol1 = ?)
+   and vol_usd>?
+   and symbol=?
+;`, symbol, symbol,50000,symbol).Find( &pairs).Error
 		if err != nil {
 			return nil, err
 		}
 		if len(pairs) == 0 {
 			return nil, errors.New("pairs not found")
 		}
+
 		vps := []*HLValuePair{}
 		for _, pair := range pairs {
 			vp := new(HLValuePair)
-
-			lastPrice := 0.0
-			//todo test exists err
-			err := utils.Orm.Raw(`SELECT (case
-            when symbol0 = ? then price0
-            else price1
-    end) price
-FROM pair_events t
-WHERE pair = ?
-  and (case
-           when symbol0 = ? then vol0
-           else vol1
-    end) > 40000
-order by id desc
-LIMIT 1;`, symbol, pair.Pair, symbol).Scan(&lastPrice).Error
-			if err != nil {
-				log.Println("get last price err", pair.Pair)
-				continue
-			}
+			lastPrice := pair.GetPrice()
 			if lastPrice==0{
 				log.Println("no last price err", pair.Pair)
 				continue
 			}
 			vp.Last = lastPrice
 
+
 			err = utils.Orm.Raw(`
 select *
 from (
-         select avg(price) avg, max(price) high, min(price) low
-         from (
-                  SELECT t.id,
-                         t.chain_name,
-                         t.proj_name,
-                         t.pair,
-                         max(case
-                                 when symbol0 = ? then price0
-                                 else price1
-                             end) price
-                  FROM pair_events t
-                  WHERE pair = ?
-                    and t.block_time > (unix_timestamp() - 2240 * 60)
-                    and (case
-                             when symbol0 = ? then vol0
-                             else vol1
-                      end) > 40000
-              ) a) b
-where b.high is not null`, symbol, pair.Pair, symbol).First(vp).Error
+         select avg(prices.price) avg, max(prices.price) high, min(prices.price) low
+         from uni_prices prices
+         where prices.pair_id = ?
+           and prices.symbol = ?
+           and prices.block_time>unix_timestamp() - 240 * 60
+     ) a
+where a.high is not null`, pair.Id, pair.Symbol).First(vp).Error
 			if err != nil {
 				vp.Avg = vp.Last
 				vp.Low = vp.Last
@@ -459,8 +541,8 @@ where b.high is not null`, symbol, pair.Pair, symbol).First(vp).Error
 		return vp, err
 	}
 	TokenChainPriceProcess(c, dataProc, "TokenChainPriceHandler2")
-
 }
+
 var KovanAddreMap=map[string]string{"0x011864d37035439e078d64630777ec518138af05":"0x9207cb63b450af0d0930501b78f1a1b63b9cdb22",
 	"0x76417e660df3e5c90c0361674c192da152a806e4":"0x5e6dacf79473f3f0a8eb3f9cb569dd9bfdf091dd"}
 
@@ -751,6 +833,10 @@ func TokenAvgHlPriceHandler(c *gin.Context) {
 			// 验证数据签名
 			if node.Sign == nil {
 				err = errors.New("miss node.sign")
+				break
+			}
+			if node.PriceUsd == 0 {
+				err = errors.New("zero price")
 				break
 			}
 			//白名单验证

@@ -255,7 +255,9 @@ type TokenInfo struct {
 	Point       uint8
 	Name        string
 	Symbol      string
+	//is 1$ stableCoin: usdc or usdt
 	IsUsd bool
+	//是否需要将价格转换为usd价
 	LoadUsd bool
 	TotalSupply int
 	UpdatedAt   time.Time
@@ -343,6 +345,8 @@ type PairInfo struct {
 	LoadUsd1  bool
 	Vol0      float64
 	Vol1      float64
+	//lp$
+	VolUsd    float64
 	UpdatedAt time.Time
 	BlockNum  int64
 	BlockTime uint32 `gorm:"index:idx_main,priority:2"`
@@ -357,6 +361,15 @@ type SubPairConfig struct {
 	Pair     string
 	Symbol	 string
 	ChainName	 string
+}
+func (pinfo *PairInfo)GetPrice() float64{
+	if pinfo.Symbol==pinfo.Symbol0{
+		return  pinfo.Price0
+	}
+	if pinfo.Symbol==pinfo.Symbol1{
+		return  pinfo.Price1
+	}
+	return 0
 }
 func (pinfo *PairInfo)getPairInfo(pcfg SubPairConfig, ethConn *ethclient.Client){
 	log.Println("getPairInfo",pcfg)
@@ -408,7 +421,10 @@ func (pinfos ps)initHistoryLog( ethConn *ethclient.Client,counts int)(lcount int
 		chainName=pinfo.ChainName
 	}
 	msgid:=fmt.Sprintf("initHistoryLog %s",chainName)
-	log.Println(msgid)
+
+	fromBlock:=lastBlock-counts
+	ftime:=time.Unix( int64(utils.EthBlockTime(uint64(fromBlock),ethConn)),0)
+	log.Println(msgid,"from block",fromBlock,"blockTime:",ftime)
 
 	for i:=lastBlock-counts; i<lastBlock;i+=2000{
 		query := ethereum.FilterQuery{
@@ -500,7 +516,7 @@ func SubPair(chainName string, pairCfgs []SubPairConfig, init bool, infuraID str
 	if init {
 		ps(pinfos).initHistoryLog(ethConn,5000)
 	}
-	return
+
 
 	fromBlock := int64(0)
 	pinfo := new(PairLog)
@@ -606,15 +622,20 @@ func parseSyncEvent(item types.Log) *syncEvent {
 	event.Reserve1 = transferEvent.Reserve1
 	return event
 }
-func getUsdPair(projName,symbol string, pInfos map[string]*PairInfo)(price float64 ){
+func getUsdtPrice(projName,symbol string, pInfos map[string]*PairInfo)(price float64 ){
 	for _, info := range pInfos {
 		if info.ProjName==projName && (info.IsUsd0 || info.IsUsd1) && (info.Symbol1==symbol || info.Symbol0==symbol ){
-			up:=new(UniPrice)
-			err:=utils.Orm.Order("id desc").Find(up,UniPrice{PairID: info.Id,Symbol: symbol}).Error
-			if err != nil {
-				log.Fatal("getUsdPair",err)
+			if info.Symbol0==symbol{
+				return info.Price0
+			}else{
+				return info.Price1
 			}
-			return up.Price
+			//up:=new(UniPrice)
+			//err:=utils.Orm.Order("id desc").Find(up,UniPrice{PairID: info.Id,Symbol: symbol}).Error
+			//if err != nil {
+			//	log.Fatal("getUsdtPrice",err)
+			//}
+			//return up.Price
 		}
 	}
 	return 0
@@ -649,17 +670,25 @@ func syncEventHanlder(event *syncEvent, pInfos map[string]*PairInfo,useChainTime
 	p0, _ := price0.SetPrec(10).Float64()
 	p1, _ := price1.SetPrec(10).Float64()
 	vol0, vol1 := BintTrunc2f(reserv0, 18, 6), BintTrunc2f(reserv1, 18, 6)
-
-	if !pinfo.IsUsd1 && !pinfo.IsUsd1 {
+	volUsd:=0.0
+	if  pinfo.IsUsd0{
+		volUsd=vol0
+	}
+	if  pinfo.IsUsd1{
+		volUsd=vol1
+	}
+	if !pinfo.IsUsd0 && !pinfo.IsUsd1 {
 		if  pinfo.LoadUsd1{
-			tprice:=getUsdPair(pinfo.ProjName,pinfo.Symbol1,pInfos)
+			tprice:= getUsdtPrice(pinfo.ProjName,pinfo.Symbol1,pInfos)
 			log.Println("loadUsd pirce for pair",pinfo.Id ,pinfo.Symbol1,tprice)
 			p0=p0*tprice
+			volUsd=tprice*vol1
 		}
 		if pinfo.LoadUsd0{
-			tprice:=getUsdPair(pinfo.ProjName,pinfo.Symbol0,pInfos)
+			tprice:= getUsdtPrice(pinfo.ProjName,pinfo.Symbol0,pInfos)
 			log.Println("loadUsd pirce for pair",pinfo.Id ,pinfo.Symbol0,tprice)
 			p1=p1*tprice
+			volUsd=tprice*vol0
 		}
 	}
 
@@ -677,6 +706,7 @@ func syncEventHanlder(event *syncEvent, pInfos map[string]*PairInfo,useChainTime
 
 	pinfo.Vol0=vol0
 	pinfo.Vol1=vol1
+	pinfo.VolUsd=volUsd
 	pinfo.Reserve0=plog.Reserve0
 	pinfo.Reserve1=plog.Reserve0
 	pinfo.Price0=p0

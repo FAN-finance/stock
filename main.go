@@ -89,6 +89,8 @@ func main() {
 			"bsc": []uni.SubPairConfig{
 				{"pancake", "0x8c83e7aef5116be215223d3688a2f5dc4c7f241b","REI","bsc"},
 				{"pancake", "0x7C613ccf0656B509fEE51900d55b39308b1FC00d","zUSD","bsc"},
+				//	//load wault-usd price for  wault rei-wusd;
+				{"wault", "0x6102d8a7c963f78d46a35a6218b0db4845d1612f","WUSD","bsc"},
 				{"wault", "0x4b31d95654300cbe8ce3fe2b2ec5c6d2929ae7a6","REI","bsc"},
 				{"baby", "0xd02f44fa87f365cd160a033007ef80c311b7f5d9","REI","bsc"},
 				{"baby", "0x659951a7f393496232a4e8c308bb4d1ad6400b59","zUSD","bsc"},
@@ -189,7 +191,7 @@ func main() {
 	api.GET("/internal/dex/token_price/:token/:timestamp", controls.TokenPriceHandler)
 	api.GET("/internal/dex/pair/token_price/:pair/:token/:timestamp", controls.PairTokenPriceHandler)
 
-	api.GET("/internal/dex/token_chain_price/:token/:timestamp", controls.TokenChainPriceHandler2)
+	api.GET("/internal/dex/token_chain_price/:token/:timestamp", controls.TokenChainPriceHandler3)
 
 	api.GET("/internal/dex/token_info/:token/:timestamp", controls.TokenInfoHandler)
 	api.GET("/internal/dex/pair/token_info/:pair/:token/:timestamp", controls.PairTokenInfoHandler)
