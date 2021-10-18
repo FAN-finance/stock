@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"log"
@@ -729,6 +730,85 @@ limit 1;
 	}
 	return datas, err
 }
+
+//getChainChart
+func GetUniTimesPrice(symbol string, interval, count int) ([]*FtxChartDate, error) {
+	 pairId :=0
+	err:=utils.Orm.Raw(`
+select id
+from pair_infos t
+where vol_usd > ?
+  and symbol = ?
+order by vol_usd limit 1;
+`,50000,symbol).Scan(&pairId).Error
+	if err != nil {
+		return nil,err
+	}
+	if pairId==0{
+		return nil,errors.New("未找到相应的Pair")
+	}
+
+	datas := []*FtxChartDate{}
+	sql := `
+select bulls.*,dates.secon1 as timestamp
+from (select truncate((dates.id - 1) / @interval, 0) as id1,
+             min(dates.date)                     datestr,
+             min(dates.secon1)                   secon1,
+             max(dates.secon2)                   secon2
+      from stock.dates dates
+      where dates.secon1 > truncate(unix_timestamp() / (15 * 60 * @interval), 0) * 15 * 60 * @interval  - 15 * 60 * @interval * @count
+        and dates.secon1 < unix_timestamp()
+      group by id1
+     ) dates
+         left join (select
+                            truncate(t.block_time / (15 * 60 * @interval), 0) * 15 * 60 * @interval as b_timestamp,
+                            cast(avg(t.price) as decimal(9, 3))                          bull
+                    from uni_prices t
+                    where t.block_time > unix_timestamp() - 15 * 60 * @interval * @count
+                      and t.block_time < unix_timestamp()
+                      and t.pair_id = @pair_id
+                      and symbol=@symbol
+                    group by b_timestamp
+) bulls
+                   on dates.secon1 <= bulls.b_timestamp and dates.secon2 > bulls.b_timestamp
+order by dates.id1;
+`
+	err = utils.Orm.Raw(sql, map[string]interface{}{"interval": interval, "count": count, "pair_id": pairId, "symbol": symbol}).Scan(&datas).Error
+	if err == nil {
+		for idx, data := range datas {
+			//数据不连续时，取得的第一个时间点可能为０
+			if idx == 0 {
+				if data.Bull == 0 {
+					sql = `
+select cast(t.price as decimal(9, 3))      bull
+from uni_prices t
+where t.block_time < ?
+  and t.pair_id = ?
+  and symbol=?
+order by id desc
+limit 1;
+`
+					cdata := new(FtxChartDate)
+					err = utils.Orm.Raw(sql, data.Timestamp, pairId,symbol).Scan(cdata).Error
+					if err != nil {
+						log.Println(err)
+					} else {
+						data.Bull = cdata.Bull
+						//data.RawPrice = cdata.RawPrice
+					}
+				}
+			}
+			if idx > 0 {
+				if data.Bull == 0 {
+					data.Bull = datas[idx-1].Bull
+					//data.RawPrice = datas[idx-1].RawPrice
+				}
+			}
+		}
+	}
+	return datas, err
+}
+
 
 //股票图表
 func GetStockTimesPrice(coin_type string, interval, count int) ([]*FtxChartDate, error) {

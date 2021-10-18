@@ -285,7 +285,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/services.BlockPrice"
+                                "$ref": "#/definitions/uni.BlockPrice"
                             }
                         },
                         "headers": {
@@ -522,7 +522,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/services.BlockPrice"
+                                "$ref": "#/definitions/uni.BlockPrice"
                             }
                         }
                     },
@@ -673,7 +673,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/services.BlockPrice"
+                                "$ref": "#/definitions/uni.BlockPrice"
                             }
                         },
                         "headers": {
@@ -928,7 +928,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/services.BlockPrice"
+                                "$ref": "#/definitions/uni.BlockPrice"
                             }
                         },
                         "headers": {
@@ -1083,9 +1083,9 @@
                 }
             }
         },
-        "/pub/dic_config": {
+        "/pub/dex/uni_chart_prices/{coin_type}/{count}/{interval}/{timestamp}": {
             "get": {
-                "description": "字典配制信息",
+                "description": "获取chain-token不同时间区间的价格图表信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -1093,29 +1093,76 @@
                     "application/json"
                 ],
                 "tags": [
-                    "sys"
+                    "default"
                 ],
-                "summary": "获取字典配制信息",
-                "operationId": "ConfigHandler",
+                "summary": "获取chain-token不同时间区间的价格图表信息",
+                "operationId": "UniChainChartPricesHandler",
                 "parameters": [
                     {
+                        "enum": [
+                            "REI",
+                            "WMATIC",
+                            "WUSD",
+                            "zUSD"
+                        ],
                         "type": "string",
-                        "description": "配制json",
-                        "name": "is_using",
-                        "in": "query"
+                        "default": "REI",
+                        "description": "ftx类型",
+                        "name": "coin_type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "获取多少个数据点",
+                        "name": "count",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4,
+                            96
+                        ],
+                        "type": "integer",
+                        "default": 1,
+                        "description": "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；",
+                        "name": "interval",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1620383144,
+                        "description": "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识",
+                        "name": "timestamp",
+                        "in": "path"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "config json",
+                        "description": "stock info",
                         "schema": {
-                            "$ref": "#/definitions/common.RawDicConfig"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/uni.BlockPrice"
+                            }
+                        },
+                        "headers": {
+                            "sign": {
+                                "type": "string",
+                                "description": "签名信息"
+                            }
                         }
                     },
                     "500": {
                         "description": "失败时，有相应测试日志输出",
                         "schema": {
-                            "$ref": "#/definitions/common.ResBody"
+                            "$ref": "#/definitions/common.ApiErr"
                         }
                     }
                 }
@@ -1871,87 +1918,6 @@
                 }
             }
         },
-        "/pub/login": {
-            "post": {
-                "description": "钱包登陆",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sys"
-                ],
-                "summary": "钱包登陆",
-                "operationId": "LoginHandler",
-                "parameters": [
-                    {
-                        "description": "钱包登陆对象",
-                        "name": "logreq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/sys.loginModel"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "登陆结果",
-                        "schema": {
-                            "$ref": "#/definitions/sys.loginRes"
-                        }
-                    },
-                    "500": {
-                        "description": "失败时，有相应测试日志输出",
-                        "schema": {
-                            "$ref": "#/definitions/common.ResBody"
-                        }
-                    }
-                }
-            }
-        },
-        "/pub/pre_login": {
-            "get": {
-                "description": "钱包登陆Challenge",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sys"
-                ],
-                "summary": "钱包登陆Challenge",
-                "operationId": "ChallengeHandler",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "0x24C93Aaec52539a60240BCd2E972AB672D33eD79",
-                        "description": "钱包地址",
-                        "name": "address",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Challenge　code",
-                        "schema": {
-                            "$ref": "#/definitions/auth.ChallengeOutput"
-                        }
-                    },
-                    "500": {
-                        "description": "失败时，有相应测试日志输出",
-                        "schema": {
-                            "$ref": "#/definitions/common.ResBody"
-                        }
-                    }
-                }
-            }
-        },
         "/pub/stock/aggre_info/{code}/{data_type}/{timestamp}": {
             "get": {
                 "description": "获取共识美股价格 苹果代码  AAPL  ,苹果代码 TSLA",
@@ -2296,143 +2262,13 @@
                     }
                 }
             }
-        },
-        "/sys/dic_config": {
-            "post": {
-                "description": "修改字典配制信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sys"
-                ],
-                "summary": "修改字典配制信息",
-                "operationId": "ConfigUpdateHandler",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "配制json",
-                        "name": "dic",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/common.RawDicConfig"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "data",
-                        "schema": {
-                            "$ref": "#/definitions/common.RawDicConfig"
-                        }
-                    },
-                    "500": {
-                        "description": "失败时，有相应测试日志输出",
-                        "schema": {
-                            "$ref": "#/definitions/common.ResBody"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
-        "auth.ChallengeOutput": {
-            "type": "object",
-            "properties": {
-                "challenge": {
-                    "type": "string"
-                }
-            }
-        },
         "common.ApiErr": {
             "type": "object",
             "properties": {
                 "Error": {
-                    "type": "string"
-                }
-            }
-        },
-        "common.RawDicConfig": {
-            "type": "object",
-            "properties": {
-                "ftxTokenAddres": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/common.fa"
-                    }
-                },
-                "isDisableAllSign": {
-                    "description": "禁用所有签名",
-                    "type": "boolean"
-                },
-                "isDisableFtxSign": {
-                    "description": "禁用ftx签名",
-                    "type": "boolean"
-                },
-                "safePrices": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/common.sp"
-                    }
-                }
-            }
-        },
-        "common.ResBody": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 200
-                },
-                "data": {
-                    "description": "Data interface{} `json:\"data\"`",
-                    "type": "object"
-                },
-                "msg": {
-                    "type": "string",
-                    "example": "ok"
-                },
-                "time": {
-                    "type": "string"
-                }
-            }
-        },
-        "common.fa": {
-            "type": "object",
-            "properties": {
-                "ftxName": {
-                    "type": "string"
-                },
-                "tokenAddre": {
-                    "type": "string"
-                }
-            }
-        },
-        "common.sp": {
-            "type": "object",
-            "properties": {
-                "comment": {
-                    "description": "备注　可选项，可输入名字",
-                    "type": "string"
-                },
-                "max": {
-                    "type": "number"
-                },
-                "min": {
-                    "type": "number"
-                },
-                "tokenAddre": {
                     "type": "string"
                 }
             }
@@ -2501,26 +2337,6 @@
                 },
                 "openTime": {
                     "type": "integer"
-                }
-            }
-        },
-        "services.BlockPrice": {
-            "type": "object",
-            "properties": {
-                "blockTime": {
-                    "type": "integer"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "delay": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
                 }
             }
         },
@@ -2933,36 +2749,23 @@
                 }
             }
         },
-        "sys.loginModel": {
+        "uni.BlockPrice": {
             "type": "object",
-            "required": [
-                "address",
-                "signature"
-            ],
             "properties": {
-                "address": {
+                "blockTime": {
+                    "type": "integer"
+                },
+                "createdAt": {
                     "type": "string"
                 },
-                "signature": {
-                    "type": "string"
-                }
-            }
-        },
-        "sys.loginRes": {
-            "type": "object",
-            "required": [
-                "address",
-                "isAdmin"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
+                "delay": {
+                    "type": "integer"
                 },
-                "isAdmin": {
-                    "type": "boolean"
+                "id": {
+                    "type": "integer"
                 },
-                "token": {
-                    "type": "string"
+                "price": {
+                    "type": "number"
                 }
             }
         }

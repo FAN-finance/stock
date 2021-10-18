@@ -1133,7 +1133,7 @@ func PairTokenInfoHandler(c *gin.Context) {
 // @Param     count   path    int     true    "获取多少个数据点" default(10)
 // @Param     interval   path    string     true    "数据间隔 15minite hour day 1w(1周) 1m (1月) " default(day) Enums(15minite,hour,day,1w,1m)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {array} services.BlockPrice	"stock info"
+// @Success 200 {array} uni.BlockPrice	"stock info"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/token_chart_prices/{token}/{count}/{interval}/{timestamp} [get]
@@ -1179,7 +1179,7 @@ func TokenDayPricesHandler(c *gin.Context) {
 // @Param     count   path    int     true    "获取多少个数据点" default(10)
 // @Param     interval   path    string     true    "数据间隔 15minite hour day 1w(1周) 1m (1月) " default(day) Enums(15minite,hour,day,1w,1m)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {array} services.BlockPrice	"stock info"
+// @Success 200 {array} uni.BlockPrice	"stock info"
 // @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/pair/token_chart_prices/{pair}/{token}/{count}/{interval}/{timestamp} [get]
 func PairTokenDayPricesHandler(c *gin.Context) {

@@ -207,6 +207,7 @@ func main() {
 	api.GET("/dex/ftx_price/:coin_type/:data_type/:timestamp", controls.FtxPriceSignHandler)
 	api.GET("/dex/token_day_datas/:token/:days/:timestamp", controls.TokenDayDatasHandler)
 	api.GET("/dex/ftx_chart_prices/:coin_type/:count/:interval/:timestamp", controls.FtxChartPricesHandler)
+	api.GET("/dex/uni_chart_prices/:coin_type/:count/:interval/:timestamp", controls.UniChainChartPricesHandler)
 	api.GET("/dex/stock_chart_prices/:coin_type/:count/:interval/:timestamp", controls.StockChartPricesHandler)
 
 	api.GET("/dex/token_chart_prices/:token/:count/:interval/:timestamp", controls.TokenDayPricesHandler)

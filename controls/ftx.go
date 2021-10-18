@@ -347,6 +347,40 @@ func isGoldFtx(code string) bool {
 
 
 // @Tags default
+// @Summary　获取chain-token不同时间区间的价格图表信息
+// @Description 获取chain-token不同时间区间的价格图表信息
+// @ID UniChainChartPricesHandler
+// @Accept  json
+// @Produce  json
+// @Param     coin_type   path    string     true        "ftx类型" default(REI)  Enums(REI,WMATIC,WUSD,zUSD)
+// @Param     count   path    int     true    "获取多少个数据点" default(10)
+// @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；" default(1) Enums(1,2,3,4,96)
+// @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
+// @Success 200 {array} uni.BlockPrice	"stock info"
+//@Header 200 {string} sign "签名信息"
+// @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
+// @Router /pub/dex/uni_chart_prices/{coin_type}/{count}/{interval}/{timestamp} [get]
+func UniChainChartPricesHandler(c *gin.Context) {
+	coin_type := c.Param("coin_type")
+	//code:="btc"
+	interval_str := c.Param("interval")
+	interval, _ := strconv.Atoi(interval_str)
+	count_str := c.Param("count")
+	count, _ := strconv.Atoi(count_str)
+
+	//common.SetCacheRes(c,ckey,false,proc,c.Query("debug")=="1")
+	ckey := fmt.Sprintf("UniChainChartPricesHandler-%s-%s-%s", coin_type, interval_str, count_str)
+	proc := func() (interface{}, error) {
+		items, err := services.GetUniTimesPrice(coin_type, interval, count)
+		if err != nil {
+			return nil, err
+		}
+		return items, err
+	}
+	common.SetCacheResExpire(c, ckey, false, 200, proc, c.Query("debug") == "1")
+}
+
+// @Tags default
 // @Summary　获取杠杆btc代币不同时间区间的价格图表信息
 // @Description 获取杠杆btc代币不同时间区间的价格图表信息
 // @ID FtxChartPricesHandler
@@ -356,7 +390,7 @@ func isGoldFtx(code string) bool {
 // @Param     count   path    int     true    "获取多少个数据点" default(10)
 // @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 2表示30分钟间隔 3表示45分钟间隔 ,96表示1天间隔 ；" default(1) Enums(1,2,3,4,96)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {array} services.BlockPrice	"stock info"
+// @Success 200 {array} uni.BlockPrice	"stock info"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/ftx_chart_prices/{coin_type}/{count}/{interval}/{timestamp} [get]
@@ -402,7 +436,7 @@ func FtxChartPricesHandler(c *gin.Context) {
 // @Param     count   path    int     true    "获取多少个数据点" default(100)
 // @Param     interval   path    int     true    "数据间隔值,表示多少个15分钟, 如:1表示15分钟间隔 ４表示60分钟间隔 ,96表示1天间隔 ；" default(4) Enums(1,4,96)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
-// @Success 200 {array} services.BlockPrice	"stock info"
+// @Success 200 {array} uni.BlockPrice	"stock info"
 //@Header 200 {string} sign "签名信息"
 // @Failure 500 {object} common.ApiErr "失败时，有相应测试日志输出"
 // @Router /pub/dex/stock_chart_prices/{coin_type}/{count}/{interval}/{timestamp} [get]
