@@ -132,6 +132,7 @@ func main() {
 
 		services.SetAllBullsFromTw(true)
 		services.CronTwData()
+		services.CronHuobi()
 		services.Cn.Start()
 
 		//订阅coinmarketcap数据 Metaverse Index

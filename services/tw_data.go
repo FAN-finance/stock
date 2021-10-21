@@ -178,7 +178,24 @@ const (
 	DATASOURCE_HUO_BI=10000
 	DATASOURCE_BINANCE=10001
 )
-func GetHuobiData() error {
+func CronHuobi() {
+	fails := 15
+	proc := func() error {
+		log.Println("fails", fails)
+		err := GetHuobiData(true)
+		if err != nil {
+			fails += 1
+		} else {
+			fails = 0
+		}
+		return err
+	}
+	Cn.AddFunc("10 * * * * *", func() {
+		proc()
+	})
+	//Cn.Start()
+}
+func GetHuobiData(preDate bool) error {
 	var items=map[string]string{
 		"ETH":"ethusdt",
 		"BTC":"btcusdt",
@@ -196,10 +213,17 @@ func GetHuobiData() error {
 			return err
 		}
 		for _, data := range res.Data {
+			btime:=data.ID
+			if preDate{
+				if btime!=time.Now().Truncate(time.Minute).Add(-1*time.Minute).Unix(){
+					continue
+				}
+			}
+
 			uprice:=new(uni.UniPrice)
 			uprice.PairID=DATASOURCE_HUO_BI
 			uprice.Symbol=key
-			uprice.BlockTime=uint64(data.ID)
+			uprice.BlockTime=uint64(btime)
 			uprice.Price=data.Close
 			utils.Orm.Save(uprice)
 		}
@@ -222,7 +246,7 @@ type resHuobiKline struct {
 	Ts     int64  `json:"ts" example:"1629769247172"`
 }
 
-func GetBinanceData() error {
+func GetBinanceData(preDate bool) error {
 	var items=map[string]string{
 		"ETH":"ETHUSDT",
 		"BTC":"BTCUSDT",
@@ -242,10 +266,17 @@ func GetBinanceData() error {
 		}
 		if len(res)==0{return errors.New("GetBinanceData none data")}
 		for _, data := range res {
+			btime:=int64(data[0].(float64))/1000
+			if preDate{
+				if btime!=time.Now().Truncate(time.Minute).Add(-1*time.Minute).Unix(){
+					continue
+				}
+			}
+
 			uprice:=new(uni.UniPrice)
 			uprice.PairID=DATASOURCE_BINANCE
 			uprice.Symbol=key
-			uprice.BlockTime=uint64(data[0].(float64))
+			uprice.BlockTime=uint64(btime)
 			uprice.Price,_=strconv.ParseFloat( data[4].(string),64)
 			utils.Orm.Save(uprice)
 		}
