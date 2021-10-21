@@ -460,7 +460,7 @@ func (pinfos ps)initHistoryLog( ethConn *ethclient.Client,counts int)(lcount int
 	}
 
 	for _, pi := range pinfos {
-		utils.Orm.Save(&pi)
+		utils.Orm.Save(pi)
 	}
 	log.Println("finish init history logs", msgid, "saved:",lcount)
 	return lcount
@@ -572,6 +572,15 @@ RETRY:
 				if err == nil {
 					err=dbtx.Save(up).Error
 					if err == nil {
+						for _, pi := range pinfos {
+							//save pair_info which update in 5 secs
+							if pi.UpdatedAt.After(time.Now().Add(-5*time.Second)){
+								err=dbtx.Save(pi).Error
+							}
+							if err != nil {
+								continue
+							}
+						}
 						dbtx.Commit()
 					}
 				}
@@ -713,6 +722,7 @@ func syncEventHanlder(event *syncEvent, pInfos map[string]*PairInfo,useChainTime
 	pinfo.Reserve1=plog.Reserve0
 	pinfo.Price0=p0
 	pinfo.Price1=p1
+	pinfo.UpdatedAt=time.Now()
 	return plog, []*UniPrice{up, &up1}
 }
 
