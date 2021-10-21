@@ -441,7 +441,7 @@ type HLValuePair struct {
 // @ID TokenChainPriceHandler
 // @Accept  json
 // @Produce  json
-// @Param     token   path    string     true        "token地址" default(0x66a0f676479cee1d7373f3dc2e2952778bff5bd6)
+// @Param     token   path    string     true        "token地址" default(0x765b85839717ebfc84378b83381a4814897a0506)
 // @Param     data_type   query    int     true   "最高最低价１最高　２最低价 3平均价 4最后价" default(1) Enums(1,2,3,4)
 // @Param     timestamp   path    int     false    "当前时间的unix秒数,该字段未使用，仅在云存储上用于标识" default(1620383144)
 // @Success 200 {object} services.HLPriceView	"Price View"
@@ -463,6 +463,9 @@ where token0 = ?
    or token1 = ?`, tokenCode, tokenCode, tokenCode).Scan(&symbol).Error
 		if err != nil {
 			return nil, err
+		}
+		if symbol=="zUSD"{
+			return nil, errors.New("please use ftx_price api")
 		}
 
 		//get all pair
@@ -521,17 +524,20 @@ where a.high is not null`, pair.Id, pair.Symbol).First(vp).Error
 		debugmsg,_:=json.Marshal( vps)
 		log.Println("get vps",string(debugmsg))
 		vp := new(HLValuePair)
+		//正向铸造是调用 传的type 是2。
+		//这个先每个交易所取4个小时的 “最低价”。
+		//然后得到的“每个交易所的4小时价格”，再次取出一个“最低价”？
 		for _, value := range vps {
-			//反铸取最大
-			if vp.Low == 0 || vp.Low < value.Low {
+			//反向铸取最高
+			if vp.High == 0 || vp.High < value.High {
+				vp.High = value.High
+			}
+			//正向铸取最低
+			if vp.Low == 0 || vp.Low > value.Low {
 				vp.Low = value.Low
 			}
-
 			if vp.Last == 0 || vp.Last > value.Last {
 				vp.Last = value.Last
-			}
-			if vp.High == 0 || vp.High > value.High {
-				vp.High = value.High
 			}
 			if vp.Avg == 0 || vp.Avg > value.Avg {
 				vp.Avg = value.Avg
