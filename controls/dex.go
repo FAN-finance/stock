@@ -536,13 +536,15 @@ where a.high is not null`, pair.Id, pair.Symbol).First(vp).Error
 			if vp.Low == 0 || vp.Low > value.Low {
 				vp.Low = value.Low
 			}
-			if vp.Last == 0 || vp.Last > value.Last {
-				vp.Last = value.Last
-			}
+			//if vp.Last == 0 || vp.Last > value.Last {
+			//	vp.Last = value.Last
+			//}
+			vp.Last +=value.Last
 			if vp.Avg == 0 || vp.Avg > value.Avg {
 				vp.Avg = value.Avg
 			}
 		}
+		vp.Last=vp.Last /float64(len(vps))
 		log.Println("get vp",vp)
 		return vp, err
 	}
