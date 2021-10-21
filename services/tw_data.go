@@ -181,7 +181,7 @@ const (
 func CronHuobi() {
 	fails := 15
 	proc := func() error {
-		log.Println("fails", fails)
+		log.Println("CronHuobi fails", fails)
 		err := GetHuobiData(true)
 		if err != nil {
 			fails += 1
