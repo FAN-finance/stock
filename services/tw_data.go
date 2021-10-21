@@ -180,7 +180,7 @@ const (
 )
 func CronHuobi() {
 	fails := 15
-	proc := func() error {
+	proc := func() {
 		log.Println("CronHuobi fails", fails)
 		err := GetHuobiData(true)
 		if err != nil {
@@ -188,11 +188,11 @@ func CronHuobi() {
 		} else {
 			fails = 0
 		}
-		return err
+		if err != nil {
+			log.Println("CronHuobi err", err)
+		}
 	}
-	Cn.AddFunc("10 * * * * *", func() {
-		proc()
-	})
+	Cn.AddFunc("10 * * * * *", proc)
 	//Cn.Start()
 }
 func GetHuobiData(preDate bool) error {
