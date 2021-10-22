@@ -33,10 +33,13 @@ func InitEConn(infura string) {
 //ethUrl := fmt.Sprintf("wss://mainnet.infura.io/ws/v3/%s", infura)
 //bsc ethUrl := "wss://bsc-ws-node.nariox.org:443"
 //polygon ethUrl := "wss://rpc-mainnet.matic.network:443
+
+//bsc wss endpoint: https://account.getblock.io/
 //https://docs.polygon.technology/docs/develop/network-details/network
 var EthUrlMap =map[string]string{
 	"eth":"wss://mainnet.infura.io/ws/v3/%s",
-	"bsc":"wss://bsc-ws-node.nariox.org",
+	"bsc":"wss://bsc.getblock.io/mainnet/?api_key=25c285b0-35ec-4455-8902-3187daf08750",
+	//"bsc":"wss://bsc-ws-node.nariox.org",
 	"polygon":"wss://rpc-mainnet.matic.quiknode.pro",
 }
 func GetEthConn(chainName string ) *ethclient.Client {
