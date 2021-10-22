@@ -39,7 +39,7 @@ func InitEConn(infura string) {
 var EthUrlMap =map[string]string{
 	"eth":"wss://mainnet.infura.io/ws/v3/%s",
 	"bsc":"wss://bsc.getblock.io/mainnet/?api_key=25c285b0-35ec-4455-8902-3187daf08750",
-	//"bsc":"wss://bsc-ws-node.nariox.org",
+	//"bsc":"wss://bsc-ws-node.nariox.org", //boken since 2021-10-22
 	"polygon":"wss://rpc-mainnet.matic.quiknode.pro",
 }
 func GetEthConn(chainName string ) *ethclient.Client {
