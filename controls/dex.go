@@ -961,7 +961,7 @@ func IsSignAble(code string, price float64) (signAble bool, msg string) {
 			return
 		}
 
-		delay:=180
+		delay:=300
 		if strings.HasPrefix(coinType,"govt"){
 			delay=600
 		}

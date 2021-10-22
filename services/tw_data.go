@@ -123,15 +123,51 @@ func CronTwData() {
 		}
 		return err
 	}
-	Cn.AddFunc("45 * * * * *", func() {
+	Cn.AddFunc("20 * * * * *", func() {
 		proc()
 	})
 	//Cn.Start()
 }
 func GetTwData(start_date, end_date string, limit int) error {
+	GetHuobiData(true)
+	//使用分symbol访问方法，减少twdata 压力
+	//[]string{"AAPL","TSLA","vix","ndx","xau/usd","eur/usd","govt","eth/usd","btc/usd"}
+	stockSymbol:=[]string{"AAPL","TSLA","vix","ndx","govt"}
+	otherSymbol:=[]string{"xau/usd","eur/usd"} //,"eth/usd","btc/usd"
+	if IsMarketTime(time.Now().Unix() - 65) { //减65用来确保收盘后，再请求一次．
+		otherSymbol=append(otherSymbol,stockSymbol...)
+	}
+	for _, symbol := range otherSymbol {
+		dataUrl:= fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=%s&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d", symbol, start_date, end_date, "21cad25580b74ba3a0a2ba9be29057bb", limit)
+		bs, err := utils.ReqResBody(dataUrl, "", "GET", nil, nil)
+		if err == nil {
+			twData := new(resTw)
+			err = json.Unmarshal(bs, twData)
+			if err == nil {
+				for i := len(twData.Values) - 1; i > -1; i-- {
+					value := twData.Values[i]
+					//log.Printf("%v",value)
+					mprice := new(MarketPrice)
+					mprice.ItemType = twSymbolMap[symbol]
+					mprice.Price, _ = strconv.ParseFloat(value.Close, 64)
+					ts, _ := time.ParseInLocation("2006-01-02 15:04:05", value.Datetime, twSymbolLocalMap[symbol])
+					mprice.Timestamp = int(ts.Unix())
+					dberr := utils.Orm.Save(mprice).Error
+					if dberr != nil {
+						log.Println(dberr)
+					}
+					//log.Println("process mm %v", mprice)
+				}
+			}
+		}
+	}
+	return nil
+}
+func GetTwDataBack(start_date, end_date string, limit int) error {
 	//appkey="4e8a6b8b4afe47be815d9e3b4d8cf163"
 	//appkey="21cad25580b74ba3a0a2ba9be29057bb"
-	dataUrl := fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d", start_date, end_date, "21cad25580b74ba3a0a2ba9be29057bb", limit)
+	//dataUrl := fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d", start_date, end_date, "21cad25580b74ba3a0a2ba9be29057bb", limit)
+	dataUrl := fmt.Sprintf("https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt&interval=1min&start_date=%s&end_date=%s&apikey=%s&source=docs&outputsize=%d", start_date, end_date, "21cad25580b74ba3a0a2ba9be29057bb", limit)
 
 	//非开盘时间，不请求股市数据, 减65用来确保收盘后，再请求一次．
 	if !IsMarketTime(time.Now().Unix() - 65) {
@@ -139,6 +175,7 @@ func GetTwData(start_date, end_date string, limit int) error {
 	}
 	//dataUrl="https://api.twelvedata.com/time_series?symbol=AAPL,TSLA,xau/usd,vix,ndx,eur/usd,govt,eth/usd,btc/usd&interval=1min&start_date=2021-07-26%2019:00:00&end_date=2021-07-27&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize=5000"
 	//dataUrl="https://api.twelvedata.com/time_series?symbol=AAPL,TSLA&interval=1min&apikey=21cad25580b74ba3a0a2ba9be29057bb&source=docs&outputsize="+strconv.Itoa(limit)
+
 	bs, err := utils.ReqResBody(dataUrl, "", "GET", nil, nil)
 	if err == nil {
 		//log.Println(string(bs))
