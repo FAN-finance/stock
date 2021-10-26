@@ -146,6 +146,7 @@ func main() {
 
 		//股票时间间隔价格统计
 		//go services.SetStockStat()
+		go uni.CronUniStat()
 
 	}
 

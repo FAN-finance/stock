@@ -137,7 +137,7 @@ func CronUniStat() {
 	utils.Orm.AutoMigrate(UniPriceIntervalStat{})
 	InitMapStat();
 	lastId := UniPriceIntervalStat{}.GetLastID()
-	//SetUniStatFromLastId(1190);return;
+	//SetUniStatFromLastId(lastId);return;
 	proc := func() error {
 		lastId = SetUniStatFromLastId(lastId)
 		return nil
