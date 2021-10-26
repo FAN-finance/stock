@@ -889,27 +889,46 @@ func SetStockStat() {
 }
 
 func SetStockStatFromlastId(lastId int) int {
-	rows, err := utils.Orm.Model(MarketPrice{}).Where(" id>? and item_type in(?)", lastId, stocks).Rows()
-	if err == nil {
-		idx := 0
-		for rows.Next() {
-			idx++
-			//if idx>100{log.Println("break",idx); break;}
-			mprice := new(MarketPrice)
-			err = utils.Orm.ScanRows(rows, mprice)
-			if err != nil {
-				break
-			}
-			gIntervals.SetItem(mprice)
-			lastId = int(mprice.ID)
+	//rows, err := utils.Orm.Model(MarketPrice{}).Where(" id>? and item_type in(?)", lastId, stocks).Rows()
+	//if err == nil {
+	//	idx := 0
+	//	for rows.Next() {
+	//		idx++
+	//		//if idx>100{log.Println("break",idx); break;}
+	//		mprice := new(MarketPrice)
+	//		err = utils.Orm.ScanRows(rows, mprice)
+	//		if err != nil {
+	//			break
+	//		}
+	//		gIntervals.SetItem(mprice)
+	//		lastId = int(mprice.ID)
+	//	}
+	//	if idx > 0 {
+	//		gIntervals.Finish()
+	//	}
+	//}
+	//if err != nil {
+	//	log.Println(err)
+	//}
+
+	mps:=[]*MarketPrice{}
+	counter:=0
+	proc:=func(tx *gorm.DB, batch int) error{
+		for _, mp := range mps {
+			gIntervals.SetItem(mp)
+			lastId = int(mp.ID)
 		}
-		if idx > 0 {
-			gIntervals.Save()
-		}
+		counter+=len(mps)
+		return nil
 	}
+	err:=utils.Orm.Where(" id>? and item_type in(?)", lastId,stocks).FindInBatches(&mps,500,proc ).Error
 	if err != nil {
 		log.Println(err)
 	}
+	if counter>0{
+		gIntervals.Finish()
+	}
+
 	return lastId
 }
 
@@ -926,7 +945,7 @@ type IntervalStat struct {
 }
 
 func (istat IntervalStat) GetLastID() int {
-	err := utils.Orm.Order("timestamp desc").Limit(1).Find(&istat).Error
+	err := utils.Orm.Order("id desc").Limit(1).Find(&istat).Error
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -964,7 +983,8 @@ func (mstat mapInterval) SetItem(price *MarketPrice) {
 		key := fmt.Sprintf("%s-%d", price.ItemType, interval)
 		istat := mstat[key]
 		if istat == nil {
-
+			log.Println("mapInterval not init")
+			return
 		}
 		tt := (price.Timestamp / istat.Interval) * istat.Interval
 		if istat.Timestamp != tt && istat.Timestamp != 0 {
@@ -983,10 +1003,11 @@ func (mstat mapInterval) SetItem(price *MarketPrice) {
 		istat.LastID = int(price.ID)
 	}
 }
-func (mstat mapInterval) Save() {
+func (mstat mapInterval) Finish() {
 	for _, stat := range mstat {
 		if stat.Timestamp > 0 {
 			utils.Orm.Save(stat)
+			stat.Saved=false
 		}
 	}
 }

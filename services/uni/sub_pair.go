@@ -708,18 +708,18 @@ func syncEventHanlder(event *syncEvent, pInfos map[string]*PairInfo,useChainTime
 	up.PairID = pinfo.Id
 	up.Price = p0
 	up.BlockTime = plog.BlockTime
-	up.Vol = vol0
+	up.Vol =vol0
 
 	up1 := *up
 	up1.Symbol = pinfo.Symbol1
-	up1.Price = p1
-	up.Vol = vol1
+	up1.Price =  p1
+	up.Vol =  vol1
 
 	pinfo.Vol0=vol0
 	pinfo.Vol1=vol1
 	pinfo.VolUsd=volUsd
 	pinfo.Reserve0=plog.Reserve0
-	pinfo.Reserve1=plog.Reserve0
+	pinfo.Reserve1=plog.Reserve1
 	pinfo.Price0=p0
 	pinfo.Price1=p1
 	pinfo.UpdatedAt=time.Now()

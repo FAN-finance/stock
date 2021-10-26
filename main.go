@@ -84,20 +84,23 @@ func main() {
 	//return
 
 	if job {
-		chainPairConfs := map[string][]uni.SubPairConfig{
-			"eth": []uni.SubPairConfig{{"uniswap", "0xdfb8824b094f56b9216a015ff77bdb056923aaf6","REI","eth"},},
-			"bsc": []uni.SubPairConfig{
-				{"pancake", "0x8c83e7aef5116be215223d3688a2f5dc4c7f241b","REI","bsc"},
-				{"pancake", "0x7C613ccf0656B509fEE51900d55b39308b1FC00d","zUSD","bsc"},
-				//	//load wault-usd price for  wault rei-wusd;
-				{"wault", "0x6102d8a7c963f78d46a35a6218b0db4845d1612f","WUSD","bsc"},
-				{"wault", "0x4b31d95654300cbe8ce3fe2b2ec5c6d2929ae7a6","REI","bsc"},
-				{"baby", "0xd02f44fa87f365cd160a033007ef80c311b7f5d9","REI","bsc"},
-				{"baby", "0x659951a7f393496232a4e8c308bb4d1ad6400b59","zUSD","bsc"},
-			},
-			"polygon":[]uni.SubPairConfig{
-				{"wault","0xf7bc741b2086ca344e78225d06224ffdcd86d110","WMATIC","polygon"},
-			},
+		PairConfs:=[]uni.SubPairConfig{
+			{"uniswap", "0xdfb8824b094f56b9216a015ff77bdb056923aaf6","REI","eth"},
+
+			{"pancake", "0x8c83e7aef5116be215223d3688a2f5dc4c7f241b","REI","bsc"},
+			{"pancake", "0x7C613ccf0656B509fEE51900d55b39308b1FC00d","zUSD","bsc"},
+			{"wault", "0xd6196036cb72bb921e013189cc594fec29453c2e","WBNB","bsc"},
+			//	//load wault-usd price for  wault rei-wusd;
+			{"wault", "0x6102d8a7c963f78d46a35a6218b0db4845d1612f","WUSD","bsc"},
+			{"wault", "0x4b31d95654300cbe8ce3fe2b2ec5c6d2929ae7a6","REI","bsc"},
+			{"baby", "0xd02f44fa87f365cd160a033007ef80c311b7f5d9","REI","bsc"},
+			{"baby", "0x659951a7f393496232a4e8c308bb4d1ad6400b59","zUSD","bsc"},
+
+			{"wault","0xf7bc741b2086ca344e78225d06224ffdcd86d110","WMATIC","polygon"},
+		}
+		chainPairConfs := map[string][]uni.SubPairConfig{}
+		for _, cfg := range PairConfs {
+			chainPairConfs[cfg.ChainName]=append(chainPairConfs[cfg.ChainName],cfg)
 		}
 
 		for chainName, subPireConfs := range chainPairConfs {
@@ -142,7 +145,7 @@ func main() {
 		go services.TokenTotalSupplyDailyData()
 
 		//股票时间间隔价格统计
-		go services.SetStockStat()
+		//go services.SetStockStat()
 
 	}
 
