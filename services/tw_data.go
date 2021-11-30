@@ -128,6 +128,7 @@ func CronTwData() {
 }
 func GetTwData(start_date, end_date string, limit int) error {
 	GetHuobiData(true)
+	return
 	//使用分symbol访问方法，减少twdata 压力
 	//[]string{"AAPL","TSLA","vix","ndx","xau/usd","eur/usd","govt","eth/usd","btc/usd"}
 	stockSymbol:=[]string{"AAPL","TSLA","vix","ndx","govt"}
